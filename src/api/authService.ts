@@ -113,11 +113,17 @@ export const authService = {
    * Get currently stored client data
    */
   getCurrentUser: async () => {
-    const clientId = await AsyncStorage.getItem('clientId');
-    const collectoId = await AsyncStorage.getItem('collectoId');
-    const userName = await AsyncStorage.getItem('userName');
+    try {
+      const clientId = await AsyncStorage.getItem('clientId');
+      const collectoId = await AsyncStorage.getItem('collectoId');
+      const userName = await AsyncStorage.getItem('userName');
 
-    if (!clientId) return null;
-    return { clientId, collectoId, userName };
+      if (!clientId) return null;
+      return { clientId, collectoId, userName };
+    } catch (err: any) {
+      console.error('[AuthService] Error reading from AsyncStorage:', err.message);
+      // Return null to allow app to continue, user will need to log in again
+      return null;
+    }
   },
 };
