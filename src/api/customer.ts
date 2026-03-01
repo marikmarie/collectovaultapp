@@ -36,6 +36,9 @@ export const customerService = {
   getServices: (vaultOTPToken?: string, collectoId?: string, page?: number, limit?: number) =>
     api.post('/services', { vaultOTPToken, collectoId, page, limit }),
 
+  getVaultPackages: (collectoId?: string) =>
+    api.get(`/vaultPackages${collectoId ? `?collectoId=${collectoId}` : ''}`),
+
   createCustomer: (payload: { collecto_id: string; client_id: string; name?: string }) =>
     api.post('/customers', payload),
 };
