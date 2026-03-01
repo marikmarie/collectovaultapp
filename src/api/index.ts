@@ -6,9 +6,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 let API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || '';
 if (!API_BASE) {
   if (Platform.OS === 'android') {
-    API_BASE = 'http://10.0.2.2:4000';
+    API_BASE = 'http://10.0.2.2:8080';
   } else {
-    API_BASE = 'http://localhost:4000';
+    API_BASE = 'http://localhost:8080';
   }
 }
 
