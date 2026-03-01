@@ -6,11 +6,11 @@ import {
   ActivityIndicator,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
   RefreshControl,
   TextInput,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/context/AuthContext';
 import { customerService } from '@/src/api/customer';
 import AsyncStorage from '@react-native-async-storage/async-storage';

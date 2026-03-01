@@ -6,10 +6,10 @@ import {
   ActivityIndicator,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/context/AuthContext';
 import { transactionService, invoiceService } from '@/src/api/collecto';
 import AsyncStorage from '@react-native-async-storage/async-storage';

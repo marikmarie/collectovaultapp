@@ -110,6 +110,19 @@ export const authService = {
   },
 
   /**
+   * Check if a username is available. resolves to { available, message }
+   */
+  checkUsernameAvailability: async (username: string) => {
+    try {
+      await authService.getClientIdByUsername(username);
+      // if the call succeeds the username is already taken
+      return { available: false, message: 'Username already taken' };
+    } catch {
+      return { available: true, message: 'Username is available' };
+    }
+  },
+
+  /**
    * Get currently stored client data
    */
   getCurrentUser: async () => {

@@ -7,13 +7,14 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  SafeAreaView,
   ScrollView,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/context/AuthContext';
 import { authService } from '@/src/api/authService';
 import { setVaultOtpToken, getVaultOtpToken } from '@/src/api';
+import SetUsernameModal from './SetUsernameModal';
 
 type LoginStep = 'id_entry' | 'otp_entry';
 
@@ -33,6 +34,7 @@ export default function LoginScreen() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingPayload, setPendingPayload] = useState<PendingPayload | null>(null);
   const [showClientIdDialog, setShowClientIdDialog] = useState(false);
+  const [showSetUsernameModal, setShowSetUsernameModal] = useState(false);
   const [clientIdForUsername, setClientIdForUsername] = useState('');
 
   const buildAuthPayload = (id: string) => {
@@ -142,8 +144,7 @@ export default function LoginScreen() {
       return;
     }
     setShowClientIdDialog(false);
-    // Note: SetUsernameModal component would be shown here (to be added later)
-    setError('Username feature coming soon!');
+    setShowSetUsernameModal(true);
   };
 
   return (
@@ -352,6 +353,19 @@ export default function LoginScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Username creation modal */}
+      <SetUsernameModal
+        isOpen={showSetUsernameModal}
+        existingUsername={undefined}
+        clientId={clientIdForUsername}
+        onClose={() => setShowSetUsernameModal(false)}
+        onSuccess={(uname) => {
+          setShowSetUsernameModal(false);
+          setClientIdForUsername('');
+          setError(`Username "${uname}" created successfully!`);
+        }}
+      />
     </SafeAreaView>
   );
 }

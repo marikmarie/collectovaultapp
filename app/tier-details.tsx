@@ -5,10 +5,10 @@ import {
   StyleSheet,
   ActivityIndicator,
   FlatList,
-  SafeAreaView,
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/context/AuthContext';
 import { customerService } from '@/src/api/customer';
 import { useRouter } from 'expo-router';

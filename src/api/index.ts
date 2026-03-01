@@ -1,7 +1,16 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api.collectovault.local';
+// determine base url - on android emulator localhost must be 10.0.2.2
+let API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || '';
+if (!API_BASE) {
+  if (Platform.OS === 'android') {
+    API_BASE = 'http://10.0.2.2:4000';
+  } else {
+    API_BASE = 'http://localhost:4000';
+  }
+}
 
 console.log('API_BASE URL:', API_BASE);
 
@@ -32,6 +41,10 @@ export async function clearVaultOtpToken() {
 }
 
 export async function hasVaultOtpToken(): Promise<boolean> {
+  if (!AsyncStorage || typeof AsyncStorage.getItem !== 'function') {
+    // storage unavailable
+    return false;
+  }
   const token = await AsyncStorage.getItem('vaultOtpToken');
   if (!token) return false;
   const expiry = await AsyncStorage.getItem('vaultOtpExpiresAt');
@@ -69,9 +82,12 @@ export async function getVaultOtpToken(): Promise<string> {
 api.interceptors.request.use(
   async (config) => {
     try {
-      if ((await hasVaultOtpToken()) && config.headers) {
-        const vaultOtp = await getVaultOtpToken();
-        config.headers.Authorization = `Bearer ${vaultOtp}`;
+      // guard in case AsyncStorage native module is missing
+      if (AsyncStorage && typeof AsyncStorage.getItem === 'function') {
+        if ((await hasVaultOtpToken()) && config.headers) {
+          const vaultOtp = await getVaultOtpToken();
+          config.headers.Authorization = `Bearer ${vaultOtp}`;
+        }
       }
     } catch (err) {
       console.warn('vault token not attached to request:', err);

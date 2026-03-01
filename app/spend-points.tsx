@@ -6,9 +6,9 @@ import {
   ActivityIndicator,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/context/AuthContext';
 import { customerService } from '@/src/api/customer';
 import { transactionService } from '@/src/api/collecto';
