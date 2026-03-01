@@ -53,14 +53,14 @@ export default function LoginScreen() {
       let resolvedId = input;
 
       // Try as username first
-      if (/^[a-zA-Z0-9_-]+$/.test(input) && input.length < 50) {
-        try {
-          const userInfo = await authService.getClientIdByUsername(input);
-          resolvedId = userInfo.clientId;
-        } catch (usernameErr) {
-          // Username not found, try as client ID
-        }
-      }
+      // if (/^[a-zA-Z0-9_-]+$/.test(input) && input.length < 50) {
+      //   try {
+      //     const userInfo = await authService.getClientIdByUsername(input);
+      //     resolvedId = userInfo.clientId;
+      //   } catch (usernameErr) {
+      //     // Username not found, try as client ID
+      //   }
+      // }
 
       // Try as client ID
       const { id, type } = buildAuthPayload(resolvedId);

@@ -113,6 +113,13 @@ export const authService = {
    * Get currently stored client data
    */
   getCurrentUser: async () => {
+    // AsyncStorage may not be available in all environments (e.g. web),
+    // in which case the native module will be null and calling methods
+    // throws.  Early return to avoid noise.
+    if (!AsyncStorage || typeof AsyncStorage.getItem !== 'function') {
+      return null;
+    }
+
     try {
       const clientId = await AsyncStorage.getItem('clientId');
       const collectoId = await AsyncStorage.getItem('collectoId');
@@ -121,8 +128,8 @@ export const authService = {
       if (!clientId) return null;
       return { clientId, collectoId, userName };
     } catch (err: any) {
-      console.error('[AuthService] Error reading from AsyncStorage:', err.message);
-      // Return null to allow app to continue, user will need to log in again
+      // Only log if something unexpected happens, avoid repeated null-module noise
+      console.debug('[AuthService] AsyncStorage unavailable:', err.message);
       return null;
     }
   },
