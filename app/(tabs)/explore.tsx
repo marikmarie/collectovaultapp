@@ -13,7 +13,7 @@ export default function MoreScreen() {
     { label: 'Buy Points', href: '/buy-points', icon: '💳' },
     { label: 'Redeem Points', href: '/spend-points', icon: '🎁' },
     { label: 'Tier Benefits', href: '/tier-details', icon: '👑' },
-  ];
+  ] as const;
 
   const handleLogout = async () => {
     try {
