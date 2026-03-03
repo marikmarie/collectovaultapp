@@ -4,15 +4,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // determine base url - on android emulator localhost must be 10.0.2.2
 let API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || '';
-if (!API_BASE) {
-  if (Platform.OS === 'android') {
-    API_BASE = 'http://10.0.2.2:8080';
-  } else {
-    API_BASE = 'http://localhost:8080';
+
+// Handle localhost mapping for Android emulators
+if (Platform.OS === 'android') {
+  if (!API_BASE || API_BASE.includes('localhost') || API_BASE.includes('127.0.0.1')) {
+    API_BASE = API_BASE.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2') || 'http://10.0.2.2:8080';
   }
+} else if (!API_BASE) {
+  API_BASE = 'http://localhost:8080';
 }
 
 console.log('API_BASE URL:', API_BASE);
+console.log('AsyncStorage available:', !!(AsyncStorage && typeof AsyncStorage.getItem === 'function'));
 
 const api = axios.create({
   baseURL: API_BASE,
