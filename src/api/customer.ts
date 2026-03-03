@@ -1,5 +1,5 @@
 import api from './index';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from '@/src/utils/storage';
 
 export const customerService = {
   // Get all customers for a collecto
@@ -15,13 +15,13 @@ export const customerService = {
 
   // Get customer's current points balance and tier info
   getPointsAndTier: async (vendorId?: string) => {
-    const id = vendorId || (await AsyncStorage.getItem('collectoId'));
+    const id = vendorId || (await storage.getItem('collectoId'));
     return api.get(`/pointRules/collecto/${id || null}`);
   },
 
   // Get tier rules/benefits
   getTierInfo: async (vendorId?: string) => {
-    const id = vendorId || (await AsyncStorage.getItem('collectoId'));
+    const id = vendorId || (await storage.getItem('collectoId'));
     return api.get(`/tier/collecto/${id || null}`);
   },
 

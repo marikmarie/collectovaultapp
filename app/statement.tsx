@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/context/AuthContext';
 import { transactionService, invoiceService } from '@/src/api/collecto';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from '@/src/utils/storage';
 import { useRouter } from 'expo-router';
 
 interface TransactionItem {

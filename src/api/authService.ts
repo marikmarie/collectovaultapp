@@ -1,5 +1,5 @@
 import api, { setVaultOtpToken } from './index';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from '@/src/utils/storage';
 
 export const authService = {
   startCollectoAuth: async (payload: {
@@ -29,9 +29,9 @@ export const authService = {
 
     if (userData) {
       const { id, collectoId, userName } = userData;
-      await AsyncStorage.setItem('clientId', id);
-      await AsyncStorage.setItem('collectoId', collectoId.toString());
-      await AsyncStorage.setItem('userName', userName);
+      await storage.setItem('clientId', id);
+      await storage.setItem('collectoId', collectoId.toString());
+      await storage.setItem('userName', userName);
     }
 
     return data;
@@ -48,7 +48,7 @@ export const authService = {
     try {
       const resp = await api.post('/setUsername', payload);
       if (resp.data.success) {
-        await AsyncStorage.setItem('userName', payload.username);
+        await storage.setItem('userName', payload.username);
       }
       return resp.data;
     } catch (error: any) {
@@ -101,11 +101,11 @@ export const authService = {
    */
   logout: async () => {
     await Promise.all([
-      AsyncStorage.removeItem('clientId'),
-      AsyncStorage.removeItem('collectoId'),
-      AsyncStorage.removeItem('userName'),
-      AsyncStorage.removeItem('vaultOtpToken'),
-      AsyncStorage.removeItem('vaultOtpExpiresAt'),
+      storage.removeItem('clientId'),
+      storage.removeItem('collectoId'),
+      storage.removeItem('userName'),
+      storage.removeItem('vaultOtpToken'),
+      storage.removeItem('vaultOtpExpiresAt'),
     ]);
   },
 
@@ -129,14 +129,14 @@ export const authService = {
     // AsyncStorage may not be available in all environments (e.g. web),
     // in which case the native module will be null and calling methods
     // throws.  Early return to avoid noise.
-    if (!AsyncStorage || typeof AsyncStorage.getItem !== 'function') {
+    if (!storage || typeof (storage as any).getItem !== 'function') {
       return null;
     }
 
     try {
-      const clientId = await AsyncStorage.getItem('clientId');
-      const collectoId = await AsyncStorage.getItem('collectoId');
-      const userName = await AsyncStorage.getItem('userName');
+      const clientId = await storage.getItem('clientId');
+      const collectoId = await storage.getItem('collectoId');
+      const userName = await storage.getItem('userName');
 
       if (!clientId) return null;
       return { clientId, collectoId, userName };

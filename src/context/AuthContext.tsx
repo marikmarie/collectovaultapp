@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authService } from '../api/authService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from '@/src/utils/storage';
 
 interface AuthContextType {
   isLoggedIn: boolean;

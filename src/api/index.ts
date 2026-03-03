@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from '@/src/utils/storage';
 
 // determine base url - on android emulator localhost must be 10.0.2.2
 let API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || '';
@@ -15,7 +15,7 @@ if (Platform.OS === 'android') {
 }
 
 console.log('API_BASE URL:', API_BASE);
-console.log('AsyncStorage available:', !!(AsyncStorage && typeof AsyncStorage.getItem === 'function'));
+console.log('storage available:', !!(storage && typeof (storage as any).getItem === 'function'));
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -26,31 +26,31 @@ export async function setVaultOtpToken(token: string, expiresAt?: string) {
   if (!token || typeof token !== 'string' || token.trim() === '') {
     throw new Error('setVaultOtpToken: token must be a non-empty string');
   }
-  await AsyncStorage.setItem('vaultOtpToken', token);
+  await storage.setItem('vaultOtpToken', token);
   if (expiresAt) {
     const t = Date.parse(expiresAt);
     if (!Number.isFinite(t)) {
       throw new Error('setVaultOtpToken: expiresAt must be a valid date string');
     }
-    await AsyncStorage.setItem('vaultOtpExpiresAt', new Date(t).toISOString());
+    await storage.setItem('vaultOtpExpiresAt', new Date(t).toISOString());
   } else {
-    await AsyncStorage.removeItem('vaultOtpExpiresAt');
+    await storage.removeItem('vaultOtpExpiresAt');
   }
 }
 
 export async function clearVaultOtpToken() {
-  await AsyncStorage.removeItem('vaultOtpToken');
-  await AsyncStorage.removeItem('vaultOtpExpiresAt');
+  await storage.removeItem('vaultOtpToken');
+  await storage.removeItem('vaultOtpExpiresAt');
 }
 
 export async function hasVaultOtpToken(): Promise<boolean> {
-  if (!AsyncStorage || typeof AsyncStorage.getItem !== 'function') {
+  if (!storage || typeof (storage as any).getItem !== 'function') {
     // storage unavailable
     return false;
   }
-  const token = await AsyncStorage.getItem('vaultOtpToken');
+  const token = await storage.getItem('vaultOtpToken');
   if (!token) return false;
-  const expiry = await AsyncStorage.getItem('vaultOtpExpiresAt');
+  const expiry = await storage.getItem('vaultOtpExpiresAt');
   if (!expiry) return true;
   const exp = Date.parse(expiry);
   if (!Number.isFinite(exp)) {
@@ -65,9 +65,9 @@ export async function hasVaultOtpToken(): Promise<boolean> {
 }
 
 export async function getVaultOtpToken(): Promise<string> {
-  const token = await AsyncStorage.getItem('vaultOtpToken');
+  const token = await storage.getItem('vaultOtpToken');
   if (!token) throw new Error('Vault OTP token not found');
-  const expiry = await AsyncStorage.getItem('vaultOtpExpiresAt');
+  const expiry = await storage.getItem('vaultOtpExpiresAt');
   if (expiry) {
     const exp = Date.parse(expiry);
     if (!Number.isFinite(exp)) {
@@ -86,7 +86,7 @@ api.interceptors.request.use(
   async (config) => {
     try {
       // guard in case AsyncStorage native module is missing
-      if (AsyncStorage && typeof AsyncStorage.getItem === 'function') {
+      if (storage && typeof (storage as any).getItem === 'function') {
         if ((await hasVaultOtpToken()) && config.headers) {
           const vaultOtp = await getVaultOtpToken();
           config.headers.Authorization = `Bearer ${vaultOtp}`;

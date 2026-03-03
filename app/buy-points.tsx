@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/context/AuthContext';
 import { customerService } from '@/src/api/customer';
 import api from '@/src/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from '@/src/utils/storage';
 
 interface Package {
   id: string | number;
@@ -75,8 +75,8 @@ export default function BuyPointsScreen() {
 
     setVerifyingPhone(true);
     try {
-      const vaultOTPToken = await AsyncStorage.getItem('vaultOtpToken');
-      const collectoId = await AsyncStorage.getItem('collectoId');
+      const vaultOTPToken = await storage.getItem('vaultOtpToken');
+      const collectoId = await storage.getItem('collectoId');
       const clientId = user?.clientId;
 
       const res = await api.post('/verifyPhoneNumber', {
@@ -105,8 +105,8 @@ export default function BuyPointsScreen() {
 
     setProcessing(true);
     try {
-      const vaultOTPToken = await AsyncStorage.getItem('vaultOtpToken');
-      const collectoId = await AsyncStorage.getItem('collectoId');
+      const vaultOTPToken = await storage.getItem('vaultOtpToken');
+      const collectoId = await storage.getItem('collectoId');
       const clientId = user?.clientId;
 
       const response = await api.post('/initiateMobileMoneyPayment', {

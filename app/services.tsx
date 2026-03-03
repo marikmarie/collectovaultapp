@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/context/AuthContext';
 import { customerService } from '@/src/api/customer';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from '@/src/utils/storage';
 import { useRouter } from 'expo-router';
 
 interface Service {
@@ -41,8 +41,8 @@ export default function ServicesScreen() {
   const fetchServices = useCallback(async () => {
     try {
       setLoading(true);
-      const vaultOTPToken = await AsyncStorage.getItem('vaultOtpToken') || undefined;
-      const collectoId = await AsyncStorage.getItem('collectoId') || undefined;
+      const vaultOTPToken = await storage.getItem('vaultOtpToken') || undefined;
+      const collectoId = await storage.getItem('collectoId') || undefined;
 
       const response = await customerService.getServices(
         vaultOTPToken,

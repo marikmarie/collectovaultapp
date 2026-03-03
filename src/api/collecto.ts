@@ -1,5 +1,5 @@
 import api from './index';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from '@/src/utils/storage';
 
 export const transactionService = {
   // Get customer transactions/history

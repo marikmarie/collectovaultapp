@@ -8,7 +8,7 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from '@/src/utils/storage';
 import { authService } from '@/src/api/authService';
 
 interface SetUsernameModalProps {
@@ -64,8 +64,8 @@ export default function SetUsernameModal({
     setIsLoading(true);
     try {
       const storedClientId =
-        passedClientId || (await AsyncStorage.getItem('clientId'));
-      const collectoId = await AsyncStorage.getItem('collectoId');
+        passedClientId || (await storage.getItem('clientId'));
+      const collectoId = await storage.getItem('collectoId');
 
       if (!storedClientId) {
         setError('Client ID not found. Please login again.');
@@ -96,7 +96,7 @@ export default function SetUsernameModal({
 
       if (result.success) {
         setSuccess('Username created successfully!');
-        await AsyncStorage.setItem('userName', trimmed);
+        await storage.setItem('userName', trimmed);
         setTimeout(() => {
           onSuccess(trimmed);
           onClose();
