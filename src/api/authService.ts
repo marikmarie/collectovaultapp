@@ -124,6 +124,7 @@ export const authService = {
 
   /**
    * Get currently stored client data
+   * VALIDATES that both user data AND token are valid
    */
   getCurrentUser: async () => {
     // AsyncStorage may not be available in all environments (e.g. web),
@@ -135,14 +136,26 @@ export const authService = {
 
     try {
       const clientId = await getItem('clientId');
+      
+      // If no clientId, user is not logged in
+      if (!clientId) return null;
+
+      // CRITICAL: Validate that the vaultOtpToken is still valid
+      const hasValidToken = await import('./index').then(m => m.hasVaultOtpToken());
+      
+      if (!hasValidToken) {
+        // Token is missing or expired, clear all user data
+        await authService.logout();
+        return null;
+      }
+
       const collectoId = await getItem('collectoId');
       const userName = await getItem('userName');
 
-      if (!clientId) return null;
       return { clientId, collectoId, userName };
     } catch (err: any) {
       // Only log if something unexpected happens, avoid repeated null-module noise
-      console.debug('[AuthService] AsyncStorage unavailable:', err.message);
+      console.debug('[AuthService] Error in getCurrentUser:', err.message);
       return null;
     }
   },

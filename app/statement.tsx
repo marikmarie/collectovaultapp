@@ -39,8 +39,8 @@ export default function StatementScreen() {
 
     try {
       setLoading(true);
-      const response = await transactionService.getTransactions(user.clientId);
-      const txs = response.data?.transactions || [];
+      const response = await transactionService.getTransactions(user.clientId, 50, 0);
+      const txs = response.data?.data?.data ?? response.data?.transactions ?? [];
 
       const mapped: TransactionItem[] = txs.map((t: any) => ({
         id: t.id,

@@ -70,9 +70,9 @@ export default function DashboardScreen() {
         }
       }
 
-      // Fetch transactions
-      const txRes = await transactionService.getTransactions(clientId);
-      const txs = (txRes.data?.transactions || []).slice(0, 5);
+      // Fetch transactions with correct parameters (limit: 5 for dashboard preview)
+      const txRes = await transactionService.getTransactions(clientId, 5, 0);
+      const txs = (txRes.data?.data?.data ?? txRes.data?.transactions ?? []).slice(0, 5);
       setTransactions(txs);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);

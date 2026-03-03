@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { authService } from '../api/authService';
 import storage from '@/src/utils/storage';
+import { hasVaultOtpToken } from '@/src/api/index';
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -16,11 +17,43 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<AuthContextType['user']>(null);
+  const tokenCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Boot up: check if user is already logged in
   useEffect(() => {
     bootstrapAsync();
   }, []);
+
+  // Periodically check token validity and force logout when expired
+  useEffect(() => {
+    if (!user) {
+      // Not logged in, no need to check
+      if (tokenCheckIntervalRef.current) {
+        clearInterval(tokenCheckIntervalRef.current);
+        tokenCheckIntervalRef.current = null;
+      }
+      return;
+    }
+
+    // Check token every 30 seconds
+    if (!tokenCheckIntervalRef.current) {
+      tokenCheckIntervalRef.current = setInterval(async () => {
+        const hasValid = await hasVaultOtpToken();
+        if (!hasValid && user) {
+          // Token expired, force logout
+          console.warn('[AuthContext] Token expired, logging out user');
+          await logout();
+        }
+      }, 30000);
+    }
+
+    return () => {
+      if (tokenCheckIntervalRef.current) {
+        clearInterval(tokenCheckIntervalRef.current);
+        tokenCheckIntervalRef.current = null;
+      }
+    };
+  }, [user]);
 
   const bootstrapAsync = async () => {
     try {
@@ -55,6 +88,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     setIsLoading(true);
     try {
+      // Clean up token check interval
+      if (tokenCheckIntervalRef.current) {
+        clearInterval(tokenCheckIntervalRef.current);
+        tokenCheckIntervalRef.current = null;
+      }
       await authService.logout();
       setUser(null);
     } catch (err) {

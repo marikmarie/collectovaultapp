@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/context/AuthContext';
 import { transactionService, invoiceService } from '@/src/api/collecto';
+import storage from '@/src/utils/storage';
 
 interface TransactionItem {
   id: string;
@@ -46,8 +47,8 @@ export default function StatementScreen() {
     if (!user?.clientId) return;
 
     try {
-      const response = await transactionService.getTransactions(user.clientId);
-      const txs = response.data?.transactions || [];
+      const response = await transactionService.getTransactions(user.clientId, 50, 0);
+      const txs = response.data?.data?.data ?? response.data?.transactions ?? [];
       setTransactions(txs);
     } catch (err) {
       console.error('Error fetching transactions:', err);
@@ -59,15 +60,33 @@ export default function StatementScreen() {
     if (!user?.clientId) return;
 
     try {
-      const response = await invoiceService.getInvoices(user.clientId);
-      const invs = response.data?.data?.data || response.data?.data || [];
+      const vaultOTPToken = await storage.getItem('vaultOtpToken');
+      const collectoId = await storage.getItem('collectoId');
+      
+      const response = await invoiceService.getInvoices({
+        vaultOTPToken: vaultOTPToken || undefined,
+        clientId: user.clientId,
+        collectoId: collectoId || undefined,
+        invoiceId: null,
+      });
+
+      const innerData = response.data?.data?.data || response.data?.data;
+      let invs: InvoiceItem[] = [];
+      
+      if (Array.isArray(innerData)) {
+        invs = innerData;
+      } else if (innerData && typeof innerData === 'object' && innerData.details) {
+        invs = [innerData];
+      } else {
+        invs = [];
+      }
       
       // Sort by date descending
-      const sorted = Array.isArray(invs) ? invs.sort((a: InvoiceItem, b: InvoiceItem) => {
+      const sorted = invs.sort((a: InvoiceItem, b: InvoiceItem) => {
         const dateA = new Date(a.details?.invoice_date || 0).getTime();
         const dateB = new Date(b.details?.invoice_date || 0).getTime();
         return dateB - dateA;
-      }) : [];
+      });
 
       setInvoices(sorted);
     } catch (err) {

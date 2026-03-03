@@ -2,9 +2,9 @@ import api from './index';
 import storage from '@/src/utils/storage';
 
 export const transactionService = {
-  // Get customer transactions/history
-  getTransactions: (clientId: string) =>
-    api.get(`/customers/${clientId}/transactions`),
+  // Get customer transactions/history - matches web app pattern
+  getTransactions: (customerId: string, limit: number = 50, offset: number = 0) =>
+    api.post('/transactions', { customerId, limit, offset }),
 
   // Redeem points for an offer
   redeemPoints: (customerId: string, payload: { offerId: string }) =>
@@ -16,15 +16,19 @@ export const transactionService = {
 };
 
 export const invoiceService = {
-  // Get customer invoices
-  getInvoices: (clientId: string, page?: number) =>
-    api.get(`/customers/${clientId}/invoices`, { params: { page } }),
+  // Get customer invoices - matches web app pattern using /invoiceDetails POST endpoint
+  getInvoices: (payload: {
+    vaultOTPToken?: string;
+    clientId?: string;
+    collectoId?: string;
+    invoiceId?: string | null;
+  }) => api.post('/invoiceDetails', payload),
 
   // Get invoice details
   getInvoiceDetails: (invoiceId: string) =>
     api.get(`/invoices/${invoiceId}`),
 
   // Pay an invoice
-  payInvoice: (invoiceId: string, payload: any) =>
-    api.post(`/invoices/${invoiceId}/pay`, payload),
+  payInvoice: (payload: any) =>
+    api.post('/requestToPay', payload),
 };
