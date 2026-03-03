@@ -6,7 +6,7 @@ interface AuthContextType {
   isLoggedIn: boolean;
   isLoading: boolean;
   user: { clientId: string; collectoId: string | null; userName?: string | null } | null;
-  login: (clientId: string) => Promise<void>;
+  login: (username: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -33,12 +33,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (clientId: string) => {
+  const login = async (username: string) => {
     setIsLoading(true);
     try {
-      // After OTP verification, fetch user data and set logged in state
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
+      const result = await authService.loginByUsername({
+        username,
+        type: 'client',
+      });
+      // After login, refresh user data
+      await refreshUser();
     } catch (err) {
       console.error('Login failed:', err);
       throw err;
@@ -46,6 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }
   };
+
+
 
   const logout = async () => {
     setIsLoading(true);
