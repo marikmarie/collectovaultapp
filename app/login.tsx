@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Modal,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/context/AuthContext';
@@ -67,6 +68,7 @@ export default function LoginScreen() {
       // Try as client ID
       const { id, type } = buildAuthPayload(resolvedId);
       const res = await authService.startCollectoAuth({ type, id });
+      console.log('Auth response:', res);
       const inner = res?.data ?? null;
 
       const returnedToken = inner?.data?.vaultOTPToken ?? inner?.vaultOTPToken ?? null;
@@ -155,7 +157,12 @@ export default function LoginScreen() {
       >
         {/* Logo & Header */}
         <View style={styles.logoSection}>
-          <Text style={styles.logoText}>CollectoVault</Text>
+          {/* replace the Text logo with an Image. put your logo file under assets/images and adjust the require path accordingly */}
+          <Image
+            source={require('../assets/images/react-logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
           <Text style={styles.tagline}>Earn & Thrive</Text>
         </View>
 
@@ -385,11 +392,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
+  /* old text logo style commented out in case it is needed later
   logoText: {
     fontSize: 28,
     fontWeight: '700',
     color: '#1a1a1a',
     marginBottom: 4,
+  },*/
+  logoImage: {
+    width: 120,
+    height: 120,
+    marginBottom: 8,
   },
   tagline: {
     fontSize: 10,
