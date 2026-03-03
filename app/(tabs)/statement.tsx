@@ -285,26 +285,25 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700',
     color: '#333',
   },
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    marginBottom: 1,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 14,
     alignItems: 'center',
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
@@ -313,93 +312,97 @@ const styles = StyleSheet.create({
     borderBottomColor: '#d81b60',
   },
   tabText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: '#999',
+    textTransform: 'uppercase',
   },
   tabTextActive: {
     color: '#d81b60',
   },
   listContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingTop: 12,
-    paddingBottom: 100,
+    paddingBottom: 80,
   },
-  transactionCard: {
+  itemCard: {
     flexDirection: 'row',
     paddingVertical: 12,
     paddingHorizontal: 12,
-    marginBottom: 8,
+    marginBottom: 10,
     backgroundColor: '#fff',
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#f0f0f0',
     alignItems: 'flex-start',
   },
-  transactionIcon: {
+  itemIcon: {
     width: 48,
     height: 48,
-    borderRadius: 8,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
-    marginTop: 2,
+    backgroundColor: '#f0f0f0',
   },
   iconText: {
-    fontSize: 24,
+    fontSize: 20,
   },
-  transactionContent: {
+  itemContent: {
     flex: 1,
   },
-  transactionDesc: {
-    fontSize: 14,
-    fontWeight: '600',
+  itemTitle: {
+    fontSize: 13,
+    fontWeight: '700',
     color: '#333',
-    marginBottom: 2,
-  },
-  transactionId: {
-    fontSize: 10,
-    color: '#999',
+    marginBottom: 4,
     fontFamily: 'monospace',
-    marginBottom: 6,
   },
-  transactionFooter: {
+  itemMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+    marginBottom: 6,
   },
-  transactionDate: {
-    fontSize: 10,
+  itemDate: {
+    fontSize: 11,
     color: '#999',
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
+  itemMetaSeparator: {
+    fontSize: 11,
+    color: '#ddd',
   },
-  statusText: {
+  itemStatus: {
     fontSize: 9,
-    fontWeight: '600',
+    fontWeight: '700',
     textTransform: 'uppercase',
   },
-  transactionValue: {
-    alignItems: 'flex-end',
+  itemSubtext: {
+    fontSize: 11,
+    color: '#666',
+    marginTop: 2,
   },
-  transactionPoints: {
-    fontSize: 14,
+  itemRight: {
+    alignItems: 'flex-end',
+    marginLeft: 8,
+  },
+  itemAmount: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#333',
+  },
+  itemPoints: {
+    fontSize: 12,
     fontWeight: '700',
     color: '#d81b60',
     marginBottom: 2,
-  },
-  transactionAmount: {
-    fontSize: 12,
-    color: '#999',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 60,
+    minHeight: 300,
   },
   emptyIcon: {
     fontSize: 48,

@@ -13,7 +13,12 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
+        headerShown: true,
+        headerTitle: 'Collecto Vault',
+        headerTitleStyle: {
+          fontSize: 18,
+          fontWeight: '700',
+        },
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
