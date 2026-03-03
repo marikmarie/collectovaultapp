@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 type StorageLike = {
   getItem: (key: string) => Promise<string | null>;
   setItem: (key: string, value: string) => Promise<void>;
@@ -14,7 +16,8 @@ try {
 } catch (e) {
   SecureStore = null;
 }
-
+console.log('Platform:', Platform.OS);
+console.log('SecureStore:', SecureStore);
 const inMemory = new Map<string, string>();
 
 const isSecureAvailable = () => SecureStore && typeof SecureStore.getItemAsync === 'function';
