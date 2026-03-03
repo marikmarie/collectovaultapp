@@ -110,3 +110,9 @@ const storage: StorageLike = {
 };
 
 export default storage;
+
+// Named helpers to provide guaranteed function exports for TypeScript callers
+export const getItem = (key: string) => storage.getItem(key);
+export const setItem = (key: string, value: string) => storage.setItem(key, value);
+export const removeItem = (key: string) => storage.removeItem(key);
+export const clearStorage = () => storage.clear();

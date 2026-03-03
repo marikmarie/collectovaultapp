@@ -1,5 +1,5 @@
 import api, { setVaultOtpToken } from './index';
-import storage from '@/src/utils/storage';
+import storage, { setItem, removeItem, getItem } from '@/src/utils/storage';
 
 export const authService = {
   startCollectoAuth: async (payload: {
@@ -29,9 +29,9 @@ export const authService = {
 
     if (userData) {
       const { id, collectoId, userName } = userData;
-      await storage.setItem('clientId', id);
-      await storage.setItem('collectoId', collectoId.toString());
-      await storage.setItem('userName', userName);
+      await setItem('clientId', id);
+      await setItem('collectoId', collectoId.toString());
+      await setItem('userName', userName);
     }
 
     return data;
@@ -48,7 +48,7 @@ export const authService = {
     try {
       const resp = await api.post('/setUsername', payload);
       if (resp.data.success) {
-        await storage.setItem('userName', payload.username);
+        await setItem('userName', payload.username);
       }
       return resp.data;
     } catch (error: any) {
@@ -101,11 +101,11 @@ export const authService = {
    */
   logout: async () => {
     await Promise.all([
-      storage.removeItem('clientId'),
-      storage.removeItem('collectoId'),
-      storage.removeItem('userName'),
-      storage.removeItem('vaultOtpToken'),
-      storage.removeItem('vaultOtpExpiresAt'),
+      removeItem('clientId'),
+      removeItem('collectoId'),
+      removeItem('userName'),
+      removeItem('vaultOtpToken'),
+      removeItem('vaultOtpExpiresAt'),
     ]);
   },
 
@@ -134,9 +134,9 @@ export const authService = {
     }
 
     try {
-      const clientId = await storage.getItem('clientId');
-      const collectoId = await storage.getItem('collectoId');
-      const userName = await storage.getItem('userName');
+      const clientId = await getItem('clientId');
+      const collectoId = await getItem('collectoId');
+      const userName = await getItem('userName');
 
       if (!clientId) return null;
       return { clientId, collectoId, userName };

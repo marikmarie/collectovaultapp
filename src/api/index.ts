@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
-import storage from '@/src/utils/storage';
+import storage, { getItem, setItem, removeItem } from '@/src/utils/storage';
 
 // determine base url - on android emulator localhost must be 10.0.2.2
 let API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || '';
@@ -26,21 +26,21 @@ export async function setVaultOtpToken(token: string, expiresAt?: string) {
   if (!token || typeof token !== 'string' || token.trim() === '') {
     throw new Error('setVaultOtpToken: token must be a non-empty string');
   }
-  await storage.setItem('vaultOtpToken', token);
+  await setItem('vaultOtpToken', token);
   if (expiresAt) {
     const t = Date.parse(expiresAt);
     if (!Number.isFinite(t)) {
       throw new Error('setVaultOtpToken: expiresAt must be a valid date string');
     }
-    await storage.setItem('vaultOtpExpiresAt', new Date(t).toISOString());
+    await setItem('vaultOtpExpiresAt', new Date(t).toISOString());
   } else {
-    await storage.removeItem('vaultOtpExpiresAt');
+    await removeItem('vaultOtpExpiresAt');
   }
 }
 
 export async function clearVaultOtpToken() {
-  await storage.removeItem('vaultOtpToken');
-  await storage.removeItem('vaultOtpExpiresAt');
+  await removeItem('vaultOtpToken');
+  await removeItem('vaultOtpExpiresAt');
 }
 
 export async function hasVaultOtpToken(): Promise<boolean> {
@@ -48,9 +48,9 @@ export async function hasVaultOtpToken(): Promise<boolean> {
     // storage unavailable
     return false;
   }
-  const token = await storage.getItem('vaultOtpToken');
+  const token = await getItem('vaultOtpToken');
   if (!token) return false;
-  const expiry = await storage.getItem('vaultOtpExpiresAt');
+  const expiry = await getItem('vaultOtpExpiresAt');
   if (!expiry) return true;
   const exp = Date.parse(expiry);
   if (!Number.isFinite(exp)) {
@@ -65,9 +65,9 @@ export async function hasVaultOtpToken(): Promise<boolean> {
 }
 
 export async function getVaultOtpToken(): Promise<string> {
-  const token = await storage.getItem('vaultOtpToken');
+  const token = await getItem('vaultOtpToken');
   if (!token) throw new Error('Vault OTP token not found');
-  const expiry = await storage.getItem('vaultOtpExpiresAt');
+  const expiry = await getItem('vaultOtpExpiresAt');
   if (expiry) {
     const exp = Date.parse(expiry);
     if (!Number.isFinite(exp)) {
