@@ -8,14 +8,12 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
-  Modal,
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/context/AuthContext';
 import { authService } from '@/src/api/authService';
 import { setVaultOtpToken, getVaultOtpToken } from '@/src/api';
-import SetUsernameModal from './SetUsernameModal';
 
 type LoginStep = 'id_entry' | 'otp_entry';
 
@@ -34,9 +32,6 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingPayload, setPendingPayload] = useState<PendingPayload | null>(null);
-  const [showClientIdDialog, setShowClientIdDialog] = useState(false);
-  const [showSetUsernameModal, setShowSetUsernameModal] = useState(false);
-  const [clientIdForUsername, setClientIdForUsername] = useState('');
 
   const buildAuthPayload = (id: string) => {
     return { type: 'client' as const, id };
@@ -111,11 +106,13 @@ export default function LoginScreen() {
         vaultOTPToken: pendingPayload!.vaultOTPToken!,
       };
 
+      // Verify OTP with the API
       await authService.verifyCollectoOtp(verifyPayload);
-      // Auth context will handle navigation
+      
+      // Login and navigate to dashboard
       await login(pendingPayload!.id);
     } catch (err: any) {
-      setError('Verification failed. Please try again.');
+      setError(err?.message || 'Verification failed. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -133,20 +130,6 @@ export default function LoginScreen() {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const handleSetUsernameClick = () => {
-    setShowClientIdDialog(true);
-    setClientIdForUsername('');
-  };
-
-  const handleClientIdSubmit = () => {
-    if (clientIdForUsername.trim().length < 3) {
-      setError('Please enter a valid client ID');
-      return;
-    }
-    setShowClientIdDialog(false);
-    setShowSetUsernameModal(true);
   };
 
   return (
@@ -232,14 +215,6 @@ export default function LoginScreen() {
                   </>
                 )}
               </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={handleSetUsernameClick}
-              >
-                <Text style={styles.secondaryButtonIcon}>👤</Text>
-                <Text style={styles.secondaryButtonText}>Create Username</Text>
-              </TouchableOpacity>
             </View>
           ) : (
             // OTP Entry Step
@@ -304,75 +279,6 @@ export default function LoginScreen() {
         {/* Footer */}
         <Text style={styles.footer}>© 2026 CollectoVault</Text>
       </ScrollView>
-
-      {/* Client ID Dialog Modal */}
-      <Modal
-        visible={showClientIdDialog}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowClientIdDialog(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Enter Client ID</Text>
-            <Text style={styles.modalDescription}>
-              Please enter your client ID to create a username
-            </Text>
-
-            {error && (
-              <View style={styles.modalErrorBox}>
-                <Text style={styles.modalErrorText}>{error}</Text>
-              </View>
-            )}
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g., 324CV38"
-              placeholderTextColor="#999"
-              value={clientIdForUsername}
-              onChangeText={(text) => {
-                setClientIdForUsername(text);
-                setError('');
-              }}
-              autoCapitalize="none"
-              autoFocus
-            />
-
-            <View style={styles.modalButtonContainer}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => {
-                  setShowClientIdDialog(false);
-                  setClientIdForUsername('');
-                  setError('');
-                }}
-              >
-                <Text style={styles.modalCancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.modalConfirmButton}
-                onPress={handleClientIdSubmit}
-              >
-                <Text style={styles.modalConfirmButtonText}>Continue</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Username creation modal */}
-      <SetUsernameModal
-        isOpen={showSetUsernameModal}
-        existingUsername={undefined}
-        clientId={clientIdForUsername}
-        onClose={() => setShowSetUsernameModal(false)}
-        onSuccess={(uname) => {
-          setShowSetUsernameModal(false);
-          setClientIdForUsername('');
-          setError(`Username "${uname}" created successfully!`);
-        }}
-      />
     </SafeAreaView>
   );
 }
@@ -529,26 +435,6 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.6,
   },
-  secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-    backgroundColor: '#F8E9F1',
-    borderWidth: 1,
-    borderColor: '#E8C5D8',
-    gap: 8,
-  },
-  secondaryButtonIcon: {
-    fontSize: 16,
-  },
-  secondaryButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#D81B60',
-  },
   secondaryActionsContainer: {
     gap: 16,
     marginTop: 16,
@@ -572,89 +458,5 @@ const styles = StyleSheet.create({
     color: '#ccc',
     textAlign: 'center',
     letterSpacing: 0.4,
-  },
-  // Modal styles
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 24,
-    width: '100%',
-    maxWidth: 360,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.2,
-    shadowRadius: 50,
-    elevation: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1a1a1a',
-    marginBottom: 8,
-  },
-  modalDescription: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 16,
-  },
-  modalErrorBox: {
-    backgroundColor: '#FEE2E2',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-  },
-  modalErrorText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#991B1B',
-  },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: '#e5e5e5',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 13,
-    fontWeight: '500',
-    backgroundColor: '#fafafa',
-    marginBottom: 16,
-    color: '#1a1a1a',
-  },
-  modalButtonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalCancelButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
-  },
-  modalCancelButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#666',
-  },
-  modalConfirmButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: '#d0d0d0',
-    alignItems: 'center',
-  },
-  modalConfirmButtonText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#000',
   },
 });

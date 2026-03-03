@@ -6,8 +6,7 @@ interface AuthContextType {
   isLoggedIn: boolean;
   isLoading: boolean;
   user: { clientId: string; collectoId: string | null; userName?: string | null } | null;
-  login: (username: string) => Promise<void>;
-  loginWithOtp: (id: string, otp: string, collectoId?: string) => Promise<void>;
+  login: (clientId: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -34,35 +33,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (username: string) => {
+  const login = async (clientId: string) => {
     setIsLoading(true);
     try {
-      const result = await authService.loginByUsername({
-        username,
-        type: 'client',
-      });
-      // After login, refresh user data
-      await refreshUser();
+      // After OTP verification, fetch user data and set logged in state
+      const currentUser = await authService.getCurrentUser();
+      setUser(currentUser);
     } catch (err) {
       console.error('Login failed:', err);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loginWithOtp = async (id: string, otp: string, collectoId?: string) => {
-    setIsLoading(true);
-    try {
-      const result = await authService.verifyCollectoOtp({
-        id,
-        type: 'client',
-        vaultOTP: otp,
-        vaultOTPToken: undefined,
-      });
-      await refreshUser();
-    } catch (err) {
-      console.error('OTP verification failed:', err);
       throw err;
     } finally {
       setIsLoading(false);
@@ -96,7 +74,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     user,
     login,
-    loginWithOtp,
     logout,
     refreshUser,
   };
