@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/context/AuthContext';
-import { transactionService } from '@/src/api/collecto';
+import { transactionService, invoiceService } from '@/src/api/collecto';
 
 interface TransactionItem {
   id: string;
@@ -23,43 +23,75 @@ interface TransactionItem {
   transactionId?: string;
 }
 
+interface InvoiceItem {
+  id?: string;
+  details?: {
+    id: string;
+    invoice_date: string;
+    invoice_amount: number;
+  };
+  amount_less: number;
+  pointsEquivalent?: number;
+}
+
 export default function StatementScreen() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'all' | 'earned' | 'spent'>('all');
+  const [activeTab, setActiveTab] = useState<'invoices' | 'transactions'>('invoices');
 
   const fetchTransactions = useCallback(async () => {
     if (!user?.clientId) return;
 
     try {
-      setLoading(true);
       const response = await transactionService.getTransactions(user.clientId);
       const txs = response.data?.transactions || [];
       setTransactions(txs);
     } catch (err) {
       console.error('Error fetching transactions:', err);
       Alert.alert('Error', 'Failed to fetch transaction history');
-    } finally {
-      setLoading(false);
+    }
+  }, [user?.clientId]);
+
+  const fetchInvoices = useCallback(async () => {
+    if (!user?.clientId) return;
+
+    try {
+      const response = await invoiceService.getInvoices(user.clientId);
+      const invs = response.data?.data?.data || response.data?.data || [];
+      
+      // Sort by date descending
+      const sorted = Array.isArray(invs) ? invs.sort((a: InvoiceItem, b: InvoiceItem) => {
+        const dateA = new Date(a.details?.invoice_date || 0).getTime();
+        const dateB = new Date(b.details?.invoice_date || 0).getTime();
+        return dateB - dateA;
+      }) : [];
+
+      setInvoices(sorted);
+    } catch (err) {
+      console.error('Error fetching invoices:', err);
+      Alert.alert('Error', 'Failed to fetch invoices');
     }
   }, [user?.clientId]);
 
   useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        await Promise.all([fetchInvoices(), fetchTransactions()]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [fetchInvoices, fetchTransactions]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchTransactions().finally(() => setRefreshing(false));
-  }, [fetchTransactions]);
-
-  const filteredTransactions = transactions.filter((tx) => {
-    if (activeTab === 'earned') return tx.points > 0;
-    if (activeTab === 'spent') return tx.points < 0;
-    return true;
-  });
+    Promise.all([fetchInvoices(), fetchTransactions()]).finally(() => setRefreshing(false));
+  }, [fetchInvoices, fetchTransactions]);
 
   const getTransactionIcon = (tx: TransactionItem) => {
     const isInvoice = tx.reference === 'INVOICE_PURCHASE';
@@ -69,6 +101,21 @@ export default function StatementScreen() {
   const getTransactionColor = (tx: TransactionItem) => {
     const isInvoice = tx.reference === 'INVOICE_PURCHASE';
     return isInvoice ? '#e3f2fd' : '#e8f5e9';
+  };
+
+  const getInvoiceStatusColor = (invoice: InvoiceItem) => {
+    const isPaid = Number(invoice.amount_less) === 0;
+    return isPaid ? '#e8f5e9' : '#ffebee';
+  };
+
+  const getInvoiceStatusText = (invoice: InvoiceItem) => {
+    const isPaid = Number(invoice.amount_less) === 0;
+    return isPaid ? 'PAID' : 'PENDING';
+  };
+
+  const getInvoiceStatusTextColor = (invoice: InvoiceItem) => {
+    const isPaid = Number(invoice.amount_less) === 0;
+    return isPaid ? '#2e7d32' : '#c62828';
   };
 
   if (loading) {
@@ -86,74 +133,110 @@ export default function StatementScreen() {
         <Text style={styles.headerTitle}>Statement</Text>
       </View>
 
-      {/* Tab Filter */}
+      {/* Tab Navigation */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'all' && styles.tabActive]}
-          onPress={() => setActiveTab('all')}
+          style={[styles.tab, activeTab === 'invoices' && styles.tabActive]}
+          onPress={() => setActiveTab('invoices')}
         >
-          <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>
-            All Transactions
+          <Text style={[styles.tabText, activeTab === 'invoices' && styles.tabTextActive]}>
+            Invoices
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'earned' && styles.tabActive]}
-          onPress={() => setActiveTab('earned')}
+          style={[styles.tab, activeTab === 'transactions' && styles.tabActive]}
+          onPress={() => setActiveTab('transactions')}
         >
-          <Text style={[styles.tabText, activeTab === 'earned' && styles.tabTextActive]}>
-            Earned
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'spent' && styles.tabActive]}
-          onPress={() => setActiveTab('spent')}
-        >
-          <Text style={[styles.tabText, activeTab === 'spent' && styles.tabTextActive]}>
-            Spent
+          <Text style={[styles.tabText, activeTab === 'transactions' && styles.tabTextActive]}>
+            Transactions
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Transactions List */}
-      <FlatList
-        data={filteredTransactions}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item: tx }) => {
-          const isInvoice = tx.reference === 'INVOICE_PURCHASE';
-          const isConfirmed = ['success', 'confirmed'].includes(
-            (tx.paymentStatus || '').toLowerCase()
-          );
+      {/* Content */}
+      {activeTab === 'invoices' ? (
+        <FlatList
+          data={invoices}
+          keyExtractor={(item) => item.details?.id || item.id || Math.random().toString()}
+          renderItem={({ item: invoice }) => {
+            const invId = invoice.details?.id || 'N/A';
+            const dateRaw = invoice.details?.invoice_date || 'N/A';
+            const amount = Number(invoice.details?.invoice_amount || 0);
+            const isPaid = Number(invoice.amount_less) === 0;
 
-          return (
-            <View style={styles.transactionCard}>
+            return (
               <View
                 style={[
-                  styles.transactionIcon,
-                  { backgroundColor: getTransactionColor(tx) },
+                  styles.itemCard,
+                  { backgroundColor: getInvoiceStatusColor(invoice) },
                 ]}
               >
-                <Text style={styles.iconText}>{getTransactionIcon(tx)}</Text>
-              </View>
-              <View style={styles.transactionContent}>
-                <Text style={styles.transactionDesc}>
-                  {isInvoice ? 'Earned from Service' : 'Points Purchase'}
-                </Text>
-                <Text style={styles.transactionId}>{tx.transactionId}</Text>
-                <View style={styles.transactionFooter}>
-                  <Text style={styles.transactionDate}>
-                    {new Date(tx.createdAt).toLocaleDateString()}
+                <View style={styles.itemIcon}>
+                  <Text style={styles.iconText}>📥</Text>
+                </View>
+                <View style={styles.itemContent}>
+                  <Text style={styles.itemTitle}>{invId}</Text>
+                  <View style={styles.itemMeta}>
+                    <Text style={styles.itemDate}>{dateRaw}</Text>
+                    <Text style={styles.itemMetaSeparator}>•</Text>
+                    <Text style={[styles.itemStatus, { color: getInvoiceStatusTextColor(invoice) }]}>
+                      {getInvoiceStatusText(invoice)}
+                    </Text>
+                  </View>
+                  <Text style={styles.itemSubtext}>
+                    UGX {Number(amount).toLocaleString()}
                   </Text>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      {
-                        backgroundColor: isConfirmed ? '#e8f5e9' : '#fff3e0',
-                      },
-                    ]}
-                  >
+                </View>
+                <View style={styles.itemRight}>
+                  <Text style={styles.itemAmount}>
+                    UGX {Number(amount).toLocaleString()}
+                  </Text>
+                </View>
+              </View>
+            );
+          }}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyIcon}>📋</Text>
+              <Text style={styles.emptyText}>No invoices found</Text>
+            </View>
+          }
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#d81b60" />
+          }
+          contentContainerStyle={styles.listContent}
+        />
+      ) : (
+        <FlatList
+          data={transactions}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item: tx }) => {
+            const isConfirmed = ['success', 'confirmed'].includes(
+              (tx.paymentStatus || '').toLowerCase()
+            );
+
+            return (
+              <View style={styles.itemCard}>
+                <View
+                  style={[
+                    styles.itemIcon,
+                    { backgroundColor: getTransactionColor(tx) },
+                  ]}
+                >
+                  <Text style={styles.iconText}>{getTransactionIcon(tx)}</Text>
+                </View>
+                <View style={styles.itemContent}>
+                  <Text style={styles.itemTitle}>
+                    {tx.transactionId}
+                  </Text>
+                  <View style={styles.itemMeta}>
+                    <Text style={styles.itemDate}>
+                      {new Date(tx.createdAt).toLocaleDateString()}
+                    </Text>
+                    <Text style={styles.itemMetaSeparator}>•</Text>
                     <Text
                       style={[
-                        styles.statusText,
+                        styles.itemStatus,
                         {
                           color: isConfirmed ? '#2e7d32' : '#e65100',
                         },
@@ -163,29 +246,29 @@ export default function StatementScreen() {
                     </Text>
                   </View>
                 </View>
+                <View style={styles.itemRight}>
+                  <Text style={styles.itemPoints}>
+                    {tx.points > 0 ? '+' : ''}{tx.points.toLocaleString()} pts
+                  </Text>
+                  <Text style={styles.itemAmount}>
+                    {(tx.amount || 0).toLocaleString()} UGX
+                  </Text>
+                </View>
               </View>
-              <View style={styles.transactionValue}>
-                <Text style={styles.transactionPoints}>
-                  {tx.points > 0 ? '+' : ''}{tx.points.toLocaleString()} pts
-                </Text>
-                <Text style={styles.transactionAmount}>
-                  {(tx.amount || 0).toLocaleString()} UGX
-                </Text>
-              </View>
+            );
+          }}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyIcon}>📋</Text>
+              <Text style={styles.emptyText}>No transactions found</Text>
             </View>
-          );
-        }}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📋</Text>
-            <Text style={styles.emptyText}>No transactions found</Text>
-          </View>
-        }
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#d81b60" />
-        }
-        contentContainerStyle={styles.listContent}
-      />
+          }
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#d81b60" />
+          }
+          contentContainerStyle={styles.listContent}
+        />
+      )}
     </SafeAreaView>
   );
 }

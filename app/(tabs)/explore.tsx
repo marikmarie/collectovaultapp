@@ -176,7 +176,7 @@ export default function ServicesScreen() {
               <Image
                 source={{ uri: service.photo }}
                 style={styles.serviceImage}
-                defaultSource={require('@/assets/images/placeholder.png')}
+                defaultSource={require('@/assets/images/logo.png')}
               />
             ) : (
               <View style={[styles.serviceImage, styles.servicePlaceholder]}>
