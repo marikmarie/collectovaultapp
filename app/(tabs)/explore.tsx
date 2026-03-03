@@ -3,17 +3,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '@/src/context/AuthContext';
 
-export default function MoreScreen() {
+export default function ServicesScreen() {
   const router = useRouter();
   const { logout } = useAuth();
 
-  const menuItems = [
-    { label: 'Dashboard', href: '/(tabs)', icon: '🏠' },
-    { label: 'Services', href: '/services', icon: '🛍️' },
-    { label: 'Transaction History', href: '/statement', icon: '📊' },
-    { label: 'Buy Points', href: '/buy-points', icon: '💳' },
-    { label: 'Redeem Points', href: '/spend-points', icon: '🎁' },
-    { label: 'Tier Benefits', href: '/tier-details', icon: '👑' },
+  const serviceItems = [
+    { label: 'Buy Points', href: '/buy-points', icon: '💳', description: 'Purchase additional points' },
+    { label: 'Redeem Points', href: '/spend-points', icon: '🎁', description: 'Redeem your points for rewards' },
+    { label: 'Tier Benefits', href: '/tier-details', icon: '👑', description: 'Explore membership tiers' },
+    { label: 'All Services', href: '/services', icon: '🛍️', description: 'Browse all available services' },
   ] as const;
 
   const handleLogout = async () => {
@@ -28,17 +26,18 @@ export default function MoreScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>Menu</Text>
-          <Text style={styles.subtitle}>Quick Access</Text>
+          <Text style={styles.title}>Services</Text>
+          <Text style={styles.subtitle}>Manage your rewards</Text>
         </View>
 
         <View style={styles.menuSection}>
-          {menuItems.map((item) => (
+          {serviceItems.map((item) => (
             <Link key={item.label} href={item.href} asChild>
               <TouchableOpacity style={styles.menuItem}>
                 <Text style={styles.menuIcon}>{item.icon}</Text>
                 <View style={styles.menuLabel}>
                   <Text style={styles.menuText}>{item.label}</Text>
+                  <Text style={styles.menuDescription}>{item.description}</Text>
                 </View>
                 <Text style={styles.menuArrow}>›</Text>
               </TouchableOpacity>
@@ -109,6 +108,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#1a1a1a',
+  },
+  menuDescription: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 4,
   },
   menuArrow: {
     fontSize: 18,
