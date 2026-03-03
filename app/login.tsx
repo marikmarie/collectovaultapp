@@ -159,7 +159,7 @@ export default function LoginScreen() {
         <View style={styles.logoSection}>
           {/* replace the Text logo with an Image. put your logo file under assets/images and adjust the require path accordingly */}
           <Image
-            source={require('../assets/images/react-logo.png')}
+            source={require('../assets/images/logo.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />
