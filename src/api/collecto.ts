@@ -16,10 +16,6 @@ export const transactionService = {
 };
 
 export const invoiceService = {
-  // Create a new invoice
-  createInvoice: (payload: any) =>
-    api.post('/invoice', payload),
-
   // Get customer invoices - matches web app pattern using /invoiceDetails POST endpoint
   getInvoices: (payload: {
     vaultOTPToken?: string;
