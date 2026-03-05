@@ -62,6 +62,9 @@ export default function ServicesScreen() {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
+  // Filter dropdown
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+
   // Toast notifications
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -277,37 +280,50 @@ export default function ServicesScreen() {
             onChangeText={setSearchQuery}
           />
         </View>
+        
+        {/* Category Dropdown */}
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setFilterDropdownOpen(!filterDropdownOpen)}
+        >
+          <Feather name="filter" size={18} color="#d81b60" />
+          <Text style={styles.filterButtonText}>{selectedCategory}</Text>
+          <Feather name={filterDropdownOpen ? "chevron-up" : "chevron-down"} size={16} color="#d81b60" />
+        </TouchableOpacity>
       </View>
 
-      {/* Category Dropdown Filter */}
-      {categories.length > 1 && (
-        <View style={styles.filterDropdownContainer}>
-          <Text style={styles.filterLabel}>Category</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.dropdownButtonsContainer}
-          >
-            {categories.map((cat) => (
+      {/* Category Dropdown Modal */}
+      {filterDropdownOpen && (
+        <View style={styles.dropdownContainer}>
+          <FlatList
+            data={categories}
+            scrollEnabled={categories.length > 6}
+            keyExtractor={(cat) => cat}
+            renderItem={({ item: cat }) => (
               <TouchableOpacity
-                key={cat}
                 style={[
-                  styles.filterButton,
-                  selectedCategory === cat && styles.filterButtonActive,
+                  styles.dropdownItem,
+                  selectedCategory === cat && styles.dropdownItemActive,
                 ]}
-                onPress={() => setSelectedCategory(cat)}
+                onPress={() => {
+                  setSelectedCategory(cat);
+                  setFilterDropdownOpen(false);
+                }}
               >
                 <Text
                   style={[
-                    styles.filterButtonText,
-                    selectedCategory === cat && styles.filterButtonTextActive,
+                    styles.dropdownItemText,
+                    selectedCategory === cat && styles.dropdownItemTextActive,
                   ]}
                 >
                   {cat}
                 </Text>
+                {selectedCategory === cat && (
+                  <Feather name="check" size={16} color="#d81b60" />
+                )}
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            )}
+          />
         </View>
       )}
 
@@ -410,25 +426,6 @@ export default function ServicesScreen() {
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       />
-
-      {/* Floating Cart Button */}
-      {cartCount > 0 && (
-        <TouchableOpacity
-          style={styles.floatingCartBtn}
-          onPress={() => setCartOpen(true)}
-        >
-          <View style={styles.floatingCartContent}>
-            <Feather name="shopping-cart" size={20} color="#fff" />
-            <View style={styles.floatingCartInfo}>
-              <Text style={styles.floatingCartCount}>{cartCount} items</Text>
-              <Text style={styles.floatingCartTotal}>
-                UGX {cartTotal.toLocaleString()}
-              </Text>
-            </View>
-          </View>
-          <Feather name="chevron-right" size={20} color="#fff" />
-        </TouchableOpacity>
-      )}
 
       {/* Service Detail Modal */}
       <Modal visible={detailOpen} transparent animationType="slide">
@@ -615,8 +612,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   searchWrapper: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
@@ -631,6 +632,52 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: '#1a1a1a',
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    marginLeft: 8,
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    maxWidth: 100,
+  },
+  dropdownContainer: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    maxHeight: 300,
+    zIndex: 1000,
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dropdownItemActive: {
+    backgroundColor: '#f5f0f5',
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+  },
+  dropdownItemTextActive: {
+    fontWeight: '700',
+    color: '#d81b60',
   },
   categoryTabs: {
     backgroundColor: '#fff',
@@ -658,45 +705,6 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   categoryTabTextActive: {
-    color: '#fff',
-  },
-  filterDropdownContainer: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  filterLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#666',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  dropdownButtonsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingVertical: 4,
-  },
-  filterButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  filterButtonActive: {
-    backgroundColor: '#d81b60',
-    borderColor: '#d81b60',
-  },
-  filterButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#666',
-  },
-  filterButtonTextActive: {
     color: '#fff',
   },
   toast: {

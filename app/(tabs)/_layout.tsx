@@ -16,19 +16,19 @@ export default function TabLayout() {
         headerShown: true,
         headerTitle: 'Collecto Vault',
         headerTitleStyle: {
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: '700',
         },
         headerStyle: {
-          marginTop: -12,
-          paddingTop: 0,
+          backgroundColor: '#212121',
         },
-        tabBarButton: HapticTab,
+        headerTintColor: '#fff',
+        headerTitleAlign: 'left',
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
-          marginTop: 4,
         },
+        tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
         name="index"
@@ -41,21 +41,21 @@ export default function TabLayout() {
         name="statement"
         options={{
           title: 'Statement',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="doc.text.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={32} name="doc.text.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
           title: 'Services',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="bag.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={32} name="bag.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="help"
         options={{
           title: 'Help',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="questionmark.circle.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={32} name="info.circle.fill" color={color} />,
         }}
       />
     </Tabs>

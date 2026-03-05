@@ -565,8 +565,7 @@ export default function StatementScreen() {
                   {!isPaid && (
                     <TouchableOpacity
                       style={styles.payNowButton}
-                      onPress={(e) => {
-                        e.stopPropagation ? e.stopPropagation() : e.preventDefault();
+                      onPress={() => {
                         setPayingInvoice(invId);
                         setPaymentModalVisible(true);
                       }}
