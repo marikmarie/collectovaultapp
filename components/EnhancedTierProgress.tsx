@@ -21,24 +21,27 @@ export default function TierProgress({
     );
 
     const segmentCount = tiers.length - 1;
-    const segmentWidth = 100 / (tiers.length);
-    
-    // Calculate the starting position of the current tier segment
-    const currentSegmentStart = (currentTierIndex / tiers.length) * 100;
-    
-    // Calculate the filled width for current segment only
-    const currentSegmentFill = (pct / 100) * segmentWidth;
-    
-    // Total progress width (all completed tiers + current tier progress)
-    const totalProgressWidth = currentSegmentStart + currentSegmentFill;
-
     const isMaxTier = currentTierIndex === tiers.length - 1;
+
+    // For max tier, fill completely; otherwise show progress within current segment only
+    let currentSegmentFillWidth: number;
+    if (isMaxTier) {
+      currentSegmentFillWidth = 100;
+    } else {
+      const activeSegmentWidth = 100 / segmentCount;
+      currentSegmentFillWidth = (pct / 100) * activeSegmentWidth;
+    }
+
+    // Total width from start (for the visual bar)
+    const baseOffset = (currentTierIndex / segmentCount) * 100;
+    const totalProgressWidth = baseOffset + currentSegmentFillWidth;
 
     return {
       pct,
       currentTierIndex,
       segmentCount,
-      totalProgressWidth: Math.min(100, totalProgressWidth),
+      currentSegmentFillWidth, // Only the current segment fill
+      totalProgressWidth, // From the start
       isMaxTier,
     };
   }, [currentTier, progress, tiers]);

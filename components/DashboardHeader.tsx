@@ -9,41 +9,44 @@ interface DashboardHeaderProps {
 }
 
 export default function DashboardHeader({ name, phone, avatar }: DashboardHeaderProps) {
-  // Create initials from name
-  const getInitials = (fullName: string) => {
-    return fullName
-      .split(' ')
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
-  };
-
-  const initials = getInitials(name || 'User');
+  const initials = name
+    .split(' ')
+    .map(n => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
     <View style={styles.headerContainer}>
-      {/* Gradient background */}
-      <View style={styles.headerGradient} />
+      {/* Decorative circles/pattern */}
+      <View style={[styles.decorativeCircle, styles.circleTop]} />
+      <View style={[styles.decorativeCircle, styles.circleBottom]} />
 
       <View style={styles.headerContent}>
-        {/* Avatar - Large circular with initials */}
-        <View style={styles.avatarLarge}>
+        {/* Large Avatar in center */}
+        <View style={styles.avatarWrapper}>
           {avatar ? (
             <Image
               source={{ uri: avatar }}
-              style={styles.avatarImage}
+              style={styles.avatar}
+              defaultSource={require('@/assets/images/logo.jpg')}
             />
           ) : (
-            <Text style={styles.initialsText}>{initials}</Text>
+            <View style={styles.avatarInitials}>
+              <Text style={styles.initialsText}>{initials}</Text>
+            </View>
           )}
-          <View style={styles.settingsIconBadge}>
-            <Feather name="settings" size={16} color="#fff" />
-          </View>
+          {/* Camera icon overlay */}
+          <TouchableOpacity style={styles.cameraButton}>
+            <Feather name="camera" size={16} color="#fff" />
+          </TouchableOpacity>
         </View>
 
         {/* User Name */}
         <Text style={styles.userName}>{name}</Text>
+        
+        {/* Phone if provided */}
+        {phone && <Text style={styles.phone}>{phone}</Text>}
       </View>
     </View>
   );
@@ -51,70 +54,88 @@ export default function DashboardHeader({ name, phone, avatar }: DashboardHeader
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: '#6a1b6b',
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingTop: 32,
+    paddingHorizontal: 16,
+    paddingBottom: 28,
+    alignItems: 'center',
     position: 'relative',
-    zIndex: 1,
+    overflow: 'hidden',
+    // Gradient effect with multiple shades of purple
+    backgroundColor: '#7B3FF2',
   },
-  headerGradient: {
+  decorativeCircle: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '100%',
-    backgroundColor: '#6a1b6b',
-    zIndex: -1,
+    borderRadius: 200,
+    opacity: 0.08,
+  },
+  circleTop: {
+    width: 300,
+    height: 300,
+    top: -100,
+    right: -50,
+    backgroundColor: '#fff',
+  },
+  circleBottom: {
+    width: 200,
+    height: 200,
+    bottom: -80,
+    left: -50,
+    backgroundColor: '#fff',
   },
   headerContent: {
     alignItems: 'center',
     zIndex: 1,
   },
-  avatarLarge: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#d81b60',
-    justifyContent: 'center',
-    alignItems: 'center',
+  avatarWrapper: {
     marginBottom: 16,
     position: 'relative',
-    borderWidth: 3,
-    borderColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
   },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 50,
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#f0f0f0',
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  avatarInitials: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   initialsText: {
-    fontSize: 36,
+    fontSize: 48,
     fontWeight: '700',
     color: '#fff',
   },
-  settingsIconBadge: {
+  cameraButton: {
     position: 'absolute',
-    bottom: -2,
-    right: -2,
+    bottom: 0,
+    right: 0,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#d81b60',
+    backgroundColor: '#8B7B8B',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: 'rgba(255, 255, 255, 0.7)',
   },
   userName: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700',
     color: '#fff',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  phone: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'center',
   },
 });

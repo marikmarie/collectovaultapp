@@ -10,9 +10,11 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { useAuth } from '@/src/context/AuthContext';
 import { transactionService, invoiceService } from '@/src/api/collecto';
 import storage from '@/src/utils/storage';
+import InvoiceDetailModal from '@/components/InvoiceDetailModal';
 
 interface TransactionItem {
   id: string;
@@ -32,6 +34,8 @@ interface InvoiceItem {
     invoice_amount: number;
   };
   amount_less: number;
+  total_amount_paid?: number;
+  payments?: any[];
   pointsEquivalent?: number;
 }
 
@@ -42,6 +46,8 @@ export default function StatementScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'invoices' | 'transactions'>('invoices');
+  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceItem | null>(null);
+  const [invoiceModalVisible, setInvoiceModalVisible] = useState(false);
 
   const fetchTransactions = useCallback(async () => {
     if (!user?.clientId) return;
@@ -52,7 +58,6 @@ export default function StatementScreen() {
       setTransactions(txs);
     } catch (err) {
       console.error('Error fetching transactions:', err);
-      Alert.alert('Error', 'Failed to fetch transaction history');
     }
   }, [user?.clientId]);
 
@@ -91,7 +96,6 @@ export default function StatementScreen() {
       setInvoices(sorted);
     } catch (err) {
       console.error('Error fetching invoices:', err);
-      Alert.alert('Error', 'Failed to fetch invoices');
     }
   }, [user?.clientId]);
 
@@ -111,16 +115,6 @@ export default function StatementScreen() {
     setRefreshing(true);
     Promise.all([fetchInvoices(), fetchTransactions()]).finally(() => setRefreshing(false));
   }, [fetchInvoices, fetchTransactions]);
-
-  const getTransactionIcon = (tx: TransactionItem) => {
-    const isInvoice = tx.reference === 'INVOICE_PURCHASE';
-    return isInvoice ? '📤' : '📥';
-  };
-
-  const getTransactionColor = (tx: TransactionItem) => {
-    const isInvoice = tx.reference === 'INVOICE_PURCHASE';
-    return isInvoice ? '#e3f2fd' : '#e8f5e9';
-  };
 
   const getInvoiceStatusColor = (invoice: InvoiceItem) => {
     const isPaid = Number(invoice.amount_less) === 0;
@@ -184,14 +178,18 @@ export default function StatementScreen() {
             const isPaid = Number(invoice.amount_less) === 0;
 
             return (
-              <View
+              <TouchableOpacity
                 style={[
                   styles.itemCard,
                   { backgroundColor: getInvoiceStatusColor(invoice) },
                 ]}
+                onPress={() => {
+                  setSelectedInvoice(invoice);
+                  setInvoiceModalVisible(true);
+                }}
               >
                 <View style={styles.itemIcon}>
-                  <Text style={styles.iconText}>📥</Text>
+                  <Feather name="file-text" size={20} color="#d81b60" />
                 </View>
                 <View style={styles.itemContent}>
                   <Text style={styles.itemTitle}>{invId}</Text>
@@ -210,13 +208,18 @@ export default function StatementScreen() {
                   <Text style={styles.itemAmount}>
                     UGX {Number(amount).toLocaleString()}
                   </Text>
+                  {!isPaid && (
+                    <Text style={styles.dueAmount}>
+                      Due: UGX {Number(invoice.amount_less).toLocaleString()}
+                    </Text>
+                  )}
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           }}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>📋</Text>
+              <Feather name="inbox" size={40} color="#ddd" />
               <Text style={styles.emptyText}>No invoices found</Text>
             </View>
           }
@@ -233,20 +236,27 @@ export default function StatementScreen() {
             const isConfirmed = ['success', 'confirmed'].includes(
               (tx.paymentStatus || '').toLowerCase()
             );
+            const isInvoice = tx.reference === 'INVOICE_PURCHASE';
 
             return (
               <View style={styles.itemCard}>
                 <View
                   style={[
                     styles.itemIcon,
-                    { backgroundColor: getTransactionColor(tx) },
+                    { 
+                      backgroundColor: isInvoice ? '#e3f2fd' : '#e8f5e9',
+                    },
                   ]}
                 >
-                  <Text style={styles.iconText}>{getTransactionIcon(tx)}</Text>
+                  <Feather
+                    name={isInvoice ? 'arrow-up-right' : 'arrow-down-left'}
+                    size={20}
+                    color={isInvoice ? '#2196f3' : '#4caf50'}
+                  />
                 </View>
                 <View style={styles.itemContent}>
                   <Text style={styles.itemTitle}>
-                    {tx.transactionId}
+                    {isInvoice ? 'Service Purchase' : 'Points Added'}
                   </Text>
                   <View style={styles.itemMeta}>
                     <Text style={styles.itemDate}>
@@ -278,7 +288,7 @@ export default function StatementScreen() {
           }}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>📋</Text>
+              <Feather name="inbox" size={40} color="#ddd" />
               <Text style={styles.emptyText}>No transactions found</Text>
             </View>
           }
@@ -286,6 +296,18 @@ export default function StatementScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#d81b60" />
           }
           contentContainerStyle={styles.listContent}
+        />
+      )}
+
+      {/* Invoice Detail Modal */}
+      {selectedInvoice && (
+        <InvoiceDetailModal
+          visible={invoiceModalVisible}
+          invoice={selectedInvoice}
+          onClose={() => {
+            setInvoiceModalVisible(false);
+            setSelectedInvoice(null);
+          }}
         />
       )}
     </SafeAreaView>
@@ -415,6 +437,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#d81b60',
     marginBottom: 2,
+  },
+  dueAmount: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#c62828',
+    marginTop: 4,
   },
   emptyContainer: {
     flex: 1,

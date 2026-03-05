@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   Modal,
+  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -12,273 +12,240 @@ import {
 import { Feather } from '@expo/vector-icons';
 import api from '@/src/api';
 import storage from '@/src/utils/storage';
-
-interface InvoiceItem {
-  id: string;
-  name: string;
-  amount: number;
-  quantity?: number;
-}
-
-interface InvoicePayment {
-  amount: number;
-  date: string;
-  method: string;
-}
-
-interface Invoice {
-  details?: {
-    id: string;
-    invoice_date: string;
-    client_name: string;
-    invoice_details?: InvoiceItem[];
-  };
-  payments?: InvoicePayment[];
-  amount_less?: number;
-  total_amount_paid?: number;
-}
+import { useAuth } from '@/src/context/AuthContext';
 
 interface InvoiceDetailModalProps {
   visible: boolean;
-  invoice: Invoice | null;
+  invoice: any;
   onClose: () => void;
+  onPaymentSuccess?: () => void;
 }
 
 export default function InvoiceDetailModal({
   visible,
   invoice,
   onClose,
+  onPaymentSuccess,
 }: InvoiceDetailModalProps) {
-  const [tab, setTab] = useState<'details' | 'payment'>('details');
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'details' | 'payments'>('details');
   const [processing, setProcessing] = useState(false);
 
-  if (!invoice) return null;
+  const details = invoice?.details || {};
+  const invoiceItems = details?.invoice_details || [];
+  const payments = invoice?.payments || [];
+  const totalPaid = invoice?.total_amount_paid ?? 0;
+  const amountDue = invoice?.amount_less ?? 0;
+  const totalAmount = details?.invoice_amount ?? 0;
 
-  const details = (invoice.details || {}) as any;
-  const invoiceItems = details.invoice_details || [];
-  const payments = invoice.payments || [];
-  const amountLess = invoice.amount_less ?? 0;
-  const totalPaid = invoice.total_amount_paid ?? 0;
+  const isPaid = Number(amountDue) === 0;
 
-  const handlePayInvoice = async () => {
-    Alert.prompt(
-      'Pay Invoice',
-      `Enter phone number (10 digits):`,
-      [
-        {
-          text: 'Cancel',
-          onPress: () => {},
-          style: 'cancel',
-        },
-        {
-          text: 'Pay',
-          onPress: async (phone?: string) => {
-            if (!phone || phone.length < 10) {
-              Alert.alert('Error', 'Please enter a valid phone number');
-              return;
-            }
-
-            setProcessing(true);
-            try {
-              const vaultOTPToken = await storage.getItem('vaultOtpToken');
-              const collectoId = await storage.getItem('collectoId');
-
-              const res = await api.post('/requestToPay', {
-                phone: phone.replace(/^0/, '256'),
-                invoiceId: details.id,
-                amount: (amountLess > 0 ? amountLess : details.invoice_details?.reduce((sum: number, item: any) => sum + item.amount, 0) || 0),
-                vaultOTPToken,
-                collectoId,
-                reference: `INV-${details.id}`,
-              });
-
-              if (res.data?.status === '200') {
-                Alert.alert('Success', 'Payment initiated. Check your phone for the prompt.');
-                onClose();
-              } else {
-                Alert.alert('Error', res.data?.message || 'Payment initiation failed');
-              }
-            } catch (err: any) {
-              Alert.alert('Error', err?.response?.data?.message || 'Failed to initiate payment');
-            } finally {
-              setProcessing(false);
-            }
-          },
-        },
-      ],
-      'plain-text',
-      '',
-      'phone-pad'
+  const handlePaymentFlow = async () => {
+    Alert.alert(
+      'Payment',
+      'Implement payment flow here. This would open a payment modal similar to buy-points.',
+      [{ text: 'OK' }]
     );
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
             <View>
-              <Text style={styles.invoiceNumber}>{details.id || 'N/A'}</Text>
-              <Text style={styles.subtitle}>Invoice Details</Text>
+              <Text style={styles.headerTitle}>{details?.id || 'Invoice'}</Text>
+              <Text style={styles.headerSubtitle}>{details?.invoice_date}</Text>
             </View>
             <TouchableOpacity onPress={onClose}>
-              <Feather name="x" size={28} color="#666" />
+              <Feather name="x" size={24} color="#666" />
             </TouchableOpacity>
           </View>
 
+          {/* Status Bar */}
+          <View
+            style={[
+              styles.statusBar,
+              isPaid ? styles.statusBarPaid : styles.statusBarPending,
+            ]}
+          >
+            <Feather
+              name={isPaid ? 'check-circle' : 'alert-circle'}
+              size={20}
+              color={isPaid ? '#4caf50' : '#ff9800'}
+            />
+            <View style={styles.statusInfo}>
+              <Text style={styles.statusLabel}>Status</Text>
+              <Text style={[styles.statusValue, isPaid ? styles.statusValuePaid : {}]}>
+                {isPaid ? 'Paid' : 'Pending Payment'}
+              </Text>
+            </View>
+          </View>
+
           {/* Tabs */}
-          <View style={styles.tabsContainer}>
+          <View style={styles.tabs}>
             <TouchableOpacity
-              style={[styles.tab, tab === 'details' && styles.tabActive]}
-              onPress={() => setTab('details')}
+              style={[styles.tab, activeTab === 'details' && styles.tabActive]}
+              onPress={() => setActiveTab('details')}
             >
               <Text
-                style={[styles.tabText, tab === 'details' && styles.tabTextActive]}
+                style={[
+                  styles.tabText,
+                  activeTab === 'details' && styles.tabTextActive,
+                ]}
               >
                 Details
               </Text>
-              {tab === 'details' && <View style={styles.tabIndicator} />}
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tab, tab === 'payment' && styles.tabActive]}
-              onPress={() => setTab('payment')}
+              style={[styles.tab, activeTab === 'payments' && styles.tabActive]}
+              onPress={() => setActiveTab('payments')}
             >
               <Text
-                style={[styles.tabText, tab === 'payment' && styles.tabTextActive]}
+                style={[
+                  styles.tabText,
+                  activeTab === 'payments' && styles.tabTextActive,
+                ]}
               >
-                Payments ({payments.length})
+                Payments
               </Text>
-              {tab === 'payment' && <View style={styles.tabIndicator} />}
             </TouchableOpacity>
           </View>
 
           {/* Content */}
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            {tab === 'details' ? (
+          <ScrollView contentContainerStyle={styles.tabContent}>
+            {activeTab === 'details' ? (
               <>
-                {/* Basic Info */}
+                {/* Invoice Info */}
                 <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Invoice Information</Text>
+
                   <View style={styles.infoRow}>
-                    <Text style={styles.label}>Date</Text>
-                    <Text style={styles.value}>{details.invoice_date || 'N/A'}</Text>
+                    <Text style={styles.infoLabel}>Client</Text>
+                    <Text style={styles.infoValue}>{details?.client_name || 'N/A'}</Text>
                   </View>
+
                   <View style={styles.infoRow}>
-                    <Text style={styles.label}>Client</Text>
-                    <Text style={styles.value}>{details.client_name || 'N/A'}</Text>
+                    <Text style={styles.infoLabel}>Issued By</Text>
+                    <Text style={styles.infoValue}>{details?.invoice_by_name || 'N/A'}</Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Date</Text>
+                    <Text style={styles.infoValue}>{details?.invoice_date || 'N/A'}</Text>
                   </View>
                 </View>
 
-                {/* Services/Items */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Services</Text>
-                  {invoiceItems.length > 0 ? (
-                    invoiceItems.map((item: any, index: number) => (
-                      <View key={index} style={styles.itemRow}>
-                        <View style={styles.itemInfo}>
+                {/* Items */}
+                {invoiceItems.length > 0 && (
+                  <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Services</Text>
+                    {invoiceItems.map((item: any, i: number) => (
+                      <View key={i} style={styles.itemRow}>
+                        <View>
                           <Text style={styles.itemName}>{item.name}</Text>
-                          {item.quantity && (
-                            <Text style={styles.itemQty}>Qty: {item.quantity}</Text>
-                          )}
+                          <Text style={styles.itemQty}>Qty: {item.quantity || 1}</Text>
                         </View>
-                        <Text style={styles.itemAmount}>
+                        <Text style={styles.itemPrice}>
                           UGX {Number(item.amount).toLocaleString()}
                         </Text>
                       </View>
-                    ))
-                  ) : (
-                    <Text style={styles.emptyText}>No items</Text>
-                  )}
-                </View>
+                    ))}
+                  </View>
+                )}
 
                 {/* Summary */}
-                <View style={styles.summarySection}>
-                  {invoiceItems.length > 0 && (
-                    <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Subtotal</Text>
-                      <Text style={styles.summaryValue}>
-                        UGX{' '}
-                        {invoiceItems
-                          .reduce((sum: number, item: any) => sum + item.amount, 0)
-                          .toLocaleString()}
-                      </Text>
-                    </View>
-                  )}
-                  {amountLess > 0 && (
-                    <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Outstanding Amount</Text>
-                      <Text style={styles.summaryValueWarning}>
-                        UGX {amountLess.toLocaleString()}
-                      </Text>
-                    </View>
-                  )}
-                  {totalPaid > 0 && (
-                    <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Total Paid</Text>
-                      <Text style={styles.summaryValueSuccess}>
-                        UGX {totalPaid.toLocaleString()}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Summary</Text>
+
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Total</Text>
+                    <Text style={styles.summaryValue}>
+                      UGX {Number(totalAmount).toLocaleString()}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.summaryRow, styles.paidRow]}>
+                    <Text style={styles.summaryLabel}>Paid</Text>
+                    <Text style={styles.paidValue}>
+                      UGX {Number(totalPaid).toLocaleString()}
+                    </Text>
+                  </View>
+
+                  {amountDue > 0 && (
+                    <View style={[styles.summaryRow, styles.dueRow]}>
+                      <Text style={styles.summaryLabel}>Balance Due</Text>
+                      <Text style={styles.dueValue}>
+                        UGX {Number(amountDue).toLocaleString()}
                       </Text>
                     </View>
                   )}
                 </View>
               </>
             ) : (
-              /* Payments Tab */
-              <View style={styles.section}>
+              <>
+                {/* Payments List */}
                 {payments.length > 0 ? (
-                  payments.map((payment: any, index: number) => (
-                    <View key={index} style={styles.paymentCard}>
-                      <View style={styles.paymentHeader}>
-                        <Text style={styles.paymentDate}>
-                          {new Date(payment.date).toLocaleDateString()}
-                        </Text>
+                  <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Payment History</Text>
+                    {payments.map((pay: any, i: number) => (
+                      <View key={i} style={styles.paymentRow}>
+                        <View style={styles.paymentInfo}>
+                          <Text style={styles.paymentTxId}>{pay.transaction_id}</Text>
+                          <Text style={styles.paymentDate}>{pay.paid_date}</Text>
+                          <Text style={styles.paymentPhone}>{pay.phone}</Text>
+                          <Text style={styles.paymentUser}>By: {pay.user_name}</Text>
+                        </View>
                         <Text style={styles.paymentAmount}>
-                          UGX {Number(payment.amount).toLocaleString()}
+                          UGX {Number(pay.amount).toLocaleString()}
                         </Text>
                       </View>
-                      {payment.method && (
-                        <Text style={styles.paymentMethod}>{payment.method}</Text>
-                      )}
+                    ))}
+
+                    <View style={styles.totalPaidBox}>
+                      <Text style={styles.totalPaidLabel}>Total Paid</Text>
+                      <Text style={styles.totalPaidValue}>
+                        UGX {Number(totalPaid).toLocaleString()}
+                      </Text>
                     </View>
-                  ))
+                  </View>
                 ) : (
-                  <Text style={styles.emptyText}>No payments recorded</Text>
+                  <View style={styles.emptyState}>
+                    <Feather name="inbox" size={40} color="#ddd" />
+                    <Text style={styles.emptyStateText}>No payments recorded yet</Text>
+                  </View>
                 )}
-              </View>
+              </>
             )}
           </ScrollView>
 
-          {/* Action Button */}
-          {amountLess > 0 && (
-            <View style={styles.actionContainer}>
+          {/* Footer Actions */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={onClose}
+              disabled={processing}
+            >
+              <Text style={styles.closeBtnText}>Close</Text>
+            </TouchableOpacity>
+
+            {!isPaid && amountDue > 0 && (
               <TouchableOpacity
-                style={styles.payButton}
-                onPress={handlePayInvoice}
+                style={[styles.payBtn, processing && styles.payBtnDisabled]}
+                onPress={handlePaymentFlow}
                 disabled={processing}
               >
                 {processing ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <>
-                    <Feather
-                      name="credit-card"
-                      size={16}
-                      color="#fff"
-                      style={{ marginRight: 8 }}
-                    />
-                    <Text style={styles.payButtonText}>
-                      Pay UGX {amountLess.toLocaleString()}
-                    </Text>
-                  </>
+                  <Text style={styles.payBtnText}>
+                    Pay UGX {Number(amountDue).toLocaleString()}
+                  </Text>
                 )}
               </TouchableOpacity>
-            </View>
-          )}
+            )}
+          </View>
         </View>
       </View>
     </Modal>
@@ -291,12 +258,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
-  container: {
+  content: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     maxHeight: '90%',
-    width: '100%',
   },
   header: {
     flexDirection: 'row',
@@ -305,65 +271,89 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#eee',
   },
-  invoiceNumber: {
+  headerTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#1a1a1a',
     marginBottom: 4,
   },
-  subtitle: {
-    fontSize: 11,
-    fontWeight: '600',
+  headerSubtitle: {
+    fontSize: 12,
     color: '#999',
+  },
+  statusBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 8,
+    gap: 12,
+  },
+  statusBarPaid: {
+    backgroundColor: '#e8f5e9',
+  },
+  statusBarPending: {
+    backgroundColor: '#fff3e0',
+  },
+  statusInfo: {
+    flex: 1,
+  },
+  statusLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#666',
     textTransform: 'uppercase',
   },
-  tabsContainer: {
+  statusValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#ff9800',
+  },
+  statusValuePaid: {
+    color: '#4caf50',
+  },
+  tabs: {
     flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#eee',
+    marginTop: 12,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 8,
     alignItems: 'center',
-    position: 'relative',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   tabActive: {
-    backgroundColor: '#fff',
+    borderBottomColor: '#d81b60',
   },
   tabText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: '#999',
-    textTransform: 'uppercase',
   },
   tabTextActive: {
     color: '#d81b60',
   },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    backgroundColor: '#d81b60',
-  },
-  content: {
-    flex: 1,
-    padding: 16,
+  tabContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
   section: {
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: '#1a1a1a',
     marginBottom: 12,
-    textTransform: 'uppercase',
   },
   infoRow: {
     flexDirection: 'row',
@@ -372,59 +362,45 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  label: {
+  infoLabel: {
     fontSize: 12,
     fontWeight: '600',
     color: '#666',
   },
-  value: {
+  infoValue: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
     color: '#1a1a1a',
   },
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingVertical: 10,
+    alignItems: 'center',
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  itemInfo: {
-    flex: 1,
-    marginRight: 8,
-  },
   itemName: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: '#1a1a1a',
+    marginBottom: 2,
   },
   itemQty: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#999',
-    marginTop: 4,
   },
-  itemAmount: {
+  itemPrice: {
     fontSize: 12,
     fontWeight: '700',
     color: '#d81b60',
   },
-  emptyText: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    paddingVertical: 20,
-  },
-  summarySection: {
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   summaryLabel: {
     fontSize: 12,
@@ -432,66 +408,136 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   summaryValue: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#1a1a1a',
   },
-  summaryValueWarning: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#ff9800',
+  paidRow: {
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 6,
+    marginBottom: 8,
+    borderColor: 'transparent',
   },
-  summaryValueSuccess: {
-    fontSize: 12,
+  paidValue: {
+    fontSize: 13,
     fontWeight: '700',
     color: '#4caf50',
   },
-  paymentCard: {
-    marginBottom: 12,
+  dueRow: {
+    backgroundColor: '#fff5f5',
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#4caf50',
+    paddingVertical: 12,
+    borderRadius: 6,
+    borderColor: 'transparent',
   },
-  paymentHeader: {
+  dueValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#f44336',
+  },
+  paymentRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  paymentInfo: {
+    flex: 1,
+  },
+  paymentTxId: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginBottom: 2,
   },
   paymentDate: {
     fontSize: 11,
-    fontWeight: '600',
+    color: '#999',
+    marginBottom: 2,
+  },
+  paymentPhone: {
+    fontSize: 10,
+    color: '#999',
+    fontFamily: 'monospace',
+    marginBottom: 2,
+  },
+  paymentUser: {
+    fontSize: 11,
     color: '#666',
+    fontStyle: 'italic',
   },
   paymentAmount: {
     fontSize: 12,
     fontWeight: '700',
     color: '#4caf50',
   },
-  paymentMethod: {
-    fontSize: 10,
-    color: '#999',
-  },
-  actionContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  payButton: {
+  totalPaidBox: {
     flexDirection: 'row',
-    paddingVertical: 12,
+    justifyContent: 'space-between',
+    backgroundColor: '#f5f5f5',
+    padding: 12,
+    borderRadius: 6,
+    marginTop: 12,
+  },
+  totalPaidLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    textTransform: 'uppercase',
+  },
+  totalPaidValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 13,
+    color: '#999',
+    marginTop: 8,
+  },
+  footer: {
+    flexDirection: 'row',
+    gap: 12,
     paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  closeBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    alignItems: 'center',
+  },
+  closeBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#666',
+  },
+  payBtn: {
+    flex: 1,
+    paddingVertical: 12,
     borderRadius: 8,
     backgroundColor: '#d81b60',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  payButtonText: {
-    color: '#fff',
-    fontWeight: '700',
+  payBtnDisabled: {
+    opacity: 0.5,
+  },
+  payBtnText: {
     fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

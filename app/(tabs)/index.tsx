@@ -348,6 +348,15 @@ export default function DashboardScreen() {
         </ScrollView>
       )}
 
+      {/* Buy Points Modal */}
+      <BuyPointsModal
+        visible={buyPointsModalVisible}
+        onClose={() => {
+          setBuyPointsModalVisible(false);
+          fetchData(); // Refresh dashboard data after purchase
+        }}
+      />
+
       {/* Redeem Modal Overlay */}
       {selectedRedeemOffer && (
         <View style={styles.modalOverlay}>
@@ -399,16 +408,6 @@ export default function DashboardScreen() {
           </View>
         </View>
       )}
-
-      {/* Buy Points Modal */}
-      <BuyPointsModal
-        visible={buyPointsModalVisible}
-        onClose={() => setBuyPointsModalVisible(false)}
-        onSuccess={() => {
-          setBuyPointsModalVisible(false);
-          fetchData();
-        }}
-      />
     </SafeAreaView>
   );
 }

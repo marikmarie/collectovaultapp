@@ -2,20 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  ActivityIndicator,
-  FlatList,
-  TouchableOpacity,
-  Alert,
   Modal,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
   TextInput,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useAuth } from '@/src/context/AuthContext';
-import { customerService } from '@/src/api/customer';
 import api from '@/src/api';
 import storage from '@/src/utils/storage';
+import { useAuth } from '@/src/context/AuthContext';
 
 interface Package {
   id: string | number;
@@ -25,126 +23,132 @@ interface Package {
   recommended?: boolean;
 }
 
-type ModalStep = 'select' | 'confirm' | 'success' | 'failure';
-
 interface BuyPointsModalProps {
   visible: boolean;
   onClose: () => void;
-  onSuccess?: (details?: { addedPoints?: number }) => void;
+  onSuccess?: (points: number) => void;
 }
 
-export default function BuyPointsModal({
-  visible,
-  onClose,
-  onSuccess,
-}: BuyPointsModalProps) {
+type ModalStep = 'select' | 'confirm' | 'success' | 'failure';
+
+export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPointsModalProps) {
   const { user } = useAuth();
   const [packages, setPackages] = useState<Package[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingPackages, setLoadingPackages] = useState(false);
   const [selectedId, setSelectedId] = useState<string | number | null>(null);
   const [step, setStep] = useState<ModalStep>('select');
-  const [verifyingPhone, setVerifyingPhone] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<'mobilemoney' | 'bank'>('mobilemoney');
   const [phone, setPhone] = useState('');
-  const [verified, setVerified] = useState(false);
   const [accountName, setAccountName] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paymentMode, setPaymentMode] = useState<'mobilemoney' | 'bank'>('mobilemoney');
+  const [txId, setTxId] = useState<string | number | null>(null);
+  const [txStatus, setTxStatus] = useState<'idle' | 'pending' | 'success' | 'failed'>('idle');
+
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const selectedPackage = packages.find((p) => String(p.id) === String(selectedId));
 
+  // Fetch packages
   useEffect(() => {
-    if (visible) {
-      fetchPackages();
-      resetState();
-    }
-  }, [visible]);
+    if (!visible) return;
 
-  const resetState = () => {
+    const fetchPackages = async () => {
+      try {
+        setLoadingPackages(true);
+        const collectoId = await storage.getItem('collectoId');
+        const res = await api.get(`/vaultPackages/${collectoId}`);
+        const apiData = res.data?.data ?? [];
+        const mapped = apiData.map((pkg: any) => ({
+          id: pkg.id,
+          points: pkg.pointsAmount,
+          price: pkg.price,
+          recommended: pkg.isPopular,
+          label: pkg.name,
+        }));
+        setPackages(mapped);
+      } catch (err) {
+        console.error('Failed to load packages', err);
+        setError('Could not load packages. Please try again later.');
+      } finally {
+        setLoadingPackages(false);
+      }
+    };
+
+    // Reset state
     setSelectedId(null);
-    setStep('select');
     setPhone('');
+    setStep('select');
+    setError(null);
     setVerified(false);
     setAccountName(null);
-    setError(null);
-    setProcessing(false);
-    setPaymentMode('mobilemoney');
-  };
+    setPhoneError(null);
 
-  const fetchPackages = async () => {
-    try {
-      setLoading(true);
-      const collectoId = await storage.getItem('collectoId');
-      const response = await api.get(`/vaultPackages/${collectoId}`);
-      console.log('Packages response:', response.data);
-      const pkgs: any[] = response.data?.data ?? [];
-      const mapped = pkgs.map((p: any) => ({
-        id: p.id,
-        points: p.pointsAmount,
-        price: p.price,
-        recommended: p.isPopular,
-        label: p.name,
-      }));
-      setPackages(mapped);
-    } catch (err) {
-      console.error('Error fetching packages:', err);
-      Alert.alert('Error', 'Failed to load packages');
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchPackages();
+  }, [visible]);
 
-  const handleVerifyPhone = async () => {
+  // Verify phone
+  const verifyPhoneNumber = async () => {
     const trimmed = String(phone || '').trim();
+
     if (!trimmed || trimmed.length < 10) {
-      Alert.alert('Error', 'Please enter a valid 10-digit phone number');
+      setPhoneError('Please enter a valid 10-digit phone number');
       return;
     }
 
-    setVerifyingPhone(true);
     try {
+      setVerifying(true);
+      setPhoneError(null);
       const vaultOTPToken = await storage.getItem('vaultOtpToken');
       const collectoId = await storage.getItem('collectoId');
       const clientId = user?.clientId;
 
       const res = await api.post('/verifyPhoneNumber', {
-        phoneNumber: trimmed,
         vaultOTPToken,
         collectoId,
         clientId,
+        phoneNumber: trimmed,
       });
 
       const payload = res?.data ?? {};
       const nested = payload?.data ?? {};
-      const name = nested?.data?.name || nested?.name || payload?.name || null;
-      const verified = Boolean(nested?.verifyPhoneNumber ?? String(payload?.status_message ?? '').toLowerCase() === 'success');
+      const deeper = nested?.data ?? {};
 
-      if (verified) {
+      const name =
+        (deeper?.name && String(deeper.name).trim()) ||
+        (nested?.name && String(nested.name).trim()) ||
+        (payload?.name && String(payload.name).trim()) ||
+        null;
+
+      const verifiedFlag = Boolean(
+        nested?.verifyPhoneNumber ??
+          deeper?.verifyPhoneNumber ??
+          String(payload?.status_message ?? '').toLowerCase() === 'success'
+      );
+
+      if (verifiedFlag) {
         setVerified(true);
-        setAccountName(name ? String(name).trim() : null);
+        setAccountName(name);
       } else {
         setVerified(false);
-        Alert.alert('Verification Failed', nested?.message ?? 'Could not verify phone number');
+        setAccountName(null);
+        setPhoneError(nested?.message ?? 'Could not verify the phone number');
       }
     } catch (err: any) {
+      setAccountName(null);
       setVerified(false);
-      Alert.alert('Error', err?.response?.data?.message ?? 'Failed to verify phone');
+      setPhoneError(err?.response?.data?.message ?? 'Could not verify phone');
     } finally {
-      setVerifyingPhone(false);
+      setVerifying(false);
     }
   };
 
-  const handleProceedToPayment = async () => {
-    if (!selectedPackage) {
-      Alert.alert('Error', 'Please select a package');
-      return;
-    }
-
-    if (!verified) {
-      Alert.alert('Error', 'Please verify your phone number');
-      return;
-    }
+  // Handle payment
+  const handleConfirmPayment = async () => {
+    if (!selectedPackage) return;
 
     setProcessing(true);
     setError(null);
@@ -154,7 +158,7 @@ export default function BuyPointsModal({
       const collectoId = await storage.getItem('collectoId');
       const clientId = user?.clientId;
 
-      const formattedPhone = phone.replace(/^0/, '256');
+      const formattedPhone = phone ? phone.replace(/^0/, '256') : phone;
 
       const res = await api.post('/requestToPay', {
         vaultOTPToken,
@@ -169,211 +173,275 @@ export default function BuyPointsModal({
 
       const data = res?.data;
       const apiStatus = String(data?.status || '');
+      const transactionId = data?.data?.transactionId || data?.transactionId || null;
 
-      if (apiStatus === '200') {
-        if (String(data?.status_message).toLowerCase() === 'success') {
-          setStep('success');
-          onSuccess?.({ addedPoints: selectedPackage.points });
-        } else {
-          setStep('confirm');
-        }
+      if (apiStatus === '200' && transactionId) {
+        setTxId(transactionId);
+        setTxStatus('pending');
+        setStep('confirm');
+
+        // Start polling for status
+        setTimeout(() => {
+          queryTxStatus(transactionId);
+        }, 500);
+      } else if (String(data?.status_message).toLowerCase() === 'success') {
+        setTxStatus('success');
+        setStep('success');
+        onSuccess?.(selectedPackage.points);
       } else {
-        setError(data?.status_message || 'Payment initiation failed');
-        setStep('failure');
+        setError('Payment failed. Please try again.');
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Payment failed');
-      setStep('failure');
+      setError(err?.response?.data?.message ?? 'Payment failed');
     } finally {
       setProcessing(false);
     }
   };
 
-  if (!visible) return null;
+  // Query transaction status
+  const queryTxStatus = async (txId: string | number) => {
+    try {
+      const vaultOTPToken = await storage.getItem('vaultOtpToken');
+      const collectoId = await storage.getItem('collectoId');
+      const clientId = user?.clientId;
+
+      const res = await api.post('/queryTransactionStatus', {
+        vaultOTPToken,
+        collectoId,
+        clientId,
+        transactionId: txId,
+      });
+
+      const status = String(res.data?.status ?? '').toLowerCase();
+      if (status === 'success') {
+        setTxStatus('success');
+        setStep('success');
+        onSuccess?.(selectedPackage?.points || 0);
+        // Clear polling
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+        }
+      } else if (status === 'failed') {
+        setTxStatus('failed');
+        setStep('failure');
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+        }
+      }
+    } catch (err: any) {
+      console.error('Error querying status:', err);
+    }
+  };
+
+  // Setup polling
+  useEffect(() => {
+    const queryId = txId;
+
+    if (!queryId || txStatus === 'success' || txStatus === 'failed') {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      return;
+    }
+
+    if (!pollIntervalRef.current) {
+      pollIntervalRef.current = setInterval(async () => {
+        await queryTxStatus(queryId);
+      }, 3000);
+    }
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, [txId, txStatus]);
+
+  const handleClose = () => {
+    // Reset state
+    setSelectedId(null);
+    setPhone('');
+    setStep('select');
+    setError(null);
+    setVerified(false);
+    setAccountName(null);
+    setPhoneError(null);
+    setTxId(null);
+    setTxStatus('idle');
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+    }
+    onClose();
+  };
 
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Buy Points</Text>
-            <TouchableOpacity onPress={() => {
-              resetState();
-              onClose();
-            }}>
-              <Feather name="x" size={24} color="#333" />
+            <TouchableOpacity onPress={handleClose}>
+              <Feather name="x" size={24} color="#666" />
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            {loading && (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#d81b60" />
-              </View>
-            )}
-
-            {!loading && step === 'select' && (
+          <ScrollView contentContainerStyle={styles.body}>
+            {step === 'select' && (
               <>
-                <Text style={styles.sectionLabel}>Select a Package</Text>
-                <FlatList
-                  scrollEnabled={false}
-                  data={packages}
-                  keyExtractor={(item) => String(item.id)}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={[
-                        styles.packageCard,
-                        String(selectedId) === String(item.id) && styles.packageCardSelected,
-                      ]}
-                      onPress={() => setSelectedId(item.id)}
-                    >
-                      {item.recommended && (
-                        <View style={styles.recommendedBadge}>
-                          <Text style={styles.recommendedText}>Popular</Text>
-                        </View>
-                      )}
-                      <View style={styles.packageContent}>
-                        <Text style={styles.packagePoints}>{item.points}</Text>
-                        <Text style={styles.packagePointsLabel}>Points</Text>
-                      </View>
-                      <View style={styles.packageRight}>
-                        <Text style={styles.packagePrice}>UGX {item.price.toLocaleString()}</Text>
-                        {item.label && <Text style={styles.packageLabel}>{item.label}</Text>}
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                />
-
-                {selectedPackage && (
-                  <View style={styles.actionContainer}>
-                    <TouchableOpacity
-                      style={styles.proceedButton}
-                      onPress={() => setStep('confirm')}
-                    >
-                      <Text style={styles.proceedButtonText}>Continue to Payment</Text>
-                    </TouchableOpacity>
+                {loadingPackages ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#d81b60" />
                   </View>
-                )}
-              </>
-            )}
-
-            {!loading && step === 'confirm' && selectedPackage && (
-              <>
-                <View style={styles.summaryCard}>
-                  <Text style={styles.summaryLabel}>Package Summary</Text>
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryKey}>Points:</Text>
-                    <Text style={styles.summaryValue}>{selectedPackage.points}</Text>
-                  </View>
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryKey}>Price:</Text>
-                    <Text style={styles.summaryValue}>UGX {selectedPackage.price.toLocaleString()}</Text>
-                  </View>
-                </View>
-
-                <Text style={styles.sectionLabel}>Payment Method</Text>
-                <TouchableOpacity
-                  style={[styles.methodButton, paymentMode === 'mobilemoney' && styles.methodButtonActive]}
-                  onPress={() => setPaymentMode('mobilemoney')}
-                >
-                  <View style={styles.methodRadio}>
-                    {paymentMode === 'mobilemoney' && <View style={styles.methodRadioDot} />}
-                  </View>
-                  <Text style={styles.methodText}>Mobile Money</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.sectionLabel}>Phone Number</Text>
-                <View style={styles.phoneContainer}>
-                  <TextInput
-                    style={styles.phoneInput}
-                    placeholder="0756901234"
-                    value={phone}
-                    onChangeText={setPhone}
-                    editable={!verified}
-                    keyboardType="phone-pad"
-                  />
-                  {!verified ? (
-                    <TouchableOpacity
-                      style={styles.verifyButton}
-                      onPress={handleVerifyPhone}
-                      disabled={verifyingPhone}
-                    >
-                      <Text style={styles.verifyButtonText}>
-                        {verifyingPhone ? 'Verifying...' : 'Verify'}
-                      </Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <View style={styles.verifiedBadge}>
-                      <Feather name="check" size={16} color="#4caf50" />
-                      <Text style={styles.verifiedText}>Verified</Text>
+                ) : (
+                  <>
+                    <Text style={styles.sectionTitle}>Select a Package</Text>
+                    <View style={styles.packagesGrid}>
+                      {packages.map((pkg) => (
+                        <TouchableOpacity
+                          key={String(pkg.id)}
+                          style={[
+                            styles.packageCard,
+                            String(selectedId) === String(pkg.id) && styles.packageCardSelected,
+                          ]}
+                          onPress={() => setSelectedId(pkg.id)}
+                        >
+                          {pkg.recommended && <View style={styles.recommendedBadge} />}
+                          <Text style={styles.packagePoints}>{pkg.points}</Text>
+                          <Text style={styles.packagePointsLabel}>Points</Text>
+                          <Text style={styles.packagePrice}>UGX {pkg.price.toLocaleString()}</Text>
+                          {pkg.label && <Text style={styles.packageLabel}>{pkg.label}</Text>}
+                        </TouchableOpacity>
+                      ))}
                     </View>
-                  )}
-                </View>
-
-                {verified && accountName && (
-                  <View style={styles.accountNameBox}>
-                    <Text style={styles.accountNameLabel}>Account Holder</Text>
-                    <Text style={styles.accountName}>{accountName}</Text>
-                  </View>
-                )}
-
-                {verified && (
-                  <TouchableOpacity
-                    style={styles.payButton}
-                    onPress={handleProceedToPayment}
-                    disabled={processing}
-                  >
-                    <Text style={styles.payButtonText}>
-                      {processing ? 'Processing...' : 'Complete Payment'}
-                    </Text>
-                  </TouchableOpacity>
+                  </>
                 )}
               </>
             )}
 
-            {step === 'success' && selectedPackage && (
+            {step === 'confirm' && selectedPackage && (
+              <>
+                <Text style={styles.sectionTitle}>Confirm Purchase</Text>
+
+                {/* Package Summary */}
+                <View style={styles.summaryBox}>
+                  <View>
+                    <Text style={styles.summaryLabel}>You will receive</Text>
+                    <Text style={styles.summaryValue}>{selectedPackage.points} Points</Text>
+                  </View>
+                  <View style={styles.divider} />
+                  <View>
+                    <Text style={styles.summaryLabel}>Payment Amount</Text>
+                    <Text style={styles.summaryValue}>
+                      UGX {selectedPackage.price.toLocaleString()}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Phone Verification */}
+                {paymentMode === 'mobilemoney' && (
+                  <>
+                    <Text style={styles.sectionTitle}>Phone Number</Text>
+
+                    <View style={styles.phoneInputGroup}>
+                      <TextInput
+                        style={styles.phoneInput}
+                        placeholder=" Enter phone number (0756...)"
+                        placeholderTextColor="#ccc"
+                        value={phone}
+                        onChangeText={setPhone}
+                        editable={!verified}
+                        keyboardType="phone-pad"
+                      />
+                      <TouchableOpacity
+                        style={styles.verifyBtn}
+                        onPress={verifyPhoneNumber}
+                        disabled={verifying || verified}
+                      >
+                        <Text style={styles.verifyBtnText}>
+                          {verifying ? 'Verifying...' : verified ? '✓ Verified' : 'Verify'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
+
+                    {verified && accountName && (
+                      <View style={styles.accountBox}>
+                        <Feather name="check-circle" size={20} color="#4caf50" />
+                        <View style={styles.accountInfo}>
+                          <Text style={styles.accountLabel}>Account Name</Text>
+                          <Text style={styles.accountName}>{accountName}</Text>
+                        </View>
+                      </View>
+                    )}
+                  </>
+                )}
+
+                {error && <Text style={styles.errorText}>{error}</Text>}
+              </>
+            )}
+
+            {step === 'success' && (
               <View style={styles.successContainer}>
-                <View style={styles.successIconContainer}>
-                  <Feather name="check-circle" size={64} color="#4caf50" />
-                </View>
-                <Text style={styles.successTitle}>Payment Initiated!</Text>
-                <Text style={styles.successMessage}>
-                  You will receive a prompt on your mobile number{'\n'}
-                  to complete the payment
+                <Feather name="check-circle" size={60} color="#4caf50" />
+                <Text style={styles.successTitle}>Payment Successful!</Text>
+                <Text style={styles.successSubtitle}>
+                  {selectedPackage?.points} points have been added to your account
                 </Text>
-                <View style={styles.successDetails}>
-                  <Text style={styles.successDetailLabel}>Points to be added:</Text>
-                  <Text style={styles.successDetailValue}>{selectedPackage.points} pts</Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.doneButton}
-                  onPress={() => {
-                    resetState();
-                    onClose();
-                  }}
-                >
-                  <Text style={styles.doneButtonText}>Close</Text>
-                </TouchableOpacity>
               </View>
             )}
 
             {step === 'failure' && (
               <View style={styles.failureContainer}>
-                <View style={styles.failureIconContainer}>
-                  <Feather name="alert-circle" size={64} color="#f44336" />
-                </View>
+                <Feather name="x-circle" size={60} color="#f44336" />
                 <Text style={styles.failureTitle}>Payment Failed</Text>
-                <Text style={styles.failureMessage}>{error}</Text>
-                <TouchableOpacity
-                  style={styles.retryButton}
-                  onPress={() => setStep('confirm')}
-                >
-                  <Text style={styles.retryButtonText}>Try Again</Text>
-                </TouchableOpacity>
+                <Text style={styles.failureSubtitle}>Please try again or contact support</Text>
               </View>
             )}
           </ScrollView>
+
+          {/* Footer Actions */}
+          <View style={styles.footer}>
+            {step === 'select' && selectedPackage && (
+              <TouchableOpacity
+                style={styles.proceedBtn}
+                onPress={() => setStep('confirm')}
+              >
+                <Text style={styles.proceedBtnText}>Continue to Payment</Text>
+              </TouchableOpacity>
+            )}
+
+            {step === 'confirm' && (
+              <TouchableOpacity
+                style={[styles.proceedBtn, processing && styles.proceedBtnDisabled]}
+                onPress={handleConfirmPayment}
+                disabled={!verified || processing}
+              >
+                <Text style={styles.proceedBtnText}>
+                  {processing ? 'Processing...' : 'Confirm Payment'}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {(step === 'success' || step === 'failure') && (
+              <TouchableOpacity style={styles.proceedBtn} onPress={handleClose}>
+                <Text style={styles.proceedBtnText}>Done</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={handleClose}
+              disabled={processing}
+            >
+              <Text style={styles.cancelBtnText}>
+                {step === 'select' ? 'Cancel' : 'Back'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </Modal>
@@ -386,12 +454,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
-  container: {
+  content: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     maxHeight: '90%',
-    width: '100%',
   },
   header: {
     flexDirection: 'row',
@@ -400,313 +467,223 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#eee',
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: '#1a1a1a',
   },
-  content: {
+  body: {
     paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingVertical: 16,
   },
   loadingContainer: {
-    height: 300,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 40,
   },
-  sectionLabel: {
-    fontSize: 12,
+  sectionTitle: {
+    fontSize: 16,
     fontWeight: '700',
-    color: '#d81b60',
-    textTransform: 'uppercase',
-    marginTop: 16,
-    marginBottom: 8,
+    color: '#1a1a1a',
+    marginBottom: 12,
+  },
+  packagesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 16,
   },
   packageCard: {
-    flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    flex: 1,
+    minWidth: 120,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    padding: 12,
     borderWidth: 2,
-    borderColor: '#f0f0f0',
+    borderColor: 'transparent',
     alignItems: 'center',
   },
   packageCardSelected: {
+    backgroundColor: '#fff0f6',
     borderColor: '#d81b60',
-    backgroundColor: '#fff5f8',
   },
   recommendedBadge: {
-    marginRight: 12,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    backgroundColor: '#ffa727',
-    borderRadius: 4,
-  },
-  recommendedText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  packageContent: {
-    marginRight: 'auto',
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#ffc107',
   },
   packagePoints: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     color: '#d81b60',
   },
   packagePointsLabel: {
     fontSize: 10,
+    fontWeight: '600',
     color: '#999',
     marginTop: 2,
-  },
-  packageRight: {
-    alignItems: 'flex-end',
   },
   packagePrice: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#333',
+    color: '#1a1a1a',
+    marginTop: 8,
   },
   packageLabel: {
     fontSize: 10,
-    color: '#999',
-    marginTop: 2,
+    color: '#666',
+    marginTop: 4,
   },
-  actionContainer: {
-    paddingVertical: 16,
-  },
-  proceedButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: '#d81b60',
-    alignItems: 'center',
+  summaryBox: {
+    backgroundColor: '#fff5f5',
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 16,
-  },
-  proceedButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  summaryCard: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginTop: 8,
-    marginBottom: 12,
-    backgroundColor: '#fff5f8',
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#d81b60',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
   },
   summaryLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#d81b60',
-    marginBottom: 8,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  summaryKey: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#999',
+    textTransform: 'uppercase',
   },
   summaryValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#d81b60',
+    marginTop: 4,
   },
-  methodButton: {
-    flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-    alignItems: 'center',
+  divider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#ddd',
   },
-  methodButtonActive: {
-    backgroundColor: '#fff5f8',
-    borderColor: '#d81b60',
-  },
-  methodRadio: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: '#ddd',
-    marginRight: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  methodRadioDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#d81b60',
-  },
-  methodText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#1a1a1a',
-  },
-  phoneContainer: {
+  phoneInputGroup: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   phoneInput: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    fontSize: 13,
+    color: '#1a1a1a',
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 8,
-    fontSize: 14,
-    color: '#1a1a1a',
   },
-  verifyButton: {
+  verifyBtn: {
+    backgroundColor: '#d81b60',
+    borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#d81b60',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  verifyButtonText: {
+  verifyBtnText: {
     color: '#fff',
     fontWeight: '600',
     fontSize: 12,
   },
-  verifiedBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#e8f5e9',
+  errorText: {
+    color: '#f44336',
+    fontSize: 12,
+    marginTop: 8,
+  },
+  accountBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-  },
-  verifiedText: {
-    color: '#4caf50',
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  accountNameBox: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginTop: 8,
-    marginBottom: 12,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#e8f5e9',
     borderRadius: 8,
+    padding: 12,
+    marginTop: 12,
+    gap: 12,
   },
-  accountNameLabel: {
+  accountInfo: {
+    flex: 1,
+  },
+  accountLabel: {
     fontSize: 10,
-    color: '#999',
-    marginBottom: 4,
+    fontWeight: '600',
+    color: '#666',
   },
   accountName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1a1a1a',
-  },
-  payButton: {
-    paddingVertical: 12,
-    marginVertical: 16,
-    borderRadius: 8,
-    backgroundColor: '#d81b60',
-    alignItems: 'center',
-  },
-  payButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2e7d32',
   },
   successContainer: {
     alignItems: 'center',
-    paddingVertical: 32,
-  },
-  successIconContainer: {
-    marginBottom: 16,
+    justifyContent: 'center',
+    paddingVertical: 40,
   },
   successTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#1a1a1a',
-    marginBottom: 8,
+    marginTop: 12,
   },
-  successMessage: {
-    fontSize: 12,
+  successSubtitle: {
+    fontSize: 13,
     color: '#666',
+    marginTop: 8,
     textAlign: 'center',
-    marginBottom: 16,
-  },
-  successDetails: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginBottom: 16,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
-    width: '100%',
-  },
-  successDetailLabel: {
-    fontSize: 10,
-    color: '#999',
-  },
-  successDetailValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#d81b60',
-    marginTop: 4,
-  },
-  doneButton: {
-    width: '100%',
-    paddingVertical: 12,
-    borderRadius: 8,
-    backgroundColor: '#d81b60',
-    alignItems: 'center',
-  },
-  doneButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
   },
   failureContainer: {
     alignItems: 'center',
-    paddingVertical: 32,
-  },
-  failureIconContainer: {
-    marginBottom: 16,
+    justifyContent: 'center',
+    paddingVertical: 40,
   },
   failureTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#f44336',
-    marginBottom: 8,
+    color: '#1a1a1a',
+    marginTop: 12,
   },
-  failureMessage: {
-    fontSize: 12,
+  failureSubtitle: {
+    fontSize: 13,
     color: '#666',
-    textAlign: 'center',
-    marginBottom: 16,
+    marginTop: 8,
   },
-  retryButton: {
-    width: '100%',
-    paddingVertical: 12,
-    borderRadius: 8,
+  footer: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    gap: 8,
+  },
+  proceedBtn: {
     backgroundColor: '#d81b60',
+    borderRadius: 8,
+    paddingVertical: 14,
     alignItems: 'center',
   },
-  retryButtonText: {
+  proceedBtnDisabled: {
+    opacity: 0.5,
+  },
+  proceedBtnText: {
     color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  cancelBtn: {
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  cancelBtnText: {
+    color: '#666',
     fontWeight: '600',
     fontSize: 14,
   },
