@@ -129,7 +129,7 @@ export default function HelpScreen() {
               <Text style={styles.contactIcon}>📧</Text>
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>Email Support</Text>
-                <Text style={styles.contactValue}>support@collectovault.com</Text>
+                <Text style={styles.contactValue}>info@cissytech.com</Text>
               </View>
             </View>
             
@@ -137,7 +137,7 @@ export default function HelpScreen() {
               <Text style={styles.contactIcon}>📱</Text>
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>Phone</Text>
-                <Text style={styles.contactValue}>+1 (555) 123-4567</Text>
+                <Text style={styles.contactValue}>0775634567</Text>
               </View>
             </View>
 

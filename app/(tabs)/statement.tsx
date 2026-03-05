@@ -565,7 +565,8 @@ export default function StatementScreen() {
                   {!isPaid && (
                     <TouchableOpacity
                       style={styles.payNowButton}
-                      onPress={() => {
+                      onPress={(e) => {
+                        e.stopPropagation ? e.stopPropagation() : e.preventDefault();
                         setPayingInvoice(invId);
                         setPaymentModalVisible(true);
                       }}
@@ -1032,16 +1033,16 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   payNowButton: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginTop: 4,
+    backgroundColor: '#d81b60',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginTop: 6,
   },
   payNowText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
     textTransform: 'uppercase',
   },
   modalOverlay: {

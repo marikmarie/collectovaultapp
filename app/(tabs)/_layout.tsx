@@ -19,7 +19,16 @@ export default function TabLayout() {
           fontSize: 18,
           fontWeight: '700',
         },
+        headerStyle: {
+          marginTop: -12,
+          paddingTop: 0,
+        },
         tabBarButton: HapticTab,
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          marginTop: 4,
+        },
       }}>
       <Tabs.Screen
         name="index"

@@ -279,34 +279,36 @@ export default function ServicesScreen() {
         </View>
       </View>
 
-      {/* Category Filter Tabs */}
+      {/* Category Dropdown Filter */}
       {categories.length > 1 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.categoryTabs}
-          contentContainerStyle={styles.categoryTabsContent}
-        >
-          {categories.map((cat) => (
-            <TouchableOpacity
-              key={cat}
-              style={[
-                styles.categoryTab,
-                selectedCategory === cat && styles.categoryTabActive,
-              ]}
-              onPress={() => setSelectedCategory(cat)}
-            >
-              <Text
+        <View style={styles.filterDropdownContainer}>
+          <Text style={styles.filterLabel}>Category</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.dropdownButtonsContainer}
+          >
+            {categories.map((cat) => (
+              <TouchableOpacity
+                key={cat}
                 style={[
-                  styles.categoryTabText,
-                  selectedCategory === cat && styles.categoryTabTextActive,
+                  styles.filterButton,
+                  selectedCategory === cat && styles.filterButtonActive,
                 ]}
+                onPress={() => setSelectedCategory(cat)}
               >
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                <Text
+                  style={[
+                    styles.filterButtonText,
+                    selectedCategory === cat && styles.filterButtonTextActive,
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
       )}
 
       {/* Toast */}
@@ -408,6 +410,25 @@ export default function ServicesScreen() {
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       />
+
+      {/* Floating Cart Button */}
+      {cartCount > 0 && (
+        <TouchableOpacity
+          style={styles.floatingCartBtn}
+          onPress={() => setCartOpen(true)}
+        >
+          <View style={styles.floatingCartContent}>
+            <Feather name="shopping-cart" size={20} color="#fff" />
+            <View style={styles.floatingCartInfo}>
+              <Text style={styles.floatingCartCount}>{cartCount} items</Text>
+              <Text style={styles.floatingCartTotal}>
+                UGX {cartTotal.toLocaleString()}
+              </Text>
+            </View>
+          </View>
+          <Feather name="chevron-right" size={20} color="#fff" />
+        </TouchableOpacity>
+      )}
 
       {/* Service Detail Modal */}
       <Modal visible={detailOpen} transparent animationType="slide">
@@ -637,6 +658,45 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   categoryTabTextActive: {
+    color: '#fff',
+  },
+  filterDropdownContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  filterLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#666',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  dropdownButtonsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  filterButtonActive: {
+    backgroundColor: '#d81b60',
+    borderColor: '#d81b60',
+  },
+  filterButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#666',
+  },
+  filterButtonTextActive: {
     color: '#fff',
   },
   toast: {
