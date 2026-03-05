@@ -72,7 +72,7 @@ export default function InvoiceDetailModal({
         },
         {
           text: 'Pay',
-          onPress: async (phone: string) => {
+          onPress: async (phone?: string) => {
             if (!phone || phone.length < 10) {
               Alert.alert('Error', 'Please enter a valid phone number');
               return;
