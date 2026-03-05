@@ -77,6 +77,7 @@ export default function BuyPointsModal({
       setLoading(true);
       const collectoId = await storage.getItem('collectoId');
       const response = await api.get(`/vaultPackages/${collectoId}`);
+      console.log('Packages response:', response.data);
       const pkgs: any[] = response.data?.data ?? [];
       const mapped = pkgs.map((p: any) => ({
         id: p.id,
