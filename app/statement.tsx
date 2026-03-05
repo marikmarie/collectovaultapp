@@ -72,8 +72,8 @@ export default function StatementScreen() {
       setLoading(true);
 
       // Fetch invoices
-      const vaultOTPToken = await storage.getItem('vaultOtpToken');
-      const collectoId = await storage.getItem('collectoId');
+      const vaultOTPToken = await storage.getItem('vaultOtpToken') || undefined;
+      const collectoId = await storage.getItem('collectoId') || undefined;
 
       const invoicesRes = await invoiceService.getInvoices({
         vaultOTPToken,
@@ -488,94 +488,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
     marginTop: 12,
-  },
-});
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    marginBottom: 1,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: '#eee',
-  },
-  tabActive: {
-    borderBottomColor: '#d81b60',
-  },
-  tabText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#999',
-  },
-  tabTextActive: {
-    color: '#d81b60',
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  transactionCard: {
-    flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#eee',
-    alignItems: 'center',
-  },
-  transactionIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  iconText: {
-    fontSize: 20,
-  },
-  transactionContent: {
-    flex: 1,
-  },
-  transactionDesc: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1a1a1a',
-  },
-  transactionDate: {
-    fontSize: 11,
-    color: '#999',
-    marginTop: 2,
-  },
-  transactionValue: {
-    alignItems: 'flex-end',
-  },
-  transactionPoints: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  transactionStatus: {
-    fontSize: 10,
-    color: '#999',
-    marginTop: 4,
-    textTransform: 'uppercase',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#999',
   },
 });

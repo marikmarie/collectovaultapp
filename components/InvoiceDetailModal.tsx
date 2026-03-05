@@ -54,7 +54,7 @@ export default function InvoiceDetailModal({
 
   if (!invoice) return null;
 
-  const details = invoice.details || {};
+  const details = (invoice.details || {}) as any;
   const invoiceItems = details.invoice_details || [];
   const payments = invoice.payments || [];
   const amountLess = invoice.amount_less ?? 0;
@@ -72,7 +72,7 @@ export default function InvoiceDetailModal({
         },
         {
           text: 'Pay',
-          onPress: async (phone) => {
+          onPress: async (phone: string) => {
             if (!phone || phone.length < 10) {
               Alert.alert('Error', 'Please enter a valid phone number');
               return;
