@@ -29,7 +29,7 @@ export default function DashboardHeader({ name, phone, avatar }: DashboardHeader
             <Image
               source={{ uri: avatar }}
               style={styles.avatar}
-              defaultSource={require('@/assets/images/logo.jpg')}
+              defaultSource={require('@/assets/images/logo.png')}
             />
           ) : (
             <View style={styles.avatarInitials}>
