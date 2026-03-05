@@ -181,7 +181,7 @@ export default function ServicesScreen() {
           totalAmount: Number(c.unitAmount * c.quantity),
         })),
       };
-      const response = await invoiceService.payInvoice(payload);
+      const response = await invoiceService.createInvoice(payload);
       const invoiceId = response.data?.data?.invoiceId;
       if (invoiceId) {
         Alert.alert('Order placed', `Invoice ${invoiceId}`);

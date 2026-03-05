@@ -28,6 +28,10 @@ export const invoiceService = {
   getInvoiceDetails: (invoiceId: string) =>
     api.get(`/invoices/${invoiceId}`),
 
+  // Create an invoice
+  createInvoice: (payload: any) =>
+    api.post('/invoice', payload),
+
   // Pay an invoice
   payInvoice: (payload: any) =>
     api.post('/requestToPay', payload),

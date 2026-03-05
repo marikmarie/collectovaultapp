@@ -16,11 +16,11 @@ import { Feather } from '@expo/vector-icons';
 import { useAuth } from '@/src/context/AuthContext';
 import { customerService } from '@/src/api/customer';
 import { transactionService } from '@/src/api/collecto';
-import storage from '@/src/utils/storage';
 import DashboardHeader from '@/components/DashboardHeader';
 import OffersSlider from '@/components/OffersSlider';
 import EnhancedTierProgress from '@/components/EnhancedTierProgress';
 import HowToEarnPoints from '@/components/HowToEarnPoints';
+import BuyPointsModal from '@/components/BuyPointsModal';
 
 interface Transaction {
   id: string;
@@ -76,6 +76,7 @@ export default function DashboardScreen() {
   const [offers, setOffers] = useState<RedeemableOffer[]>([]);
   const [offersLoading, setOffersLoading] = useState(false);
   const [selectedRedeemOffer, setSelectedRedeemOffer] = useState<RedeemableOffer | null>(null);
+  const [buyPointsModalVisible, setBuyPointsModalVisible] = useState(false);
 
   const clientId = user?.clientId || '';
 
@@ -86,6 +87,7 @@ export default function DashboardScreen() {
       setLoading(true);
       // Fetch customer profile
       const customerRes = await customerService.getCustomerData(clientId);
+      console.log('Customer Data:', customerRes.data);
       const cData = customerRes.data;
 
       if (cData?.customer) {
@@ -195,7 +197,7 @@ export default function DashboardScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionButton, styles.actionButtonPrimary]}
-                onPress={() => router.push('/buy-points')}
+                onPress={() => setBuyPointsModalVisible(true)}
               >
                 <Text style={styles.actionButtonTextPrimary}>Buy Points</Text>
               </TouchableOpacity>
@@ -397,6 +399,16 @@ export default function DashboardScreen() {
           </View>
         </View>
       )}
+
+      {/* Buy Points Modal */}
+      <BuyPointsModal
+        visible={buyPointsModalVisible}
+        onClose={() => setBuyPointsModalVisible(false)}
+        onSuccess={() => {
+          setBuyPointsModalVisible(false);
+          fetchData();
+        }}
+      />
     </SafeAreaView>
   );
 }

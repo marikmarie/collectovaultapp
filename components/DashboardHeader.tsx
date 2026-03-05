@@ -9,38 +9,41 @@ interface DashboardHeaderProps {
 }
 
 export default function DashboardHeader({ name, phone, avatar }: DashboardHeaderProps) {
+  // Create initials from name
+  const getInitials = (fullName: string) => {
+    return fullName
+      .split(' ')
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  };
+
+  const initials = getInitials(name || 'User');
+
   return (
     <View style={styles.headerContainer}>
-      {/* Background gradient-like effect */}
-      <View style={styles.headerBackground} />
+      {/* Gradient background */}
+      <View style={styles.headerGradient} />
 
       <View style={styles.headerContent}>
-        {/* Avatar */}
-        <View style={styles.avatarContainer}>
+        {/* Avatar - Large circular with initials */}
+        <View style={styles.avatarLarge}>
           {avatar ? (
             <Image
               source={{ uri: avatar }}
-              style={styles.avatar}
-              defaultSource={require('@/assets/images/icon.png')}
+              style={styles.avatarImage}
             />
           ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Feather name="user" size={28} color="#fff" />
-            </View>
+            <Text style={styles.initialsText}>{initials}</Text>
           )}
+          <View style={styles.settingsIconBadge}>
+            <Feather name="settings" size={16} color="#fff" />
+          </View>
         </View>
 
-        {/* User Info */}
-        <View style={styles.userInfo}>
-          <Text style={styles.greeting}>Welcome back,</Text>
-          <Text style={styles.userName}>{name}</Text>
-          {phone && <Text style={styles.phone}>{phone}</Text>}
-        </View>
-
-        {/* Settings icon */}
-        <TouchableOpacity style={styles.settingsButton}>
-          <Feather name="settings" size={20} color="#666" />
-        </TouchableOpacity>
+        {/* User Name */}
+        <Text style={styles.userName}>{name}</Text>
       </View>
     </View>
   );
@@ -48,66 +51,70 @@ export default function DashboardHeader({ name, phone, avatar }: DashboardHeader
 
 const styles = StyleSheet.create({
   headerContainer: {
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#6a1b6b',
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    position: 'relative',
+    zIndex: 1,
   },
-  headerBackground: {
+  headerGradient: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     height: '100%',
-    backgroundColor: '#fafafa',
+    backgroundColor: '#6a1b6b',
+    zIndex: -1,
   },
   headerContent: {
-    flexDirection: 'row',
     alignItems: 'center',
     zIndex: 1,
   },
-  avatarContainer: {
-    marginRight: 12,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#f0f0f0',
-    borderWidth: 2,
-    borderColor: '#d81b60',
-  },
-  avatarPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  avatarLarge: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: '#d81b60',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 16,
+    position: 'relative',
+    borderWidth: 3,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  userInfo: {
-    flex: 1,
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
+  },
+  initialsText: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  settingsIconBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#d81b60',
     justifyContent: 'center',
-  },
-  greeting: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#999',
-    marginBottom: 2,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   userName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#1a1a1a',
-  },
-  phone: {
-    fontSize: 10,
-    color: '#ccc',
-    marginTop: 2,
-  },
-  settingsButton: {
-    padding: 8,
+    color: '#fff',
+    textAlign: 'center',
   },
 });
