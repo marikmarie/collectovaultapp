@@ -54,14 +54,13 @@ export default function DashboardHeader({ name, phone, avatar }: DashboardHeader
 
 const styles = StyleSheet.create({
   headerContainer: {
-    paddingTop: 32,
+    paddingTop: 16,
     paddingHorizontal: 16,
-    paddingBottom: 28,
+    paddingBottom: 24,
     alignItems: 'center',
     position: 'relative',
     overflow: 'hidden',
-    // Gradient effect with multiple shades of purple
-    backgroundColor: '#7B3FF2',
+    backgroundColor: '#fff',
   },
   decorativeCircle: {
     position: 'absolute',
@@ -132,13 +131,13 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#fff',
+    color: '#333',
     marginBottom: 4,
     textAlign: 'center',
   },
   phone: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(0, 0, 0, 0.6)',
     textAlign: 'center',
   },
 });

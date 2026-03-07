@@ -99,13 +99,14 @@ export default function DashboardScreen() {
   }, [fetchData]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={['left','right','bottom']}>
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#d81b60" />
         </View>
       ) : (
         <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#d81b60" />
@@ -304,9 +305,12 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
+  },
+  scrollView: {
+    backgroundColor: '#fff',
   },
   scrollContent: {
     paddingBottom: 100,

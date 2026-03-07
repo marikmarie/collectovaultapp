@@ -135,7 +135,7 @@ export default function TierProgress({
 
       {tierData.isMaxTier && (
         <View style={styles.maxTierContainer}>
-          <Text style={styles.maxTierText}>🎉 You've reached the highest tier!</Text>
+          <Text style={styles.maxTierText}>🎉 You&apos;ve reached the highest tier!</Text>
         </View>
       )}
     </View>

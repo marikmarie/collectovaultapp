@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const styles = StyleSheet.create({
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
 
 export default function HelpScreen() {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left','right','bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Help & Support</Text>
@@ -205,7 +205,7 @@ export default function HelpScreen() {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Version 1.0</Text>
             <Text style={styles.cardText}>
-              Thank you for using CollectoVault! We're constantly improving to serve you better.
+              Thank you for using CollectoVault! We&apos;re constantly improving to serve you better.
             </Text>
           </View>
         </View>
