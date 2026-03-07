@@ -352,7 +352,7 @@ export default function DashboardScreen() {
         visible={buyPointsModalVisible}
         onClose={() => {
           setBuyPointsModalVisible(false);
-          fetchData(); // Refresh dashboard data after purchase
+          fetchData(); 
         }}
       />
 
