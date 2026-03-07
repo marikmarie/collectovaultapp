@@ -108,7 +108,6 @@ export default function DashboardScreen() {
         }
       }
 
-      // Fetch transactions with correct parameters (limit: 5 for dashboard preview)
       const txRes = await transactionService.getTransactions(clientId, 5, 0);
       const txs = (txRes.data?.data?.data ?? txRes.data?.transactions ?? []).slice(0, 5);
       setTransactions(txs);
