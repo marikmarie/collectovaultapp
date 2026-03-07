@@ -17,7 +17,6 @@ import { useAuth } from '@/src/context/AuthContext';
 import { customerService } from '@/src/api/customer';
 import { transactionService } from '@/src/api/collecto';
 import DashboardHeader from '@/components/DashboardHeader';
-import OffersSlider from '@/components/OffersSlider';
 import EnhancedTierProgress from '@/components/EnhancedTierProgress';
 import HowToEarnPoints from '@/components/HowToEarnPoints';
 import BuyPointsModal from '@/components/BuyPointsModal';
@@ -33,33 +32,7 @@ interface Transaction {
   transactionId?: string;
 }
 
-interface RedeemableOffer {
-  id: string;
-  title: string;
-  desc?: string;
-  pointsCost: number;
-}
 
-const DUMMY_OFFERS: RedeemableOffer[] = [
-  {
-    id: 'offer_1',
-    title: '10% Discount on Next Purchase',
-    desc: 'Get 10% off your next purchase over 15%',
-    pointsCost: 500,
-  },
-  {
-    id: 'offer_2',
-    title: 'Free concert ticket',
-    desc: 'Redeem for a free ticket to a local concert event',
-    pointsCost: 250,
-  },
-  {
-    id: 'offer_3',
-    title: 'Exclusive Member Offer',
-    desc: 'Special discount available only to tier members',
-    pointsCost: 1000,
-  },
-];
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -73,9 +46,6 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [offers, setOffers] = useState<RedeemableOffer[]>([]);
-  const [offersLoading, setOffersLoading] = useState(false);
-  const [selectedRedeemOffer, setSelectedRedeemOffer] = useState<RedeemableOffer | null>(null);
   const [buyPointsModalVisible, setBuyPointsModalVisible] = useState(false);
 
   const clientId = user?.clientId || '';
@@ -119,22 +89,8 @@ export default function DashboardScreen() {
     }
   }, [clientId]);
 
-  const fetchOffers = async () => {
-    try {
-      setOffersLoading(true);
-      const res = await customerService.getRedeemableOffers?.();
-      const offers = res?.data?.offers ?? res?.data ?? [];
-      setOffers(Array.isArray(offers) && offers.length > 0 ? offers : DUMMY_OFFERS);
-    } catch (err) {
-      setOffers(DUMMY_OFFERS);
-    } finally {
-      setOffersLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchData();
-    fetchOffers();
   }, [fetchData]);
 
   const onRefresh = useCallback(() => {
@@ -206,20 +162,6 @@ export default function DashboardScreen() {
           {/* POINTS TAB CONTENT */}
           {activeTab === 'points' && (
             <View>
-              {/* Exclusive Offers Slider */}
-              <OffersSlider
-                offers={offers}
-                loading={offersLoading}
-                onSelectOffer={(offer) => {
-                  if (pointsBalance >= offer.pointsCost) {
-                    setSelectedRedeemOffer(offer);
-                    router.push('/spend-points');
-                  } else {
-                    Alert.alert('Insufficient Points', 'You do not have enough points to redeem this offer.');
-                  }
-                }}
-              />
-
               {/* Recent Activity */}
               <View style={styles.section}>
                 <View style={styles.activityHeader}>
@@ -347,6 +289,7 @@ export default function DashboardScreen() {
         </ScrollView>
       )}
 
+   
       {/* Buy Points Modal */}
       <BuyPointsModal
         visible={buyPointsModalVisible}
@@ -356,57 +299,6 @@ export default function DashboardScreen() {
         }}
       />
 
-      {/* Redeem Modal Overlay */}
-      {selectedRedeemOffer && (
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity
-            style={styles.modalBackdrop}
-            activeOpacity={1}
-            onPress={() => setSelectedRedeemOffer(null)}
-          />
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{selectedRedeemOffer.title}</Text>
-              <TouchableOpacity onPress={() => setSelectedRedeemOffer(null)}>
-                <Feather name="x" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
-
-            {selectedRedeemOffer.desc && (
-              <Text style={styles.modalDesc}>{selectedRedeemOffer.desc}</Text>
-            )}
-
-            <View style={styles.modalCostBox}>
-              <Text style={styles.modalCostLabel}>Redemption Cost</Text>
-              <Text style={styles.modalCostValue}>
-                {selectedRedeemOffer.pointsCost.toLocaleString()} Points
-              </Text>
-            </View>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCloseButton}
-                onPress={() => setSelectedRedeemOffer(null)}
-              >
-                <Text style={styles.modalCloseText}>Close</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.modalClaimButton,
-                  pointsBalance < selectedRedeemOffer.pointsCost && styles.modalClaimButtonDisabled,
-                ]}
-                disabled={pointsBalance < selectedRedeemOffer.pointsCost}
-                onPress={() => {
-                  setSelectedRedeemOffer(null);
-                  router.push('/spend-points');
-                }}
-              >
-                <Text style={styles.modalClaimText}>Claim Offer</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
     </SafeAreaView>
   );
 }

@@ -66,7 +66,8 @@ const styles = StyleSheet.create({
   decorativeCircle: {
     position: 'absolute',
     borderRadius: 200,
-    opacity: 0.08,
+    opacity: 0,
+    display: 'none',
   },
   circleTop: {
     width: 300,
@@ -74,6 +75,7 @@ const styles = StyleSheet.create({
     top: -100,
     right: -50,
     backgroundColor: '#fff',
+    display: 'none',
   },
   circleBottom: {
     width: 200,
@@ -81,6 +83,7 @@ const styles = StyleSheet.create({
     bottom: -80,
     left: -50,
     backgroundColor: '#fff',
+    display: 'none',
   },
   headerContent: {
     alignItems: 'center',
