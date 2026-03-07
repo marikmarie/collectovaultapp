@@ -1,24 +1,24 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { invoiceService } from '@/src/api/collecto';
+import { customerService } from '@/src/api/customer';
+import { useAuth } from '@/src/context/AuthContext';
+import storage from '@/src/utils/storage';
+import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   ActivityIndicator,
-  FlatList,
-  TouchableOpacity,
   Alert,
-  RefreshControl,
-  TextInput,
+  FlatList,
   Modal,
+  RefreshControl,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
-import { useAuth } from '@/src/context/AuthContext';
-import { customerService } from '@/src/api/customer';
-import storage from '@/src/utils/storage';
-import { useRouter } from 'expo-router';
-import { invoiceService } from '@/src/api/collecto';
 
 interface Service {
   id: string;
@@ -270,6 +270,7 @@ export default function ServicesScreen() {
 
       {/* Search and Filter */}
       <View style={styles.filterBar}>
+        {/* Search Row */}
         <View style={styles.searchWrapper}>
           <Feather name="search" size={16} color="#999" style={styles.searchIcon} />
           <TextInput
@@ -280,16 +281,18 @@ export default function ServicesScreen() {
             onChangeText={setSearchQuery}
           />
         </View>
-        
-        {/* Category Dropdown */}
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setFilterDropdownOpen(!filterDropdownOpen)}
-        >
-          <Feather name="filter" size={18} color="#d81b60" />
-          <Text style={styles.filterButtonText}>{selectedCategory}</Text>
-          <Feather name={filterDropdownOpen ? "chevron-up" : "chevron-down"} size={16} color="#d81b60" />
-        </TouchableOpacity>
+
+        {/* Filter Row */}
+        <View style={styles.filterRow}>
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={() => setFilterDropdownOpen(!filterDropdownOpen)}
+          >
+            <Feather name="filter" size={16} color="#d81b60" />
+            <Text style={styles.filterButtonText}>{selectedCategory}</Text>
+            <Feather name={filterDropdownOpen ? "chevron-up" : "chevron-down"} size={14} color="#d81b60" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Category Dropdown Modal */}
@@ -608,22 +611,21 @@ const styles = StyleSheet.create({
   },
   filterBar: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 12,
+    paddingBottom: 8,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
     gap: 8,
   },
   searchWrapper: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
-    height: 40,
+    height: 42,
   },
   searchIcon: {
     marginRight: 8,
@@ -633,23 +635,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1a1a1a',
   },
+  filterRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 10,
+    gap: 6,
+    paddingVertical: 8,
     paddingHorizontal: 14,
     backgroundColor: '#fff',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    marginLeft: 8,
+    minWidth: 120,
+    justifyContent: 'space-between',
   },
   filterButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
-    maxWidth: 100,
+    color: '#d81b60',
+    flex: 1,
+    marginHorizontal: 4,
   },
   dropdownContainer: {
     backgroundColor: '#fff',
