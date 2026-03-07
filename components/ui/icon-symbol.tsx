@@ -18,6 +18,9 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'doc.text.fill': 'description',
+  'bag.fill': 'shopping-bag',
+  'info.circle.fill': 'info',
 } as IconMapping;
 
 /**
@@ -37,5 +40,6 @@ export function IconSymbol({
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  const materialName = MAPPING[name] ?? 'help';
+  return <MaterialIcons color={color} size={size} name={materialName} style={style} />;
 }
