@@ -268,42 +268,37 @@ export default function ServicesScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Search and Filter */}
-      <View style={styles.filterBar}>
-        {/* Search Row */}
-        <View style={styles.searchWrapper}>
-          <Feather name="search" size={16} color="#999" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search..."
-            placeholderTextColor="#ccc"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
+      {/* Search + Filter + Dropdown wrapper — relative so dropdown is anchored here */}
+      <View style={styles.filterWrapper}>
+        {/* Search and Filter — single row like photo 2 */}
+        <View style={styles.filterBar}>
+          <View style={styles.searchWrapper}>
+            <Feather name="search" size={16} color="#999" style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search..."
+              placeholderTextColor="#aaa"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
 
-        {/* Filter Row */}
-        <View style={styles.filterRow}>
           <TouchableOpacity
             style={styles.filterButton}
             onPress={() => setFilterDropdownOpen(!filterDropdownOpen)}
           >
-            <Feather name="filter" size={16} color="#d81b60" />
+            <Feather name="filter" size={15} color="#d81b60" />
             <Text style={styles.filterButtonText}>{selectedCategory}</Text>
-            <Feather name={filterDropdownOpen ? "chevron-up" : "chevron-down"} size={14} color="#d81b60" />
+            <Feather name={filterDropdownOpen ? 'chevron-up' : 'chevron-down'} size={14} color="#d81b60" />
           </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Category Dropdown Modal */}
-      {filterDropdownOpen && (
-        <View style={styles.dropdownContainer}>
-          <FlatList
-            data={categories}
-            scrollEnabled={categories.length > 6}
-            keyExtractor={(cat) => cat}
-            renderItem={({ item: cat }) => (
+        {/* Dropdown overlays the list — anchored to this wrapper */}
+        {filterDropdownOpen && (
+          <View style={styles.dropdownContainer}>
+            {categories.map((cat) => (
               <TouchableOpacity
+                key={cat}
                 style={[
                   styles.dropdownItem,
                   selectedCategory === cat && styles.dropdownItemActive,
@@ -322,13 +317,13 @@ export default function ServicesScreen() {
                   {cat}
                 </Text>
                 {selectedCategory === cat && (
-                  <Feather name="check" size={16} color="#d81b60" />
+                  <Feather name="check" size={14} color="#d81b60" />
                 )}
               </TouchableOpacity>
-            )}
-          />
-        </View>
-      )}
+            ))}
+          </View>
+        )}
+      </View>
 
       {/* Toast */}
       {toast && (
@@ -351,73 +346,67 @@ export default function ServicesScreen() {
           const qty = cartItem?.quantity || 0;
 
           return (
-            <TouchableOpacity
-              style={styles.serviceCard}
-              activeOpacity={0.7}
-              onPress={() => {
-                setSelectedService(item);
-                setDetailOpen(true);
-              }}
-            >
-              {/* Image */}
-              <View style={styles.serviceImage}>
-                {item.photo ? (
-                  <Text style={styles.serviceImageText}>📦</Text>
-                ) : (
-                  <Feather name="image" size={24} color="#ddd" />
-                )}
-              </View>
-
-              {/* Info */}
-              <View style={styles.serviceContent}>
-                <Text style={styles.serviceName} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <View style={styles.serviceMeta}>
-                  <Text style={styles.serviceCategory}>{item.category}</Text>
-                  {item.isProduct && (
-                    <Text style={styles.serviceProduct}>Product</Text>
+            /* Outer is a plain View — no touch swallowing */
+            <View style={styles.serviceCard}>
+              <TouchableOpacity
+                style={styles.serviceCardLeft}
+                activeOpacity={0.7}
+                onPress={() => {
+                  setSelectedService(item);
+                  setDetailOpen(true);
+                }}
+              >
+                <View style={styles.serviceImage}>
+                  {item.photo ? (
+                    <Text style={styles.serviceImageText}>📦</Text>
+                  ) : (
+                    <Feather name="image" size={24} color="#ddd" />
                   )}
                 </View>
-                <Text style={styles.servicePrice}>
-                  UGX {item.amount.toLocaleString()}
-                </Text>
-              </View>
+                <View style={styles.serviceContent}>
+                  <Text style={styles.serviceName} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  <View style={styles.serviceMeta}>
+                    <Text style={styles.serviceCategory}>{item.category}</Text>
+                    {item.isProduct && (
+                      <Text style={styles.serviceProduct}>Product</Text>
+                    )}
+                  </View>
+                  <Text style={styles.servicePrice}>
+                    UGX {item.amount.toLocaleString()}
+                  </Text>
+                </View>
+              </TouchableOpacity>
 
-              {/* Quantity Controls */}
+              {/* Right: qty controls — independent, always tappable */}
               <View style={styles.qtyColumn}>
                 <TouchableOpacity
-                  style={styles.qtyBtn}
+                  style={[styles.qtyBtn, { backgroundColor: '#d81b60' }]}
                   onPress={() => {
-                    if (qty > 0) {
-                      updateQuantity(item.id, qty + 1);
-                    } else {
-                      addToCart(item);
-                    }
+                    if (qty > 0) updateQuantity(item.id, qty + 1);
+                    else addToCart(item);
                   }}
                 >
-                  <Text style={styles.qtyBtnText}>+</Text>
+                  <Text style={[styles.qtyBtnText, { color: '#fff' }]}>+</Text>
                 </TouchableOpacity>
 
-                <View style={styles.qtyDisplay}>
-                  <Text style={styles.qtyDisplayText}>{qty}</Text>
-                </View>
+                {qty > 0 && (
+                  <View style={styles.qtyDisplay}>
+                    <Text style={styles.qtyDisplayText}>{qty}</Text>
+                  </View>
+                )}
 
-                <TouchableOpacity
-                  style={styles.qtyBtn}
-                  onPress={() => {
-                    if (qty > 0) {
-                      updateQuantity(item.id, qty - 1);
-                    }
-                  }}
-                  disabled={qty === 0}
-                >
-                  <Text style={[styles.qtyBtnText, qty === 0 && styles.qtyBtnDisabled]}>
-                    −
-                  </Text>
-                </TouchableOpacity>
+                {qty > 0 && (
+                  <TouchableOpacity
+                    style={[styles.qtyBtn, { backgroundColor: '#f5f5f5' }]}
+                    onPress={() => updateQuantity(item.id, qty - 1)}
+                  >
+                    <Text style={styles.qtyBtnText}>−</Text>
+                  </TouchableOpacity>
+                )}
               </View>
-            </TouchableOpacity>
+            </View>
           );
         }}
         ListEmptyComponent={
@@ -609,17 +598,23 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
+  filterWrapper: {
+    position: 'relative',
+    zIndex: 100,
+    backgroundColor: '#fff',
+  },
   filterBar: {
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingVertical: 10,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    flexDirection: 'column',
-    gap: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   searchWrapper: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
@@ -643,29 +638,38 @@ const styles = StyleSheet.create({
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    gap: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     backgroundColor: '#fff',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    minWidth: 120,
-    justifyContent: 'space-between',
+    minWidth: 110,
   },
   filterButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#d81b60',
     flex: 1,
-    marginHorizontal: 4,
+    marginHorizontal: 2,
   },
   dropdownContainer: {
+    position: 'absolute',
+    top: 62,
+    right: 16,
+    minWidth: 180,
+    maxHeight: 280,
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    maxHeight: 300,
-    zIndex: 1000,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 10,
+    zIndex: 9999,
   },
   dropdownItem: {
     paddingVertical: 12,
@@ -749,6 +753,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#eee',
+  },
+  serviceCardLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   serviceImage: {
     width: 60,
