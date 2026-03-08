@@ -379,7 +379,6 @@ export default function ServicesScreen() {
                 </View>
               </TouchableOpacity>
 
-              {/* Right: qty controls — independent, always tappable */}
               <View style={styles.qtyColumn}>
                 <TouchableOpacity
                   style={[styles.qtyBtn, { backgroundColor: '#d81b60' }]}
