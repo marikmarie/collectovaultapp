@@ -60,14 +60,21 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
       try {
         setLoadingPackages(true);
         const collectoId = await storage.getItem('collectoId');
-        const res = await api.get(`/vaultPackages/${collectoId}`);
-        const apiData = res.data?.data ?? [];
-        const mapped = apiData.map((pkg: any) => ({
-          id: pkg.id,
-          points: pkg.pointsAmount,
-          price: pkg.price,
-          recommended: pkg.isPopular,
-          label: pkg.name,
+        const clientId = user?.clientId;
+
+        const res = await api.post('/loyaltySettings', {
+          collectoId,
+          clientId,
+        });
+        const loyaltySettings = res?.data?.data?.loyaltySettings ?? {};
+        const tiers = loyaltySettings.purchase_tiers ?? [];
+
+        const mapped = (tiers || []).map((tier: any, index: number) => ({
+          id: tier.id ?? `${tier.name}-${tier.points}-${tier.cost}-${index}`,
+          points: tier.points ?? 0,
+          price: tier.cost ?? 0,
+          recommended: false,
+          label: tier.name || `Package ${index + 1}`,
         }));
         setPackages(mapped);
       } catch (err) {
@@ -164,10 +171,10 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
         vaultOTPToken,
         collectoId,
         clientId,
-        packageId: selectedPackage.id,
         phone: formattedPhone,
         paymentOption: paymentMode,
         amount: selectedPackage.price,
+        points: { points_used: selectedPackage.points },
         reference: `BUYPOINTS-${Date.now()}`,
       });
 

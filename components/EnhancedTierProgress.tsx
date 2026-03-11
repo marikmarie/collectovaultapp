@@ -19,9 +19,10 @@ export default function TierProgress({
     const currentTierIndex = tiers.findIndex(
       (t) => t.toLowerCase() === currentTier.toLowerCase(),
     );
+    const safeTierIndex = currentTierIndex < 0 ? 0 : currentTierIndex;
 
     const segmentCount = tiers.length - 1;
-    const isMaxTier = currentTierIndex === tiers.length - 1;
+    const isMaxTier = safeTierIndex === tiers.length - 1;
 
     // For max tier, fill completely; otherwise show progress within current segment only
     let currentSegmentFillWidth: number;
@@ -33,12 +34,12 @@ export default function TierProgress({
     }
 
     // Total width from start (for the visual bar)
-    const baseOffset = (currentTierIndex / segmentCount) * 100;
+    const baseOffset = (safeTierIndex / segmentCount) * 100;
     const totalProgressWidth = baseOffset + currentSegmentFillWidth;
 
     return {
       pct,
-      currentTierIndex,
+      currentTierIndex: safeTierIndex,
       segmentCount,
       currentSegmentFillWidth, // Only the current segment fill
       totalProgressWidth, // From the start

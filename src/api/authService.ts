@@ -122,14 +122,9 @@ export const authService = {
     }
   },
 
-  /**
-   * Get currently stored client data
-   * VALIDATES that both user data AND token are valid
-   */
+ 
   getCurrentUser: async () => {
-    // AsyncStorage may not be available in all environments (e.g. web),
-    // in which case the native module will be null and calling methods
-    // throws.  Early return to avoid noise.
+  
     if (!storage || typeof (storage as any).getItem !== 'function') {
       return null;
     }

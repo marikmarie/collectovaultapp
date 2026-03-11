@@ -155,29 +155,29 @@ export default function StatementScreen() {
 
     try {
       const { customerService } = await import('@/src/api/customer');
-      const customerRes = await customerService.getCustomerData(user.clientId);
-      const cData = customerRes.data;
-
-      if (cData?.customer) {
-        setPointsBalance(cData.customer.currentPoints || 0);
-        setTier(cData.currentTier?.name || "N/A");
-
-        if (cData.currentTier && cData.tiers) {
-          const idx = cData.tiers.findIndex((t: any) => t.id === cData.currentTier.id);
-          if (idx !== -1 && idx < cData.tiers.length - 1) {
-            const next = cData.tiers[idx + 1];
-            const diff = next.pointsRequired - cData.currentTier.pointsRequired;
-            const earned = cData.customer.currentPoints - cData.currentTier.pointsRequired;
-            setTierProgress(Math.min(100, Math.max(0, (earned / diff) * 100)));
-          } else {
-            setTierProgress(100);
-          }
-        }
-      }
-
-      // Fetch packages to get UGX per point rate
       const collectoId = await storage.getItem('collectoId');
-      if (collectoId) {
+
+      const customerRes = await customerService.getCustomerData(collectoId || "", user.clientId);
+      const loyaltySettings = customerRes.data?.data?.loyaltySettings;
+
+      const points =
+        loyaltySettings?.points ??
+        ((loyaltySettings?.loyalty_points?.earned ?? 0) +
+          (loyaltySettings?.loyalty_points?.bought ?? 0));
+
+      setPointsBalance(points || 0);
+      setTier('N/A');
+      setTierProgress(0);
+
+      // Use loyalty settings point value if available. The API returns `point_value` as the total
+      // value for all points (e.g. 8 points = 100 UGX), so derive per-point value.
+      const pointValue =
+        loyaltySettings?.point_value ?? loyaltySettings?.pointValue ?? null;
+
+      if (typeof pointValue === 'number' && pointValue > 0 && points > 0) {
+        setUgxPerPoint(pointValue / points);
+      } else if (collectoId) {
+        // Fallback: compute UGX per point from package cost/points data
         const packagesRes = await api.get(`/vaultPackages/${collectoId}`);
         const packages = packagesRes.data?.data ?? [];
         if (packages.length > 0) {
@@ -667,6 +667,10 @@ export default function StatementScreen() {
           onClose={() => {
             setInvoiceModalVisible(false);
             setSelectedInvoice(null);
+          }}
+          onRequestPay={(invoiceId) => {
+            setPayingInvoice(invoiceId);
+            setPaymentModalVisible(true);
           }}
         />
       )}

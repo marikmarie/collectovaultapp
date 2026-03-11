@@ -33,7 +33,6 @@ interface Transaction {
 }
 
 
-
 export default function DashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
@@ -49,6 +48,7 @@ export default function DashboardScreen() {
   const [buyPointsModalVisible, setBuyPointsModalVisible] = useState(false);
 
   const clientId = user?.clientId || '';
+  const collectoId = user?.collectoId || '';
 
   const fetchData = useCallback(async () => {
     if (!clientId) return;
@@ -56,27 +56,18 @@ export default function DashboardScreen() {
     try {
       setLoading(true);
       // Fetch customer profile
-      const customerRes = await customerService.getCustomerData(clientId);
+      const customerRes = await customerService.getCustomerData(collectoId, clientId);
       console.log('Customer Data:', customerRes.data);
-      const cData = customerRes.data;
+      const loyaltySettings = customerRes.data?.data?.loyaltySettings;
 
-      if (cData?.customer) {
-        setPointsBalance(cData.customer.currentPoints || 0);
-        setTier(cData.currentTier?.name || 'N/A');
+      const points =
+        loyaltySettings?.points ??
+        ((loyaltySettings?.loyalty_points?.earned ?? 0) +
+          (loyaltySettings?.loyalty_points?.bought ?? 0));
 
-        // Calculate tier progress
-        if (cData.currentTier && cData.tiers) {
-          const idx = cData.tiers.findIndex((t: any) => t.id === cData.currentTier.id);
-          if (idx !== -1 && idx < cData.tiers.length - 1) {
-            const next = cData.tiers[idx + 1];
-            const diff = next.pointsRequired - cData.currentTier.pointsRequired;
-            const earned = cData.customer.currentPoints - cData.currentTier.pointsRequired;
-            setTierProgress(Math.min(100, Math.max(0, (earned / diff) * 100)));
-          } else {
-            setTierProgress(100);
-          }
-        }
-      }
+      setPointsBalance(points || 0);
+      setTier('N/A');
+      setTierProgress(0);
 
       const txRes = await transactionService.getTransactions(clientId, 5, 0);
       const txs = (txRes.data?.data?.data ?? txRes.data?.transactions ?? []).slice(0, 5);
@@ -149,7 +140,7 @@ export default function DashboardScreen() {
                 style={styles.actionButton}
                 onPress={() => router.push('/spend-points')}
               >
-                <Text style={styles.actionButtonText}>Spend</Text>
+                <Text style={styles.actionButtonText}>Transfer</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionButton, styles.actionButtonPrimary]}

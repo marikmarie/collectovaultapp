@@ -76,6 +76,7 @@ export default function SetUsernameModal({
       // check availability by attempting to fetch client id by username
       try {
         const avail = await authService.checkUsernameAvailability(trimmed);
+        console.log('Username availability:', avail);
         if (!avail.available) {
           setError('Username already exists. Please try another one.');
           setIsLoading(false);

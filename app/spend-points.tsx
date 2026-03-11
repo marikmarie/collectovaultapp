@@ -41,8 +41,13 @@ export default function SpendPointsScreen() {
 
       // Fetch current points
       if (user?.clientId) {
-        const customerRes = await customerService.getCustomerData(user.clientId);
-        setCurrentPoints(customerRes.data?.customer?.currentPoints || 0);
+        const customerRes = await customerService.getCustomerData(user.collectoId || "", user.clientId);
+        const loyaltySettings = customerRes.data?.data?.loyaltySettings;
+        const points =
+          loyaltySettings?.points ??
+          ((loyaltySettings?.loyalty_points?.earned ?? 0) +
+            (loyaltySettings?.loyalty_points?.bought ?? 0));
+        setCurrentPoints(points || 0);
       }
 
       // Fetch offers

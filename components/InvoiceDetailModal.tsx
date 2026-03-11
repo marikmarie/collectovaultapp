@@ -10,24 +10,24 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import api from '@/src/api';
-import storage from '@/src/utils/storage';
-import { useAuth } from '@/src/context/AuthContext';
 
 interface InvoiceDetailModalProps {
   visible: boolean;
   invoice: any;
   onClose: () => void;
-  onPaymentSuccess?: () => void;
+  /**
+   * Called when user selects "Pay" from the invoice details.
+   * Should show the same payment modal as "Pay Now" from the invoice list.
+   */
+  onRequestPay?: (invoiceId: string) => void;
 }
 
 export default function InvoiceDetailModal({
   visible,
   invoice,
   onClose,
-  onPaymentSuccess,
+  onRequestPay,
 }: InvoiceDetailModalProps) {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'details' | 'payments'>('details');
   const [processing, setProcessing] = useState(false);
 
@@ -41,6 +41,19 @@ export default function InvoiceDetailModal({
   const isPaid = Number(amountDue) === 0;
 
   const handlePaymentFlow = async () => {
+    const invoiceId = details?.id || invoice?.details?.id;
+
+    if (!invoiceId) {
+      Alert.alert('Payment', 'Unable to determine invoice ID.');
+      return;
+    }
+
+    if (onRequestPay) {
+      onRequestPay(invoiceId);
+      onClose();
+      return;
+    }
+
     Alert.alert(
       'Payment',
       'Implement payment flow here. This would open a payment modal similar to buy-points.',

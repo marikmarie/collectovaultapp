@@ -39,46 +39,32 @@ export default function TierDetailsScreen() {
       setLoading(true);
 
       if (user?.clientId) {
-        // Fetch customer tier info
-        const customerRes = await customerService.getCustomerData(user.clientId);
-        const cData = customerRes.data;
+        // Fetch customer loyalty settings (points / packages)
+        const customerRes = await customerService.getCustomerData(user.collectoId || "", user.clientId);
+        const loyaltySettings = customerRes.data?.data?.loyaltySettings;
 
-        if (cData?.currentTier) {
-          setTier(cData.currentTier.name || 'N/A');
-          setExpiryDate(
-            cData.currentTier.expiryDate
-              ? new Date(cData.currentTier.expiryDate).toLocaleDateString()
-              : 'N/A',
+        const points =
+          loyaltySettings?.points ??
+          ((loyaltySettings?.loyalty_points?.earned ?? 0) +
+            (loyaltySettings?.loyalty_points?.bought ?? 0));
+
+        // Since tiering is no longer supported, just show point-based data
+        setTier('N/A');
+        setTierProgress(0);
+        setPointsToNextTier(0);
+        setExpiryDate('N/A');
+
+        const tiers = loyaltySettings?.purchase_tiers ?? [];
+        if (Array.isArray(tiers) && tiers.length > 0) {
+          setBenefits(
+            tiers.map((t: any, idx: number) => ({
+              id: t.id ?? `${t.name}-${idx}`,
+              title: t.name || `Package ${idx + 1}`,
+              detail: `Buy ${t.points ?? 0} points for ${t.cost ?? 0} UGX`,
+            }))
           );
-
-          // Calculate points to next tier
-          if (cData.tiers && cData.tiers.length > 0) {
-            const currentIdx = cData.tiers.findIndex((t: any) => t.id === cData.currentTier.id);
-            if (currentIdx !== -1 && currentIdx < cData.tiers.length - 1) {
-              const nextTier = cData.tiers[currentIdx + 1];
-              const pointsNeeded = nextTier.pointsRequired - cData.customer.currentPoints;
-              setPointsToNextTier(Math.max(0, pointsNeeded));
-
-              // Calculate progress percentage
-              const current = cData.currentTier.pointsRequired || 0;
-              const next = nextTier.pointsRequired || 0;
-              const userPoints = cData.customer.currentPoints || 0;
-              const diff = next - current;
-              const earned = userPoints - current;
-              setTierProgress(Math.min(100, Math.max(0, (earned / diff) * 100)));
-            } else {
-              setTierProgress(100);
-            }
-          }
-        }
-
-        // Fetch tier benefits
-        try {
-          const benefitsRes = await customerService.getTierBenefits(undefined, tier);
-          const data = benefitsRes.data?.benefits ?? benefitsRes.data ?? [];
-          setBenefits(Array.isArray(data) ? data : []);
-        } catch (err) {
-          // Use mock benefits if API fails
+        } else {
+          // Use mock benefits if API returns none
           setBenefits([
             {
               id: '1',

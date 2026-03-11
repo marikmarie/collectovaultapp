@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { authService } from '../api/authService';
-import storage from '@/src/utils/storage';
 import { hasVaultOtpToken } from '@/src/api/index';
 
 interface AuthContextType {
@@ -44,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.warn('[AuthContext] Token expired, logging out user');
           await logout();
         }
-      }, 30000);
+      }, 40000);
     }
 
     return () => {
