@@ -37,10 +37,15 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'points' | 'tier'>('tier');
   const [pointsBalance, setPointsBalance] = useState(0);
   const [tier, setTier] = useState('N/A');
   const [tierProgress, setTierProgress] = useState(0);
+
+  const [walletAmount, setWalletAmount] = useState<number | null>(null);
+  const [ugxPerPoint, setUgxPerPoint] = useState<number>(0);
+  const [showWalletAmount, setShowWalletAmount] = useState(true);
+  const [earnedPoints, setEarnedPoints] = useState(0);
+  const [boughtPoints, setBoughtPoints] = useState(0);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -58,20 +63,41 @@ export default function DashboardScreen() {
       // Fetch customer profile
       const customerRes = await customerService.getCustomerData(collectoId, clientId);
       console.log('Customer Data:', customerRes.data);
-      const loyaltySettings = customerRes.data?.data?.loyaltySettings;
+      const loyaltySettings = customerRes.data?.data?.loyaltySettings ?? {};
 
-      const points =
-        loyaltySettings?.points ??
-        ((loyaltySettings?.loyalty_points?.earned ?? 0) +
-          (loyaltySettings?.loyalty_points?.bought ?? 0));
+      const earned = loyaltySettings?.loyalty_points?.earned ?? 0;
+      const bought = loyaltySettings?.loyalty_points?.bought ?? 0;
+      const points = loyaltySettings?.points ?? earned + bought;
 
       setPointsBalance(points || 0);
-      setTier('N/A');
-      setTierProgress(0);
+      setEarnedPoints(earned);
+      setBoughtPoints(bought);
 
-      const txRes = await transactionService.getTransactions(clientId, 5, 0);
-      const txs = (txRes.data?.data?.data ?? txRes.data?.transactions ?? []).slice(0, 5);
-      setTransactions(txs);
+      const tierName =
+        loyaltySettings?.tier ||
+        loyaltySettings?.tierName ||
+        loyaltySettings?.membershipTier ||
+        'N/A';
+      setTier(tierName);
+
+      const tierProgressValue =
+        typeof loyaltySettings?.tier_progress === 'number'
+          ? loyaltySettings.tier_progress
+          : typeof loyaltySettings?.tierProgress === 'number'
+          ? loyaltySettings.tierProgress
+          : 0;
+      setTierProgress(tierProgressValue);
+
+      const pointValue =
+        loyaltySettings?.point_value ?? loyaltySettings?.pointValue ?? null;
+      const perPoint =
+        typeof pointValue === 'number' && points > 0 ? pointValue / points : 0;
+      setUgxPerPoint(perPoint);
+      setWalletAmount(perPoint > 0 ? Math.round(points * perPoint) : null);
+
+      const txRes = await transactionService.getTransactions(clientId, 10, 0);
+      const txs = txRes.data?.data?.data ?? txRes.data?.transactions ?? [];
+      setTransactions(Array.isArray(txs) ? txs : []);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       Alert.alert('Error', 'Failed to load dashboard data');
@@ -106,182 +132,182 @@ export default function DashboardScreen() {
           {/* Header */}
           <DashboardHeader name={user?.userName || 'User'} />
 
-          {/* TABS */}
-          <View style={styles.tabsContainer}>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'points' && styles.tabActive]}
-              onPress={() => setActiveTab('points')}
-            >
-              <Text
-                style={[styles.tabValue, activeTab === 'points' && styles.tabValueActive]}
-              >
-                {pointsBalance.toLocaleString()}
-              </Text>
-              <Text style={styles.tabLabel}>Available Points</Text>
-            </TouchableOpacity>
+          {/* Wallet Summary */}
+          <View style={styles.walletCard}>
+            <View style={styles.walletCardHeader}>
+              <View>
+                <Text style={styles.walletCardTitle}>Wallet Balance</Text>
+                <Text style={styles.walletCardSubtitle}>
+                  {pointsBalance.toLocaleString()} pts
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowWalletAmount((v) => !v)}>
+                <Feather
+                  name={showWalletAmount ? 'eye' : 'eye-off'}
+                  size={24}
+                  color="#fff"
+                />
+              </TouchableOpacity>
+            </View>
 
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'tier' && styles.tabActive]}
-              onPress={() => setActiveTab('tier')}
-            >
-              <Text
-                style={[styles.tabValue, activeTab === 'tier' && styles.tabValueActive]}
-              >
-                {tier}
+            <Text style={styles.walletAmountText}>
+              {showWalletAmount
+                ? walletAmount !== null
+                  ? `UGX ${walletAmount.toLocaleString()}`
+                  : '—'
+                : '••••••'}
+            </Text>
+            {ugxPerPoint > 0 && (
+              <Text style={styles.walletSubtext}>
+                1 pt ≈ UGX {ugxPerPoint.toFixed(2)}
               </Text>
-              <Text style={styles.tabLabel}>Current Tier</Text>
-            </TouchableOpacity>
+            )}
+
+            <View style={styles.walletStatsRow}>
+              <View style={styles.walletStat}>
+                <Text style={styles.walletStatLabel}>Earned</Text>
+                <Text style={styles.walletStatValue}>
+                  {earnedPoints.toLocaleString()} pts
+                </Text>
+              </View>
+              <View style={styles.walletStat}>
+                <Text style={styles.walletStatLabel}>Bought</Text>
+                <Text style={styles.walletStatValue}>
+                  {boughtPoints.toLocaleString()} pts
+                </Text>
+              </View>
+              <View style={styles.walletStat}>
+                <Text style={styles.walletStatLabel}>Tier</Text>
+                <Text style={styles.walletStatValue}>{tier}</Text>
+              </View>
+            </View>
+
+            <EnhancedTierProgress currentTier={tier} progress={tierProgress} />
           </View>
 
           {/* ACTIONS */}
-          {activeTab === 'points' && (
-            <View style={styles.actionsRow}>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => router.push('/spend-points')}
-              >
-                <Text style={styles.actionButtonText}>Transfer</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.actionButtonPrimary]}
-                onPress={() => setBuyPointsModalVisible(true)}
-              >
-                <Text style={styles.actionButtonTextPrimary}>Buy Points</Text>
+          <View style={styles.actionsRow}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => router.push('/add-cash')}
+            >
+              <Text style={styles.actionButtonText}>Add Cash</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => router.push('/transfer-cash')}
+            >
+              <Text style={styles.actionButtonText}>Transfer Cash</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.actionButtonPrimary]}
+              onPress={() => setBuyPointsModalVisible(true)}
+            >
+              <Text style={styles.actionButtonTextPrimary}>Buy Points</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Recent Activity */}
+          <View style={styles.section}>
+            <View style={styles.activityHeader}>
+              <Text style={styles.sectionTitle}>Recent Activity</Text>
+              <TouchableOpacity onPress={fetchData}>
+                <Feather
+                  name="refresh-cw"
+                  size={16}
+                  color={loading ? '#ccc' : '#d81b60'}
+                />
               </TouchableOpacity>
             </View>
-          )}
 
-          {/* POINTS TAB CONTENT */}
-          {activeTab === 'points' && (
-            <View>
-              {/* Recent Activity */}
-              <View style={styles.section}>
-                <View style={styles.activityHeader}>
-                  <Text style={styles.sectionTitle}>Recent Activity</Text>
-                  <TouchableOpacity onPress={fetchData}>
-                    <Feather
-                      name="refresh-cw"
-                      size={16}
-                      color={loading ? '#ccc' : '#d81b60'}
-                    />
-                  </TouchableOpacity>
-                </View>
+            {transactions.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>No transactions yet</Text>
+              </View>
+            ) : (
+              <>
+                {transactions.slice(0, 3).map((tx) => {
+                  const isInvoice = tx.reference === 'INVOICE_PURCHASE';
+                  const isConfirmed = ['success', 'confirmed'].includes(
+                    tx.paymentStatus?.toLowerCase()
+                  );
+                  return (
+                    <View key={tx.id} style={styles.transactionCard}>
+                      <View
+                        style={[
+                          styles.txIcon,
+                          {
+                            backgroundColor: isInvoice ? '#e3f2fd' : '#e8f5e9',
+                          },
+                        ]}
+                      >
+                        <Feather
+                          name={isInvoice ? 'arrow-up-right' : 'arrow-down-left'}
+                          size={20}
+                          color={isInvoice ? '#2196f3' : '#4caf50'}
+                        />
+                      </View>
 
-                {transactions.length === 0 ? (
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyStateText}>No transactions yet</Text>
-                  </View>
-                ) : (
-                  <FlatList
-                    scrollEnabled={false}
-                    data={transactions}
-                    keyExtractor={(tx) => tx.id}
-                    renderItem={({ item: tx }) => {
-                      const isInvoice = tx.reference === 'INVOICE_PURCHASE';
-                      const isConfirmed = ['success', 'confirmed'].includes(
-                        tx.paymentStatus?.toLowerCase()
-                      );
-
-                      return (
-                        <View style={styles.transactionCard}>
+                      <View style={styles.txContent}>
+                        <View style={styles.txHeader}>
+                          <Text style={styles.txTitle}>
+                            {isInvoice ? 'Earned from Service' : 'Points Purchase'}
+                          </Text>
+                          <Text style={styles.txPoints}>
+                            +{tx.points.toLocaleString()} pts
+                          </Text>
+                        </View>
+                        <Text style={styles.txTxId}>{tx.transactionId}</Text>
+                        <View style={styles.txFooter}>
+                          <Text style={styles.txDate}>
+                            {new Date(tx.createdAt).toLocaleDateString()}
+                          </Text>
                           <View
                             style={[
-                              styles.txIcon,
+                              styles.statusBadge,
                               {
-                                backgroundColor: isInvoice ? '#e3f2fd' : '#e8f5e9',
+                                backgroundColor: isConfirmed ? '#e8f5e9' : '#fff3e0',
                               },
                             ]}
                           >
-                            <Feather
-                              name={isInvoice ? 'arrow-up-right' : 'arrow-down-left'}
-                              size={20}
-                              color={isInvoice ? '#2196f3' : '#4caf50'}
-                            />
-                          </View>
-
-                          <View style={styles.txContent}>
-                            <View style={styles.txHeader}>
-                              <Text style={styles.txTitle}>
-                                {isInvoice ? 'Earned from Service' : 'Points Purchase'}
-                              </Text>
-                              <Text style={styles.txPoints}>
-                                +{tx.points.toLocaleString()} pts
-                              </Text>
-                            </View>
-                            <Text style={styles.txTxId}>{tx.transactionId}</Text>
-                            <View style={styles.txFooter}>
-                              <Text style={styles.txDate}>
-                                {new Date(tx.createdAt).toLocaleDateString()}
-                              </Text>
-                              <View
-                                style={[
-                                  styles.statusBadge,
-                                  {
-                                    backgroundColor: isConfirmed ? '#e8f5e9' : '#fff3e0',
-                                  },
-                                ]}
-                              >
-                                <Text
-                                  style={[
-                                    styles.statusText,
-                                    {
-                                      color: isConfirmed ? '#4caf50' : '#ff9800',
-                                    },
-                                  ]}
-                                >
-                                  {tx.paymentStatus}
-                                </Text>
-                              </View>
-                            </View>
-                          </View>
-
-                          <View style={styles.txRight}>
-                            <Text style={styles.txAmount}>
-                              {(tx.amount || 0).toLocaleString()} UGX
+                            <Text
+                              style={[
+                                styles.statusText,
+                                {
+                                  color: isConfirmed ? '#4caf50' : '#ff9800',
+                                },
+                              ]}
+                            >
+                              {tx.paymentStatus}
                             </Text>
                           </View>
                         </View>
-                      );
-                    }}
-                  />
-                )}
-              </View>
-            </View>
-          )}
+                      </View>
 
-          {/* TIER TAB CONTENT */}
-          {activeTab === 'tier' && (
-            <View>
-              {/* Tier Progress */}
-              <EnhancedTierProgress currentTier={tier} progress={tierProgress} />
+                      <View style={styles.txRight}>
+                        <Text style={styles.txAmount}>
+                          {(tx.amount || 0).toLocaleString()} UGX
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
 
-              {/* Tier Benefits Card */}
-              <View style={styles.section}>
-                <View style={styles.benefitsCard}>
-                  <View style={styles.benefitsContent}>
-                    <Text style={styles.benefitsTitle}>Tier Benefits</Text>
-                    <Text style={styles.benefitsDesc}>
-                      Enjoy exclusive rewards and priority services as a {tier} member.
-                    </Text>
-                  </View>
+                {transactions.length > 3 && (
                   <TouchableOpacity
-                    style={styles.benefitsButton}
-                    onPress={() => router.push('/tier-details')}
+                    style={styles.viewAllButton}
+                    onPress={() => router.push('/statement')}
                   >
-                    <Text style={styles.benefitsButtonText}>View All Benefits</Text>
-                    <Feather name="chevron-right" size={16} color="#fff" />
+                    <Text style={styles.viewAllText}>View All Transactions</Text>
+                    <Feather name="chevron-right" size={14} color="#d81b60" />
                   </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* How to Earn Points */}
-              <HowToEarnPoints limit={5} />
-            </View>
-          )}
+                )}
+              </>
+            )}
+          </View>
         </ScrollView>
       )}
 
-   
       {/* Buy Points Modal */}
       <BuyPointsModal
         visible={buyPointsModalVisible}
@@ -305,6 +331,81 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 100,
+  },
+  walletCard: {
+    margin: 16,
+    borderRadius: 18,
+    padding: 16,
+    backgroundColor: '#d81b60',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  walletCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  walletCardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  walletCardSubtitle: {
+    fontSize: 12,
+    color: '#ffe6f1',
+    marginTop: 2,
+  },
+  walletAmountText: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  walletSubtext: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.85)',
+    marginBottom: 12,
+  },
+  walletStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  walletStat: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  walletStatLabel: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.8)',
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  walletStatValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: 8,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+  },
+  viewAllText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#d81b60',
+    marginRight: 6,
   },
   loadingContainer: {
     flex: 1,
