@@ -224,12 +224,12 @@ export default function DashboardScreen() {
               </View>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.actionButton, styles.actionButtonPrimary]}
+              style={styles.actionButton}
               onPress={() => setBuyPointsModalVisible(true)}
             >
               <View style={styles.actionButtonContent}>
-                <Feather name="shopping-cart" size={16} color="#fff" />
-                <Text style={styles.actionButtonTextPrimary}>Buy Points</Text>
+                <Feather name="shopping-cart" size={16} color="#d81b60" />
+                <Text style={styles.actionButtonText}>Buy Points</Text>
               </View>
             </TouchableOpacity>
           </View>

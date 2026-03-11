@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Modal,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import api from '@/src/api';
@@ -66,91 +68,93 @@ export default function TransferCashScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backBtnText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Transfer Cash</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <Modal visible transparent animationType="fade">
+      <SafeAreaView style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Transfer Cash</Text>
+            <TouchableOpacity onPress={() => router.back()}>
+              <Feather name="x" size={20} color="#333" />
+            </TouchableOpacity>
+          </View>
 
-      <View style={styles.content}>
-        <Text style={styles.subtitle}>
-          Send cash to another wallet using mobile money.
-        </Text>
+          <View style={styles.content}>
+            <Text style={styles.subtitle}>
+              Send cash to another wallet using mobile money.
+            </Text>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Recipient Phone</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="07XXXXXXXX"
-            keyboardType="phone-pad"
-            value={recipientPhone}
-            onChangeText={setRecipientPhone}
-            editable={!loading}
-          />
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Recipient Phone</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="07XXXXXXXX"
+                keyboardType="phone-pad"
+                value={recipientPhone}
+                onChangeText={setRecipientPhone}
+                editable={!loading}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Amount (UGX)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. 10000"
+                keyboardType="numeric"
+                value={amount}
+                onChangeText={setAmount}
+                editable={!loading}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleTransfer}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Send Transfer</Text>
+              )}
+            </TouchableOpacity>
+
+            <Text style={styles.helpText}>
+              The recipient will receive a prompt to accept the payment. Once confirmed, it will appear in your activity.
+            </Text>
+          </View>
         </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Amount (UGX)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. 10000"
-            keyboardType="numeric"
-            value={amount}
-            onChangeText={setAmount}
-            editable={!loading}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleTransfer}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Send Transfer</Text>
-          )}
-        </TouchableOpacity>
-
-        <Text style={styles.helpText}>
-          The recipient will receive a prompt to accept the payment. Once confirmed, it will appear in your activity.
-        </Text>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
   },
-  header: {
+  modalCard: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 16,
+    maxHeight: '85%',
+  },
+  modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    marginBottom: 12,
   },
-  backBtnText: {
-    color: '#d81b60',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  headerTitle: {
+  modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#1a1a1a',
   },
   content: {
-    padding: 16,
+    paddingBottom: 16,
   },
   subtitle: {
     fontSize: 14,
