@@ -35,7 +35,7 @@ function RootLayoutContent() {
           <Stack.Screen name="login" options={{ headerShown: false }} />
         )}
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" backgroundColor="#ffffff" />
     </ThemeProvider>
   );
 }

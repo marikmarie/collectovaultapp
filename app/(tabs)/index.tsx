@@ -159,7 +159,7 @@ export default function DashboardScreen() {
           >
             <View style={styles.walletCardHeader}>
               <View>
-                <Text style={styles.walletCardTitle}>Wallet Balance</Text>
+                <Text style={styles.walletCardTitle}>Cash Balance</Text>
               </View>
               <TouchableOpacity onPress={() => setShowWalletAmount((v) => !v)}>
                 <Feather
