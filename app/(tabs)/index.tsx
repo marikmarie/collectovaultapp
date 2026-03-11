@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/src/context/AuthContext';
 import { customerService } from '@/src/api/customer';
 import { transactionService } from '@/src/api/collecto';
@@ -39,6 +40,7 @@ export default function DashboardScreen() {
   const [pointsBalance, setPointsBalance] = useState(0);
   const [tier, setTier] = useState('N/A');
   const [tierProgress, setTierProgress] = useState(0);
+  const [loyaltyName, setLoyaltyName] = useState<string | undefined>();
 
   const [walletAmount, setWalletAmount] = useState<number | null>(null);
   const [ugxPerPoint, setUgxPerPoint] = useState<number>(0);
@@ -63,6 +65,12 @@ export default function DashboardScreen() {
       const customerRes = await customerService.getCustomerData(collectoId, clientId);
       console.log('Customer Data:', customerRes.data);
       const loyaltySettings = customerRes.data?.data?.loyaltySettings ?? {};
+
+      const loyaltyNameFromSettings =
+        typeof loyaltySettings?.name === 'string' && loyaltySettings.name.trim()
+          ? loyaltySettings.name.trim()
+          : undefined;
+      setLoyaltyName(loyaltyNameFromSettings);
 
       const earned = loyaltySettings?.loyalty_points?.earned ?? 0;
       const bought = loyaltySettings?.loyalty_points?.bought ?? 0;
@@ -130,7 +138,7 @@ export default function DashboardScreen() {
         >
           {/* Header */}
           <DashboardHeader
-            name={user?.userName || 'User'}
+            name={loyaltyName ?? user?.userName ?? undefined}
             onProfilePress={() => {
               // Placeholder: navigate to profile/settings if available
               // e.g. router.push('/settings')
@@ -138,7 +146,12 @@ export default function DashboardScreen() {
           />
 
           {/* Wallet Summary */}
-          <View style={styles.walletCard}>
+          <LinearGradient
+            colors={['#d81b60', '#67095d']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.walletCard}
+          >
             <View style={styles.walletCardHeader}>
               <View>
                 <Text style={styles.walletCardTitle}>Wallet Balance</Text>
@@ -188,7 +201,7 @@ export default function DashboardScreen() {
             </View>
 
             <EnhancedTierProgress currentTier={tier} progress={tierProgress} />
-          </View>
+          </LinearGradient>
 
           {/* ACTIONS */}
           <View style={styles.actionsRow}>
@@ -196,19 +209,28 @@ export default function DashboardScreen() {
               style={styles.actionButton}
               onPress={() => router.push('/add-cash')}
             >
-              <Text style={styles.actionButtonText}>Add Cash</Text>
+              <View style={styles.actionButtonContent}>
+                <Feather name="plus-circle" size={16} color="#d81b60" />
+                <Text style={styles.actionButtonText}>Add Cash</Text>
+              </View>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => router.push('/transfer-cash')}
             >
-              <Text style={styles.actionButtonText}>Transfer Cash</Text>
+              <View style={styles.actionButtonContent}>
+                <Feather name="send" size={16} color="#d81b60" />
+                <Text style={styles.actionButtonText}>Transfer Cash</Text>
+              </View>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, styles.actionButtonPrimary]}
               onPress={() => setBuyPointsModalVisible(true)}
             >
-              <Text style={styles.actionButtonTextPrimary}>Buy Points</Text>
+              <View style={styles.actionButtonContent}>
+                <Feather name="shopping-cart" size={16} color="#fff" />
+                <Text style={styles.actionButtonTextPrimary}>Buy Points</Text>
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -469,9 +491,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
   },
+  actionButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
   actionButtonPrimary: {
-    backgroundColor: '#f0edee',
-    borderColor: '#f0edee',
+    backgroundColor: '#d81b60',
+    borderColor: '#d81b60',
   },
   actionButtonText: {
     fontSize: 14,
@@ -481,7 +509,7 @@ const styles = StyleSheet.create({
   actionButtonTextPrimary: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#fff',
   },
   section: {
     paddingHorizontal: 16,
