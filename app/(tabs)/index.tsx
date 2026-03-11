@@ -129,7 +129,13 @@ export default function DashboardScreen() {
           }
         >
           {/* Header */}
-          <DashboardHeader name={user?.userName || 'User'} />
+          <DashboardHeader
+            name={user?.userName || 'User'}
+            onProfilePress={() => {
+              // Placeholder: navigate to profile/settings if available
+              // e.g. router.push('/settings')
+            }}
+          />
 
           {/* Wallet Summary */}
           <View style={styles.walletCard}>

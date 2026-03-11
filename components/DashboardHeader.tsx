@@ -1,52 +1,30 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 interface DashboardHeaderProps {
   name: string;
-  phone?: string;
-  avatar?: string;
+  onProfilePress?: () => void;
 }
 
-export default function DashboardHeader({ name, phone, avatar }: DashboardHeaderProps) {
-  const initials = name
-    .split(' ')
-    .map(n => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+export default function DashboardHeader({ name, onProfilePress }: DashboardHeaderProps) {
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
 
   return (
     <View style={styles.headerContainer}>
-      {/* Decorative circles/pattern */}
-      <View style={[styles.decorativeCircle, styles.circleTop]} />
-      <View style={[styles.decorativeCircle, styles.circleBottom]} />
-
-      <View style={styles.headerContent}>
-        {/* Large Avatar in center */}
-        <View style={styles.avatarWrapper}>
-          {avatar ? (
-            <Image
-              source={{ uri: avatar }}
-              style={styles.avatar}
-              defaultSource={require('@/assets/images/logo.png')}
-            />
-          ) : (
-            <View style={styles.avatarInitials}>
-              <Text style={styles.initialsText}>{initials}</Text>
-            </View>
-          )}
-          {/* Camera icon overlay */}
-          <TouchableOpacity style={styles.cameraButton}>
-            <Feather name="camera" size={16} color="#fff" />
-          </TouchableOpacity>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.greetingText}>{`${greeting},`}</Text>
+          <Text style={styles.userName}>{name}</Text>
         </View>
-
-        {/* User Name */}
-        <Text style={styles.userName}>{name}</Text>
-        
-        {/* Phone if provided */}
-        {phone && <Text style={styles.phone}>{phone}</Text>}
+        <TouchableOpacity style={styles.profileButton} onPress={onProfilePress}>
+          <Feather name="user" size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -54,90 +32,34 @@ export default function DashboardHeader({ name, phone, avatar }: DashboardHeader
 
 const styles = StyleSheet.create({
   headerContainer: {
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingTop: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: '#d81b60',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-    backgroundColor: '#fff',
   },
-  decorativeCircle: {
-    position: 'absolute',
-    borderRadius: 200,
-    opacity: 0,
-    display: 'none',
-  },
-  circleTop: {
-    width: 300,
-    height: 300,
-    top: -100,
-    right: -50,
-    backgroundColor: '#fff',
-    display: 'none',
-  },
-  circleBottom: {
-    width: 200,
-    height: 200,
-    bottom: -80,
-    left: -50,
-    backgroundColor: '#fff',
-    display: 'none',
-  },
-  headerContent: {
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  avatarWrapper: {
-    marginBottom: 16,
-    position: 'relative',
-  },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#f0f0f0',
-    borderWidth: 3,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-  },
-  avatarInitials: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-  },
-  initialsText: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  cameraButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#8B7B8B',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
+  greetingText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.85)',
+    marginBottom: 4,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
-    textAlign: 'center',
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#fff',
   },
-  phone: {
-    fontSize: 12,
-    color: 'rgba(0, 0, 0, 0.6)',
-    textAlign: 'center',
+  profileButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
