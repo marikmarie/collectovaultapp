@@ -77,8 +77,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 120,
-    height: 30,
+    width: 170,
+    height: 45,
   },
   greetingRow: {
     marginTop: 14,

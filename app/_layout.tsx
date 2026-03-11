@@ -40,10 +40,14 @@ function RootLayoutContent() {
   );
 }
 
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutContent />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <RootLayoutContent />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

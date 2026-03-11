@@ -1,25 +1,23 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import BuyPointsModal from '@/components/BuyPointsModal';
+import DashboardHeader from '@/components/DashboardHeader';
+import { transactionService } from '@/src/api/collecto';
+import { customerService } from '@/src/api/customer';
+import { useAuth } from '@/src/context/AuthContext';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '@/src/context/AuthContext';
-import { customerService } from '@/src/api/customer';
-import { transactionService } from '@/src/api/collecto';
-import DashboardHeader from '@/components/DashboardHeader';
-import EnhancedTierProgress from '@/components/EnhancedTierProgress';
-import HowToEarnPoints from '@/components/HowToEarnPoints';
-import BuyPointsModal from '@/components/BuyPointsModal';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Transaction {
   id: string;
@@ -32,6 +30,10 @@ interface Transaction {
   transactionId?: string;
 }
 
+
+import { StatusBar } from 'expo-status-bar';
+import AddCashModal from '../../components/AddCashModal';
+import TransferCashModal from '../../components/TransferCashModal';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -52,6 +54,8 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [buyPointsModalVisible, setBuyPointsModalVisible] = useState(false);
+  const [addCashModalVisible, setAddCashModalVisible] = useState(false);
+  const [transferCashModalVisible, setTransferCashModalVisible] = useState(false);
 
   const clientId = user?.clientId || '';
   const collectoId = user?.collectoId || '';
@@ -123,7 +127,8 @@ export default function DashboardScreen() {
   }, [fetchData]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['left','right','bottom']}>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" backgroundColor="#fff" />
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#d81b60" />
@@ -155,9 +160,6 @@ export default function DashboardScreen() {
             <View style={styles.walletCardHeader}>
               <View>
                 <Text style={styles.walletCardTitle}>Wallet Balance</Text>
-                <Text style={styles.walletCardSubtitle}>
-                  {pointsBalance.toLocaleString()} pts
-                </Text>
               </View>
               <TouchableOpacity onPress={() => setShowWalletAmount((v) => !v)}>
                 <Feather
@@ -175,12 +177,7 @@ export default function DashboardScreen() {
                   : '—'
                 : '••••••'}
             </Text>
-            {ugxPerPoint > 0 && (
-              <Text style={styles.walletSubtext}>
-                1 pt ≈ UGX {ugxPerPoint.toFixed(2)}
-              </Text>
-            )}
-
+      
             <View style={styles.walletStatsRow}>
               <View style={styles.walletStat}>
                 <Text style={styles.walletStatLabel}>Earned</Text>
@@ -199,15 +196,13 @@ export default function DashboardScreen() {
                 <Text style={styles.walletStatValue}>{tier}</Text>
               </View>
             </View>
-
-            <EnhancedTierProgress currentTier={tier} progress={tierProgress} />
           </LinearGradient>
 
           {/* ACTIONS */}
           <View style={styles.actionsRow}>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => router.push('/add-cash')}
+              onPress={() => setAddCashModalVisible(true)}
             >
               <View style={styles.actionButtonContent}>
                 <Feather name="plus-circle" size={16} color="#d81b60" />
@@ -216,7 +211,7 @@ export default function DashboardScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => router.push('/transfer-cash')}
+              onPress={() => setTransferCashModalVisible(true)}
             >
               <View style={styles.actionButtonContent}>
                 <Feather name="send" size={16} color="#d81b60" />
@@ -341,6 +336,22 @@ export default function DashboardScreen() {
         onClose={() => {
           setBuyPointsModalVisible(false);
           fetchData(); 
+        }}
+      />
+
+      <AddCashModal
+        visible={addCashModalVisible}
+        onClose={() => {
+          setAddCashModalVisible(false);
+          fetchData();
+        }}
+      />
+
+      <TransferCashModal
+        visible={transferCashModalVisible}
+        onClose={() => {
+          setTransferCashModalVisible(false);
+          fetchData();
         }}
       />
 

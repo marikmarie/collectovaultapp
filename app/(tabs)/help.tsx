@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
 
 export default function HelpScreen() {
   return (
-    <SafeAreaView style={styles.container} edges={['left','right','bottom']}>
+    <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Help & Support</Text>

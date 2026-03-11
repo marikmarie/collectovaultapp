@@ -13,17 +13,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: true,
-        headerTitle: 'Collecto Vault',
-        headerTitleStyle: {
-          fontSize: 20,
-          fontWeight: '700',
-        },
-        headerStyle: {
-          backgroundColor: '#212121',
-        },
-        headerTintColor: '#fff',
-        headerTitleAlign: 'left',
+        headerShown: false,
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
@@ -34,6 +24,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
+          headerShown: false,
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
