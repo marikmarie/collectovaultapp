@@ -391,7 +391,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                       <View style={styles.accountBox}>
                         <Feather name="check-circle" size={20} color="#4caf50" />
                         <View style={styles.accountInfo}>
-                          <Text style={styles.accountLabel}>Account Name</Text>
+                          <Text style={styles.accountLabel}>Recipient Name</Text>
                           <Text style={styles.accountName}>{accountName}</Text>
                         </View>
                       </View>
