@@ -1,26 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  Modal,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  TextInput,
-  ScrollView,
-  Alert,
-} from 'react-native';
-import { Feather } from '@expo/vector-icons';
 import api from '@/src/api';
-import storage from '@/src/utils/storage';
 import { useAuth } from '@/src/context/AuthContext';
+import storage from '@/src/utils/storage';
+import { Feather } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 interface AddCashModalProps {
   visible: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export default function AddCashModal({ visible, onClose }: AddCashModalProps) {
+export default function AddCashModal({ visible, onClose, onSuccess }: AddCashModalProps) {
   const { user } = useAuth();
   const [amount, setAmount] = useState('');
   const [phone, setPhone] = useState('');
@@ -144,7 +145,7 @@ export default function AddCashModal({ visible, onClose }: AddCashModalProps) {
         Alert.alert(
           'Payment Initiated',
           'A mobile money prompt has been sent. Follow the instructions on your phone.',
-          [{ text: 'OK', onPress: () => handleClose() }]
+          [{ text: 'OK', onPress: () => { handleClose(); onSuccess?.(); } }]
         );
       } else {
         Alert.alert('Failed', res.data?.message ?? 'Could not initiate payment');
@@ -197,6 +198,7 @@ export default function AddCashModal({ visible, onClose }: AddCashModalProps) {
                     setPhoneError(null);
                   }}
                   editable={!loading && !verifying}
+                  maxLength={10}
                 />
                 <TouchableOpacity
                   style={[
@@ -220,7 +222,7 @@ export default function AddCashModal({ visible, onClose }: AddCashModalProps) {
                 <View style={styles.accountBox}>
                   <Feather name="check-circle" size={20} color="#4caf50" />
                   <View style={styles.accountInfo}>
-                    <Text style={styles.accountLabel}>Account Name</Text>
+                    <Text style={styles.accountLabel}>Recipient Name</Text>
                     <Text style={styles.accountName}>{accountName}</Text>
                   </View>
                 </View>

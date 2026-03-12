@@ -153,6 +153,12 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
     }
   };
 
+  useEffect(() => {
+    if (phone.trim().length === 10 && !verified && !verifying) {
+      verifyPhoneNumber();
+    }
+  }, [phone, verified, verifying]);
+
   // Handle payment
   const handleConfirmPayment = async () => {
     if (!selectedPackage) return;
@@ -358,9 +364,15 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                         placeholder=" Enter phone number (0756...)"
                         placeholderTextColor="#ccc"
                         value={phone}
-                        onChangeText={setPhone}
-                        editable={!verified}
+                        onChangeText={(value) => {
+                          setPhone(value);
+                          setVerified(false);
+                          setAccountName(null);
+                          setPhoneError(null);
+                        }}
+                        editable={!verified && !verifying}
                         keyboardType="phone-pad"
+                        maxLength={10}
                       />
                       <TouchableOpacity
                         style={styles.verifyBtn}

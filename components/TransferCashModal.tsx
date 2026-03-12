@@ -18,9 +18,10 @@ import { useAuth } from '@/src/context/AuthContext';
 interface TransferCashModalProps {
   visible: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export default function TransferCashModal({ visible, onClose }: TransferCashModalProps) {
+export default function TransferCashModal({ visible, onClose, onSuccess }: TransferCashModalProps) {
   const { user } = useAuth();
   const [amount, setAmount] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
@@ -144,7 +145,7 @@ export default function TransferCashModal({ visible, onClose }: TransferCashModa
         Alert.alert(
           'Transfer initiated',
           'A payment request has been sent to the recipient. The transfer will reflect once confirmed.',
-          [{ text: 'OK', onPress: () => handleClose() }]
+          [{ text: 'OK', onPress: () => { handleClose(); onSuccess?.(); } }]
         );
       } else {
         Alert.alert('Failed', res.data?.message ?? 'Could not initiate transfer');
@@ -197,6 +198,7 @@ export default function TransferCashModal({ visible, onClose }: TransferCashModa
                     setPhoneError(null);
                   }}
                   editable={!loading && !verifying}
+                  maxLength={10}
                 />
                 <TouchableOpacity
                   style={[

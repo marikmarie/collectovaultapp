@@ -335,7 +335,9 @@ export default function DashboardScreen() {
         visible={buyPointsModalVisible}
         onClose={() => {
           setBuyPointsModalVisible(false);
-          fetchData(); 
+        }}
+        onSuccess={() => {
+          fetchData();
         }}
       />
 
@@ -343,6 +345,8 @@ export default function DashboardScreen() {
         visible={addCashModalVisible}
         onClose={() => {
           setAddCashModalVisible(false);
+        }}
+        onSuccess={() => {
           fetchData();
         }}
       />
@@ -351,6 +355,8 @@ export default function DashboardScreen() {
         visible={transferCashModalVisible}
         onClose={() => {
           setTransferCashModalVisible(false);
+        }}
+        onSuccess={() => {
           fetchData();
         }}
       />

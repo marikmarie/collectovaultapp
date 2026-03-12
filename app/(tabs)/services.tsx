@@ -21,6 +21,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
 interface Service {
   id: string;
@@ -62,6 +63,9 @@ export default function ServicesScreen() {
   // Service detail modal
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+
+  // Filter dropdown state
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
 
   // Toast
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -239,26 +243,30 @@ export default function ServicesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* ── Status Bar ── */}
+      <StatusBar style="light" backgroundColor="#1a1a1a" />
+
       {/* ── Header ── */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Services</Text>
-        <TouchableOpacity style={styles.cartBtn} onPress={() => setCartOpen(true)}>
-          <Feather name="shopping-cart" size={22} color="#d81b60" />
+        <Text style={styles.headerTitle}>Services and Products</Text>
+        <TouchableOpacity style={styles.pillCartBtn} onPress={() => setCartOpen(true)}>
+          <Feather name="shopping-cart" size={16} color="#455A64" />
+          <Text style={styles.pillCartTotal}>UGX {cartTotal.toLocaleString()}</Text>
           {cartCount > 0 && (
-            <View style={styles.cartBadge}>
+            <View style={styles.cartBadgeAbsolute}>
               <Text style={styles.cartBadgeText}>{cartCount}</Text>
             </View>
           )}
         </TouchableOpacity>
       </View>
 
-      {/* ── Search ── */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchWrapper}>
+      {/* ── Search and Filter Row ── */}
+      <View style={styles.searchFilterRow}>
+        <View style={styles.searchWrapperFlexible}>
           <Feather name="search" size={16} color="#999" style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search services..."
+            placeholder="Search..."
             placeholderTextColor="#999"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -269,32 +277,63 @@ export default function ServicesScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        <TouchableOpacity
+          style={styles.filterDropdownBtn}
+          onPress={() => setFilterDropdownOpen(true)}
+        >
+          <Feather name="filter" size={14} color="#666" style={{ marginRight: 6 }} />
+          <Text style={styles.filterDropdownText} numberOfLines={1}>
+            {selectedCategory}
+          </Text>
+          <Feather name="chevron-down" size={14} color="#999" style={{ marginLeft: 'auto' }} />
+        </TouchableOpacity>
       </View>
 
-      {/* ── Category Filter Chips ── */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryScroll}
-        contentContainerStyle={styles.categoryContent}
-      >
-        {categories.map((cat) => (
-          <TouchableOpacity
-            key={cat}
-            style={[styles.categoryChip, selectedCategory === cat && styles.categoryChipActive]}
-            onPress={() => setSelectedCategory(cat)}
-          >
-            <Text
-              style={[
-                styles.categoryChipText,
-                selectedCategory === cat && styles.categoryChipTextActive,
-              ]}
-            >
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      {/* ── Filter Dropdown Modal ── */}
+      <Modal visible={filterDropdownOpen} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setFilterDropdownOpen(false)}>
+          <View style={styles.filterModalOverlay}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <View style={styles.filterModalContent}>
+                <View style={styles.filterModalHeader}>
+                  <Text style={styles.filterModalTitle}>Select Category</Text>
+                  <TouchableOpacity onPress={() => setFilterDropdownOpen(false)}>
+                    <Feather name="x" size={20} color="#666" />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView style={styles.filterList}>
+                  {categories.map((cat) => (
+                    <TouchableOpacity
+                      key={cat}
+                      style={[
+                        styles.filterListItem,
+                        selectedCategory === cat && styles.filterListItemActive,
+                      ]}
+                      onPress={() => {
+                        setSelectedCategory(cat);
+                        setFilterDropdownOpen(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.filterListText,
+                          selectedCategory === cat && styles.filterListTextActive,
+                        ]}
+                      >
+                        {cat}
+                      </Text>
+                      {selectedCategory === cat && (
+                        <Feather name="check" size={16} color="#d81b60" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
       {/* ── Toast (shown when cart is closed) ── */}
       {!cartOpen && toast && (
@@ -615,19 +654,42 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
   },
   cartBtn: {
-    position: 'relative',
     padding: 6,
   },
-  cartBadge: {
+  pillCartBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#eee',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    gap: 6,
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  pillCartTotal: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#34495e',
+  },
+  cartBadgeAbsolute: {
     position: 'absolute',
-    top: 2,
-    right: 2,
+    top: -6,
+    right: -6,
     backgroundColor: '#d81b60',
     borderRadius: 10,
     minWidth: 18,
     height: 18,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   cartBadgeText: {
     color: '#fff',
@@ -635,61 +697,104 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Search
-  searchContainer: {
+  // Search and Filter Row
+  searchFilterRow: {
+    flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 10,
     backgroundColor: '#fff',
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
-  searchWrapper: {
+  searchWrapperFlexible: {
+    flex: 2,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
     borderRadius: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     height: 42,
     borderWidth: 1,
     borderColor: '#eee',
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
     color: '#1a1a1a',
   },
-
-  // Category chips
-  categoryScroll: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    maxHeight: 52,
-  },
-  categoryContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 8,
+  filterDropdownBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  categoryChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
     backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 42,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#eee',
   },
-  categoryChipActive: {
-    backgroundColor: '#d81b60',
-    borderColor: '#d81b60',
-  },
-  categoryChipText: {
+  filterDropdownText: {
+    flex: 1,
     fontSize: 12,
     fontWeight: '600',
-    color: '#555',
+    color: '#1a1a1a',
   },
-  categoryChipTextActive: {
-    color: '#fff',
+  
+  // Filter Modal
+  filterModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: '85%',
+    maxHeight: '70%',
+    paddingVertical: 10,
+  },
+  filterModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  filterModalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  filterList: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  filterListItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
+  filterListItemActive: {
+    backgroundColor: '#fff0f6',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    borderBottomWidth: 0,
+    marginVertical: 2,
+  },
+  filterListText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  filterListTextActive: {
+    color: '#d81b60',
+    fontWeight: '700',
   },
 
   // Toast
@@ -946,19 +1051,18 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  // Cart Modal
+  // Cart Modal Bottom Sheet
   cartModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-start',
-    paddingTop: 72,
+    justifyContent: 'flex-end',
   },
   cartModalContent: {
     backgroundColor: '#fff',
-    borderRadius: 20,
-    maxHeight: '88%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '90%',
     paddingTop: 16,
-    marginHorizontal: 16,
   },
   cartModalHeader: {
     flexDirection: 'row',
