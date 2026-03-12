@@ -63,11 +63,16 @@ export default function SetUsernameModal({
 
     setIsLoading(true);
     try {
-      const storedClientId =
-        passedClientId || (await storage.getItem('clientId'));
-      const collectoId = await storage.getItem('collectoId');
+      let storedClientId = passedClientId;
+      if (storedClientId == null) {
+        const id = await storage.getItem('clientId');
+        if (id) storedClientId = id;
+      }
+      let collectoId: string = '';
+      const rawCollectoId = await storage.getItem('collectoId');
+      if (rawCollectoId) collectoId = rawCollectoId;
 
-      if (!storedClientId) {
+      if (!storedClientId || typeof storedClientId !== 'string') {
         setError('Client ID not found. Please login again.');
         setIsLoading(false);
         return;
@@ -89,13 +94,14 @@ export default function SetUsernameModal({
         return;
       }
 
-      const result = await authService.setUsername({
-        clientId: storedClientId,
-        username: trimmed,
-        collectoId: collectoId || undefined,
-      });
+          const resp = await authService.setUsername(
+            storedClientId,
+            collectoId,
+            trimmed,
+            { clientId: storedClientId, collectoId, username: trimmed }
+          );
 
-      if (result.success) {
+      if (resp.success) {
         setSuccess('Username created successfully!');
         await storage.setItem('userName', trimmed);
         setTimeout(() => {
@@ -103,7 +109,7 @@ export default function SetUsernameModal({
           onClose();
         }, 1500);
       } else {
-        setError(result.message || 'Failed to create username');
+        setError(resp.message || 'Failed to create username');
       }
     } catch (err: any) {
       setError(err.message || 'Failed to create username. Please try again.');

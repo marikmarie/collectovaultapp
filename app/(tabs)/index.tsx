@@ -1,3 +1,5 @@
+import SetUsernameModal from '../../components/SetUsernameModal';
+import storage from '@/src/utils/storage';
 import BuyPointsModal from '@/components/BuyPointsModal';
 import DashboardHeader from '@/components/DashboardHeader';
 import { transactionService } from '@/src/api/collecto';
@@ -34,6 +36,7 @@ interface Transaction {
 import { StatusBar } from 'expo-status-bar';
 import AddCashModal from '../../components/AddCashModal';
 import TransferCashModal from '../../components/TransferCashModal';
+import { authService } from '@/src/api/authService';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -57,8 +60,10 @@ export default function DashboardScreen() {
   const [addCashModalVisible, setAddCashModalVisible] = useState(false);
   const [transferCashModalVisible, setTransferCashModalVisible] = useState(false);
 
-  const clientId = user?.clientId || '';
-  const collectoId = user?.collectoId || '';
+  const [clientId, setClientId] = useState(user?.clientId || '');
+  const [collectoId, setCollectoId] = useState(user?.collectoId || '');
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [username, setUsername] = useState(user?.userName || '');
 
   const fetchData = useCallback(async () => {
     if (!clientId) return;
@@ -118,6 +123,22 @@ export default function DashboardScreen() {
   }, [clientId]);
 
   useEffect(() => {
+    // Fetch IDs from storage if not in context
+    const fetchIds = async () => {
+      if (!clientId) {
+        const storedClientId = await storage.getItem('clientId');
+        if (storedClientId) setClientId(storedClientId);
+      }
+      if (!collectoId) {
+        const storedCollectoId = await storage.getItem('collectoId');
+        if (storedCollectoId) setCollectoId(storedCollectoId);
+      }
+      if (!username) {
+        const storedUsername = await storage.getItem('userName');
+        if (storedUsername) setUsername(storedUsername);
+      }
+    };
+    fetchIds();
     fetchData();
   }, [fetchData]);
 
@@ -129,6 +150,22 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" backgroundColor="#fff" />
+      <SetUsernameModal
+        visible={showProfileModal}
+        username={username}
+        onClose={() => setShowProfileModal(false)}
+        onSave={async (newUsername: string) => {
+          if (!clientId || !collectoId) return;
+          try {
+            await authService.setUsername(clientId, collectoId, newUsername, { clientId, username: newUsername, collectoId });
+            setUsername(newUsername);
+            await storage.setItem('userName', newUsername);
+            setShowProfileModal(false);
+          } catch (err) {
+            Alert.alert('Error', 'Failed to update username');
+          }
+        }}
+      />
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#d81b60" />
@@ -143,11 +180,8 @@ export default function DashboardScreen() {
         >
           {/* Header */}
           <DashboardHeader
-            name={loyaltyName ?? user?.userName ?? undefined}
-            onProfilePress={() => {
-              // Placeholder: navigate to profile/settings if available
-              // e.g. router.push('/settings')
-            }}
+            name={loyaltyName ?? username ?? undefined}
+            onProfilePress={() => setShowProfileModal(true)}
           />
 
           {/* Wallet Summary */}

@@ -40,13 +40,16 @@ export const authService = {
   /**
    * Set username for a customer after first login
    */
-  setUsername: async (payload: {
-    clientId: string;
-    username: string;
-    collectoId?: string;
-  }) => {
+  setUsername: async (clientId: string, collectoId: string, username: string, payload: {
+  clientId: string;
+  collectoId?: string;
+  username: string;
+  
+}) => {
     try {
       const resp = await api.post('/setUsername', payload);
+
+      console.debug('[AuthService] setUsername response:', resp.data);
       if (resp.data.success) {
         await setItem('userName', payload.username);
       }
