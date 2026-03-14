@@ -244,7 +244,7 @@ export default function ServicesScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* ── Status Bar ── */}
-      <StatusBar style="light" backgroundColor="#1a1a1a" />
+      <StatusBar style="dark" backgroundColor="#f5f5f5" />
 
       {/* ── Header ── */}
       <View style={styles.header}>
