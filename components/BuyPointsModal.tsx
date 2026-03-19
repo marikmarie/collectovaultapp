@@ -184,6 +184,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
         reference: `BUYPOINTS-${Date.now()}`,
       });
 
+      console
       const data = res?.data;
       const apiStatus = String(data?.status || '');
       const transactionId = data?.data?.transactionId || data?.transactionId || null;
@@ -336,6 +337,60 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
 
             {step === 'confirm' && selectedPackage && (
               <>
+                {/* Status feedback - SHOW AT TOP if exists */}
+                {txStatus !== 'idle' && (
+                  <View style={styles.statusFeedback}>
+                    <View style={styles.statusHeader}>
+                      {txStatus === 'success' && (
+                        <Feather name="check-circle" size={20} color="#4caf50" />
+                      )}
+                      {txStatus === 'failed' && (
+                        <Feather name="x-circle" size={20} color="#f44336" />
+                      )}
+                      {txStatus === 'pending' && (
+                        <ActivityIndicator size="small" color="#2196f3" />
+                      )}
+                      <Text style={[
+                        styles.statusText,
+                        txStatus === 'success' && styles.statusTextSuccess,
+                        txStatus === 'failed' && styles.statusTextFailed,
+                        txStatus === 'pending' && styles.statusTextPending,
+                      ]}>
+                        {txStatus === 'success'
+                          ? 'Payment Confirmed!'
+                          : txStatus === 'failed'
+                            ? 'Payment Failed'
+                            : 'Processing Payment...'}
+                      </Text>
+                    </View>
+
+                    {txStatus === 'success' && (
+                      <Text style={styles.statusSubtext}>
+                        Points have been added to your account
+                      </Text>
+                    )}
+                    {txStatus === 'failed' && (
+                      <Text style={styles.statusSubtext}>
+                        Your payment was declined. Please try again.
+                      </Text>
+                    )}
+                    {txStatus === 'pending' && (
+                      <View style={styles.pendingActions}>
+                        <Text style={styles.statusSubtext}>
+                          Checking status automatically...
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.checkButton}
+                          onPress={() => txId && queryTxStatus(txId)}
+                          disabled={false} 
+                        >
+                          <Text style={styles.checkButtonText}>Check</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                )}
+
                 <Text style={styles.sectionTitle}>Confirm Purchase</Text>
 
                 {/* Package Summary */}
@@ -434,15 +489,30 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
             )}
 
             {step === 'confirm' && (
-              <TouchableOpacity
-                style={[styles.proceedBtn, processing && styles.proceedBtnDisabled]}
-                onPress={handleConfirmPayment}
-                disabled={!verified || processing}
-              >
-                <Text style={styles.proceedBtnText}>
-                  {processing ? 'Processing...' : 'Confirm Payment'}
-                </Text>
-              </TouchableOpacity>
+              <View style={styles.confirmActions}>
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  onPress={() => setStep('select')}
+                >
+                  <Text style={styles.cancelBtnText}>Change details</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.proceedBtn,
+                    (processing || txStatus === 'pending') && styles.proceedBtnDisabled
+                  ]}
+                  onPress={handleConfirmPayment}
+                  disabled={!verified || processing || txStatus === 'pending'}
+                >
+                  <Text style={styles.proceedBtnText}>
+                    {processing
+                      ? 'Processing...'
+                      : txStatus === 'pending'
+                        ? 'Payment Sent'
+                        : 'Confirm Payment'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             )}
 
             {(step === 'success' || step === 'failure') && (
@@ -681,6 +751,10 @@ const styles = StyleSheet.create({
     borderTopColor: '#eee',
     gap: 8,
   },
+  confirmActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   proceedBtn: {
     backgroundColor: '#d81b60',
     borderRadius: 8,
@@ -705,5 +779,56 @@ const styles = StyleSheet.create({
     color: '#666',
     fontWeight: '600',
     fontSize: 14,
+  },
+  statusFeedback: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  statusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  statusTextSuccess: {
+    color: '#4caf50',
+  },
+  statusTextFailed: {
+    color: '#f44336',
+  },
+  statusTextPending: {
+    color: '#2196f3',
+  },
+  statusSubtext: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  pendingActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  checkButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#2196f3',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  checkButtonText: {
+    color: '#2196f3',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
