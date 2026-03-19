@@ -186,7 +186,7 @@ export default function DashboardScreen() {
 
           {/* Wallet Summary */}
           <LinearGradient
-            colors={['#d81b60', '#67095d']}
+            colors={["#d81b60", "#8f0a43", "#f06292"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.walletCard}
@@ -214,20 +214,22 @@ export default function DashboardScreen() {
       
             <View style={styles.walletStatsRow}>
               <View style={styles.walletStat}>
-                <Text style={styles.walletStatLabel}>Earned</Text>
+                <Text style={styles.walletStatLabel}>Earned Points</Text>
                 <Text style={styles.walletStatValue}>
                   {earnedPoints.toLocaleString()} pts
                 </Text>
               </View>
               <View style={styles.walletStat}>
-                <Text style={styles.walletStatLabel}>Bought</Text>
+                <Text style={styles.walletStatLabel}>Bought Points</Text>
                 <Text style={styles.walletStatValue}>
                   {boughtPoints.toLocaleString()} pts
                 </Text>
               </View>
               <View style={styles.walletStat}>
-                <Text style={styles.walletStatLabel}>Tier</Text>
-                <Text style={styles.walletStatValue}>{tier}</Text>
+                <Text style={styles.walletStatLabel}>Total Points</Text>
+                <Text style={styles.walletStatValue}>
+                  {(earnedPoints + boughtPoints).toLocaleString()} pts
+                </Text>
               </View>
             </View>
           </LinearGradient>
