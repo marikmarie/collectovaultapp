@@ -200,7 +200,7 @@ export default function AddCashModal({ visible, onClose, onSuccess }: AddCashMod
                   editable={!loading && !verifying}
                   maxLength={10}
                 />
-                <Text style={styles.statusText}>
+                <Text style={verifying ? styles.statusText : verified ? styles.statusTextSuccess : styles.statusText}>
                   {verifying ? 'Verifying...' : verified ? '✓ Verified' : 'Enter 10-digit phone'}
                 </Text>
               </View>
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   },
   phoneInput: {
     flex: 0,
-    width: 150,
+    width: 180,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
   },
   smallPhoneInput: {
-    width: 150,
+    width: 180,
   },
   statusText: {
     color: '#666',

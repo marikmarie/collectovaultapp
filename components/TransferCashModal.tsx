@@ -200,7 +200,7 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
                   editable={!loading && !verifying}
                   maxLength={10}
                 />
-                <Text style={styles.statusText}>
+                <Text style={[styles.statusText, { color: verifying ? '#666' : verified ? '#2e7d32' : '#666' }]}>
                   {verifying ? 'Verifying...' : verified ? '✓ Verified' : 'Enter 10-digit phone'}
                 </Text>
               </View>
@@ -307,7 +307,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   phoneInput: {
-    width: 150,
+    flex: 0,
+    width: 180,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -317,8 +318,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
   },
+  smallPhoneInput: {
+    width: 180,
+  },
   statusText: {
-    color: '#666',
     fontSize: 12,
   },
   verifyBtn: {

@@ -479,7 +479,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
 
           {/* Footer Actions */}
           <View style={styles.footer}>
-            {step === 'select' && selectedPackage && (
+            {step === 'select' && selectedId && (
               <TouchableOpacity
                 style={styles.proceedBtn}
                 onPress={() => setStep('confirm')}
@@ -663,7 +663,7 @@ const styles = StyleSheet.create({
   },
   phoneInput: {
     flex: 0,
-    width: 150,
+    width: 180,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
