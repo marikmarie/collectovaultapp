@@ -183,20 +183,6 @@ export default function HelpScreen() {
           </View>
 
           <View style={styles.faqItem}>
-            <Text style={styles.faqQuestion}>Can I redeem my points?</Text>
-            <Text style={styles.faqAnswer}>
-              Yes! Navigate to the Spend Points section to browse available rewards and redeem your points.
-            </Text>
-          </View>
-
-          <View style={styles.faqItem}>
-            <Text style={styles.faqQuestion}>What are tiers?</Text>
-            <Text style={styles.faqAnswer}>
-              Tiers are membership levels based on your spending. Higher tiers unlock better rewards and benefits. Check Tier Benefits for details.
-            </Text>
-          </View>
-
-          <View style={styles.faqItem}>
             <Text style={styles.faqQuestion}>How do I check my transaction history?</Text>
             <Text style={styles.faqAnswer}>
               Go to the Statement tab to view all your transactions, points earned, and redemptions.
