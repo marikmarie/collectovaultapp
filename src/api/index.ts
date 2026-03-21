@@ -11,11 +11,14 @@ if (Platform.OS === 'android') {
     API_BASE = API_BASE.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2') || 'http://10.0.2.2:8080';
   }
 } else if (!API_BASE) {
-  API_BASE = 'http://localhost:8080';
+    API_BASE = 'https://mariam.cissytech.com/collecto-vault-api/';
+
 }
 
-console.log('API_BASE URL:', API_BASE);
 console.log('storage available:', !!(storage && typeof (storage as any).getItem === 'function'));
+
+console.log('Platform.OS:', Platform.OS);
+console.log('API_BASE URL:', API_BASE);
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -84,12 +87,14 @@ export async function getVaultOtpToken(): Promise<string> {
 
 api.interceptors.request.use(
   async (config) => {
+    console.log('API Request:', config.method?.toUpperCase(), config.url);
     try {
       // guard in case AsyncStorage native module is missing
       if (storage && typeof (storage as any).getItem === 'function') {
         if ((await hasVaultOtpToken()) && config.headers) {
           const vaultOtp = await getVaultOtpToken();
           config.headers.Authorization = `Bearer ${vaultOtp}`;
+          console.log('Added auth header');
         }
       }
     } catch (err) {

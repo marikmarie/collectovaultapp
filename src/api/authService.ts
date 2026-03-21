@@ -138,7 +138,7 @@ export const authService = {
       // If no clientId, user is not logged in
       if (!clientId) return null;
 
-      // CRITICAL: Validate that the vaultOtpToken is still valid
+      // CRITICAL: Validate that the vaultOtpToken is still valid locally
       const hasValidToken = await import('./index').then(m => m.hasVaultOtpToken());
       
       if (!hasValidToken) {
@@ -147,7 +147,22 @@ export const authService = {
         return null;
       }
 
+      // Additionally, validate with API by making a test call
       const collectoId = await getItem('collectoId');
+      if (collectoId) {
+        try {
+          // Try to fetch customer data to validate token
+          await api.post('/loyaltySettings', {
+            collectoId,
+            clientId,
+          });
+        } catch (apiErr: any) {
+          console.warn('API validation failed, logging out:', apiErr?.message || apiErr);
+          await authService.logout();
+          return null;
+        }
+      }
+
       const userName = await getItem('userName');
 
       return { clientId, collectoId, userName };
