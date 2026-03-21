@@ -325,10 +325,6 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 12,
   },
-  statusText: {
-    color: '#666',
-    fontSize: 12,
-  },
   statusTextSuccess: {
     color: '#2e7d32',
     fontSize: 12,

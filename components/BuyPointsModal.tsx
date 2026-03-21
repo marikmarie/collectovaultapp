@@ -415,7 +415,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
 
                     <View style={styles.phoneInputGroup}>
                       <TextInput
-                        style={[styles.phoneInput, styles.smallPhoneInput]}
+                        style={styles.phoneInput}
                         placeholder="07XXXXXXXX"
                         placeholderTextColor="#ccc"
                         value={phone}

@@ -303,10 +303,11 @@ const styles = StyleSheet.create({
   },
   phoneInputGroup: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   phoneInput: {
-    flex: 1,
+    width: 150,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -315,6 +316,10 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     borderWidth: 1,
     borderColor: '#ddd',
+  },
+  statusText: {
+    color: '#666',
+    fontSize: 12,
   },
   verifyBtn: {
     backgroundColor: '#d81b60',
