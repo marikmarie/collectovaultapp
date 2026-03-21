@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const styles = StyleSheet.create({
@@ -112,6 +112,18 @@ const styles = StyleSheet.create({
 });
 
 export default function HelpScreen() {
+  const handlePhoneCall = () => {
+    Linking.openURL('tel:0775634567');
+  };
+
+  const handleEmail = () => {
+    Linking.openURL('mailto:info@cissytech.com');
+  };
+
+  const handleWhatsApp = () => {
+    Linking.openURL('https://wa.me/256775618385');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -125,21 +137,29 @@ export default function HelpScreen() {
           <Text style={styles.sectionTitle}>Contact Us</Text>
           
           <View style={styles.card}>
-            <View style={styles.contactItem}>
+            <TouchableOpacity style={styles.contactItem} onPress={handleEmail}>
               <Text style={styles.contactIcon}>📧</Text>
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>Email Support</Text>
                 <Text style={styles.contactValue}>info@cissytech.com</Text>
               </View>
-            </View>
+            </TouchableOpacity>
             
-            <View style={styles.contactItem}>
+            <TouchableOpacity style={styles.contactItem} onPress={handlePhoneCall}>
               <Text style={styles.contactIcon}>📱</Text>
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>Phone</Text>
                 <Text style={styles.contactValue}>0775634567</Text>
               </View>
-            </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.contactItem} onPress={handleWhatsApp}>
+              <Text style={styles.contactIcon}>💬</Text>
+              <View style={styles.contactInfo}>
+                <Text style={styles.contactLabel}>WhatsApp</Text>
+                <Text style={styles.contactValue}>0775618385</Text>
+              </View>
+            </TouchableOpacity>
 
             <View style={styles.contactItem}>
               <Text style={styles.contactIcon}>⏰</Text>

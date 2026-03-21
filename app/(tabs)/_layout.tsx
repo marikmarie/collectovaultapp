@@ -20,7 +20,8 @@ export default function TabLayout() {
       />
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+          tabBarActiveTintColor: '#000',
+          tabBarInactiveTintColor: '#999',
           headerShown: false,
           tabBarLabelStyle: {
             fontSize: 12,
@@ -34,7 +35,7 @@ export default function TabLayout() {
             right: 20,
             height: 70,
             borderRadius: 35,
-            backgroundColor: isDark ? Colors.dark.background : Colors.light.background,
+            backgroundColor: '#fff',
             borderTopWidth: 0,
             elevation: 5,
             shadowColor: '#000',
