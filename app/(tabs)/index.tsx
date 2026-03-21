@@ -192,16 +192,19 @@ export default function DashboardScreen() {
             style={styles.walletCard}
           >
             <View style={styles.walletCardHeader}>
-              <View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Text style={styles.walletCardTitle}>Cash Balance</Text>
+                <TouchableOpacity
+                  onPress={() => setShowWalletAmount((v) => !v)}
+                  style={{ marginLeft: 8 }}
+                >
+                  <Feather
+                    name={showWalletAmount ? 'eye' : 'eye-off'}
+                    size={24}
+                    color="#fff"
+                  />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={() => setShowWalletAmount((v) => !v)}>
-                <Feather
-                  name={showWalletAmount ? 'eye' : 'eye-off'}
-                  size={24}
-                  color="#fff"
-                />
-              </TouchableOpacity>
             </View>
 
             <Text style={styles.walletAmountText}>
