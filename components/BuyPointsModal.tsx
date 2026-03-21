@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import api from '@/src/api';
 import storage from '@/src/utils/storage';
 import { useAuth } from '@/src/context/AuthContext';
@@ -32,6 +33,7 @@ interface BuyPointsModalProps {
 type ModalStep = 'select' | 'confirm' | 'success' | 'failure';
 
 export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPointsModalProps) {
+  const router = useRouter();
   const { user } = useAuth();
   const [packages, setPackages] = useState<Package[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(false);
@@ -40,9 +42,6 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
   const [paymentMode, setPaymentMode] = useState<'mobilemoney' | 'bank'>('mobilemoney');
   const [phone, setPhone] = useState('');
   const [accountName, setAccountName] = useState<string | null>(null);
-  const [verifying, setVerifying] = useState(false);
-  const [verified, setVerified] = useState(false);
-  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txId, setTxId] = useState<string | number | null>(null);
@@ -90,74 +89,12 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
     setPhone('');
     setStep('select');
     setError(null);
-    setVerified(false);
     setAccountName(null);
-    setPhoneError(null);
 
     fetchPackages();
   }, [visible]);
 
-  // Verify phone
-  const verifyPhoneNumber = async () => {
-    const trimmed = String(phone || '').trim();
-
-    if (!trimmed || trimmed.length < 10) {
-      setPhoneError('Please enter a valid 10-digit phone number');
-      return;
-    }
-
-    try {
-      setVerifying(true);
-      setPhoneError(null);
-      const vaultOTPToken = await storage.getItem('vaultOtpToken');
-      const collectoId = await storage.getItem('collectoId');
-      const clientId = user?.clientId;
-
-      const res = await api.post('/verifyPhoneNumber', {
-        vaultOTPToken,
-        collectoId,
-        clientId,
-        phoneNumber: trimmed,
-      });
-
-      const payload = res?.data ?? {};
-      const nested = payload?.data ?? {};
-      const deeper = nested?.data ?? {};
-
-      const name =
-        (deeper?.name && String(deeper.name).trim()) ||
-        (nested?.name && String(nested.name).trim()) ||
-        (payload?.name && String(payload.name).trim()) ||
-        null;
-
-      const verifiedFlag = Boolean(
-        nested?.verifyPhoneNumber ??
-          deeper?.verifyPhoneNumber ??
-          String(payload?.status_message ?? '').toLowerCase() === 'success'
-      );
-
-      if (verifiedFlag) {
-        setVerified(true);
-        setAccountName(name);
-      } else {
-        setVerified(false);
-        setAccountName(null);
-        setPhoneError(nested?.message ?? 'Could not verify the phone number');
-      }
-    } catch (err: any) {
-      setAccountName(null);
-      setVerified(false);
-      setPhoneError(err?.response?.data?.message ?? 'Could not verify phone');
-    } finally {
-      setVerifying(false);
-    }
-  };
-
-  useEffect(() => {
-    if (phone.trim().length === 10 && !verified && !verifying) {
-      verifyPhoneNumber();
-    }
-  }, [phone, verified, verifying]);
+  // Verify phone - REMOVED
 
   // Handle payment
   const handleConfirmPayment = async () => {
@@ -279,9 +216,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
     setPhone('');
     setStep('select');
     setError(null);
-    setVerified(false);
     setAccountName(null);
-    setPhoneError(null);
     setTxId(null);
     setTxStatus('idle');
     if (pollIntervalRef.current) {
@@ -290,13 +225,23 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
     onClose();
   };
 
+  const navigateToAddCash = () => {
+    handleClose();
+    router.push('/add-cash');
+  };
+
+  const navigateToTransferCash = () => {
+    handleClose();
+    router.push('/transfer-cash');
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Buy Points</Text>
+            <Text style={styles.title}>💳 Buy Points</Text>
             <TouchableOpacity onPress={handleClose}>
               <Feather name="x" size={24} color="#666" />
             </TouchableOpacity>
@@ -408,52 +353,6 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                   </View>
                 </View>
 
-                {/* Phone Verification */}
-                {paymentMode === 'mobilemoney' && (
-                  <>
-                    <Text style={styles.sectionTitle}>Phone Number</Text>
-
-                    <View style={styles.phoneInputGroup}>
-                      <TextInput
-                        style={styles.phoneInput}
-                        placeholder=" Enter phone number (0756...)"
-                        placeholderTextColor="#ccc"
-                        value={phone}
-                        onChangeText={(value) => {
-                          setPhone(value);
-                          setVerified(false);
-                          setAccountName(null);
-                          setPhoneError(null);
-                        }}
-                        editable={!verified && !verifying}
-                        keyboardType="phone-pad"
-                        maxLength={10}
-                      />
-                      <TouchableOpacity
-                        style={styles.verifyBtn}
-                        onPress={verifyPhoneNumber}
-                        disabled={verifying || verified}
-                      >
-                        <Text style={styles.verifyBtnText}>
-                          {verifying ? 'Verifying...' : verified ? '✓ Verified' : 'Verify'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-
-                    {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
-
-                    {verified && accountName && (
-                      <View style={styles.accountBox}>
-                        <Feather name="check-circle" size={20} color="#4caf50" />
-                        <View style={styles.accountInfo}>
-                          <Text style={styles.accountLabel}>Recipient Name</Text>
-                          <Text style={styles.accountName}>{accountName}</Text>
-                        </View>
-                      </View>
-                    )}
-                  </>
-                )}
-
                 {error && <Text style={styles.errorText}>{error}</Text>}
               </>
             )}
@@ -484,6 +383,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                 style={styles.proceedBtn}
                 onPress={() => setStep('confirm')}
               >
+                <Feather name="arrow-right" size={18} color="#fff" style={{ marginRight: 8 }} />
                 <Text style={styles.proceedBtnText}>Continue to Payment</Text>
               </TouchableOpacity>
             )}
@@ -494,16 +394,18 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                   style={styles.cancelBtn}
                   onPress={() => setStep('select')}
                 >
-                  <Text style={styles.cancelBtnText}>Change details</Text>
+                  <Feather name="edit-2" size={16} color="#666" style={{ marginRight: 6 }} />
+                  <Text style={styles.cancelBtnText}>Change Details</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.proceedBtn,
-                    (processing || txStatus === 'pending') && styles.proceedBtnDisabled
+                    processing && styles.proceedBtnDisabled
                   ]}
                   onPress={handleConfirmPayment}
-                  disabled={!verified || processing || txStatus === 'pending'}
+                  disabled={processing || txStatus === 'pending'}
                 >
+                  <Feather name="check-circle" size={18} color="#fff" style={{ marginRight: 8 }} />
                   <Text style={styles.proceedBtnText}>
                     {processing
                       ? 'Processing...'
@@ -519,6 +421,22 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
               <TouchableOpacity style={styles.proceedBtn} onPress={handleClose}>
                 <Text style={styles.proceedBtnText}>Done</Text>
               </TouchableOpacity>
+            )}
+
+            {step === 'select' && (
+              <>
+                <View style={styles.dividerLine} />
+                <View style={styles.quickActionsRow}>
+                  <TouchableOpacity style={styles.quickActionBtn} onPress={navigateToAddCash}>
+                    <Feather name="plus-circle" size={20} color="#d81b60" />
+                    <Text style={styles.quickActionText}>Add Cash</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.quickActionBtn} onPress={navigateToTransferCash}>
+                    <Feather name="send" size={20} color="#d81b60" />
+                    <Text style={styles.quickActionText}>Transfer</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
             )}
 
             <TouchableOpacity
@@ -583,10 +501,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
     marginBottom: 16,
+    justifyContent: 'center',
   },
   packageCard: {
-    flex: 1,
-    minWidth: 120,
+    minWidth: 100,
+    maxWidth: '28%',
     backgroundColor: '#f5f5f5',
     borderRadius: 12,
     padding: 12,
@@ -655,61 +574,10 @@ const styles = StyleSheet.create({
     height: 40,
     backgroundColor: '#ddd',
   },
-  phoneInputGroup: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
-  },
-  phoneInput: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 13,
-    color: '#1a1a1a',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  verifyBtn: {
-    backgroundColor: '#d81b60',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  verifyBtnText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 12,
-  },
   errorText: {
     color: '#f44336',
     fontSize: 12,
     marginTop: 8,
-  },
-  accountBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e8f5e9',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 12,
-    gap: 12,
-  },
-  accountInfo: {
-    flex: 1,
-  },
-  accountLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#666',
-  },
-  accountName: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#2e7d32',
   },
   successContainer: {
     alignItems: 'center',
@@ -757,9 +625,13 @@ const styles = StyleSheet.create({
   },
   proceedBtn: {
     backgroundColor: '#d81b60',
-    borderRadius: 8,
+    borderRadius: 10,
     paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    flex: 1,
   },
   proceedBtnDisabled: {
     opacity: 0.5,
@@ -771,14 +643,40 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     backgroundColor: '#f0f0f0',
-    borderRadius: 8,
+    borderRadius: 10,
     paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
   },
   cancelBtnText: {
     color: '#666',
     fontWeight: '600',
     fontSize: 14,
+  },
+  dividerLine: {
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    marginVertical: 12,
+  },
+  quickActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 12,
+  },
+  quickActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    gap: 8,
+  },
+  quickActionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#d81b60',
   },
   statusFeedback: {
     backgroundColor: '#f8f9fa',
