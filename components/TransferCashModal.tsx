@@ -162,11 +162,10 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
       <View style={styles.overlay}>
         <View style={styles.content}>
           <View style={styles.header}>
+            <Text style={styles.title}>Transfer Cash</Text>
             <TouchableOpacity onPress={handleClose}>
               <Feather name="x" size={24} color="#666" />
             </TouchableOpacity>
-            <Text style={styles.title}>Transfer Cash</Text>
-            <View style={{ width: 24 }} />
           </View>
 
           <ScrollView contentContainerStyle={styles.body}>
@@ -188,7 +187,7 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
               <Text style={styles.inputLabel}>Recipient Phone</Text>
               <View style={styles.phoneInputGroup}>
                 <TextInput
-                  style={[styles.phoneInput, { flex: 1 }]}
+                  style={styles.phoneInput}
                   placeholder="07XXXXXXXX"
                   keyboardType="phone-pad"
                   value={recipientPhone}
@@ -201,11 +200,18 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
                   editable={!loading && !verifying}
                   maxLength={10}
                 />
-                {verified && (
-                  <View style={styles.verifyCheckmark}>
-                    <Text style={styles.verifyCheckmarkText}>✓</Text>
-                  </View>
-                )}
+                <TouchableOpacity
+                  style={[
+                    styles.verifyBtn,
+                    (verifying || verified) && styles.verifyBtnDisabled,
+                  ]}
+                  onPress={verifyPhone}
+                  disabled={verifying || verified}
+                >
+                  <Text style={styles.verifyBtnText}>
+                    {verifying ? 'Verifying...' : verified ? '✓ Verified' : 'Verify'}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               {phoneError ? (
@@ -275,8 +281,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#1a1a1a',
-    flex: 1,
-    textAlign: 'center',
   },
   body: {
     paddingHorizontal: 16,
@@ -381,17 +385,9 @@ const styles = StyleSheet.create({
   },
   proceedBtn: {
     backgroundColor: '#d81b60',
-    borderRadius: 12,
+    borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    shadowColor: '#d81b60',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
   },
   proceedBtnDisabled: {
     opacity: 0.5,
@@ -403,12 +399,9 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     backgroundColor: '#f0f0f0',
-    borderRadius: 12,
+    borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
   },
   cancelBtnText: {
     color: '#666',

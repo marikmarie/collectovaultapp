@@ -296,11 +296,10 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
+            <Text style={styles.title}>Buy Points</Text>
             <TouchableOpacity onPress={handleClose}>
               <Feather name="x" size={24} color="#666" />
             </TouchableOpacity>
-            <Text style={styles.title}>Buy Points</Text>
-            <View style={{ width: 24 }} />
           </View>
 
           <ScrollView contentContainerStyle={styles.body}>
@@ -416,8 +415,8 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
 
                     <View style={styles.phoneInputGroup}>
                       <TextInput
-                        style={[styles.phoneInput, { flex: 1 }]}
-                        placeholder=" Enter phone number (0756...)"
+                        style={[styles.phoneInput, styles.smallPhoneInput]}
+                        placeholder="07XXXXXXXX"
                         placeholderTextColor="#ccc"
                         value={phone}
                         onChangeText={(value) => {
@@ -426,15 +425,19 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                           setAccountName(null);
                           setPhoneError(null);
                         }}
-                        editable={!verified && !verifying}
+                        editable={!verifying}
                         keyboardType="phone-pad"
                         maxLength={10}
                       />
-                      {verified && (
-                        <View style={styles.verifyCheckmark}>
-                          <Text style={styles.verifyCheckmarkText}>✓</Text>
-                        </View>
-                      )}
+                      <View style={styles.phoneStatusContainer}>
+                        {verifying ? (
+                          <Text style={styles.statusText}>Verifying...</Text>
+                        ) : verified ? (
+                          <Text style={styles.statusTextSuccess}>✓ Verified</Text>
+                        ) : (
+                          <Text style={styles.statusText}>Enter a valid 10-digit number</Text>
+                        )}
+                      </View>
                     </View>
 
                     {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
@@ -582,14 +585,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   packageCard: {
-    flex: 1,
-    minWidth: 90,
-    backgroundColor: '#f5f5f5',
+    width: 140,
+    backgroundColor: '#f9f9f9',
     borderRadius: 12,
     padding: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#ddd',
     alignItems: 'center',
+    marginBottom: 12,
   },
   packageCardSelected: {
     backgroundColor: '#fff0f6',
@@ -668,18 +671,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
   },
-  verifyCheckmark: {
-    width: 36,
-    height: 36,
+  verifyBtn: {
+    backgroundColor: '#d81b60',
     borderRadius: 8,
-    backgroundColor: '#4caf50',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  verifyCheckmarkText: {
+  verifyBtnText: {
     color: '#fff',
-    fontWeight: '700',
-    fontSize: 18,
+    fontWeight: '600',
+    fontSize: 12,
   },
   errorText: {
     color: '#f44336',
@@ -754,17 +757,9 @@ const styles = StyleSheet.create({
   },
   proceedBtn: {
     backgroundColor: '#d81b60',
-    borderRadius: 12,
+    borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    shadowColor: '#d81b60',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
   },
   proceedBtnDisabled: {
     opacity: 0.5,
@@ -776,12 +771,9 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     backgroundColor: '#f0f0f0',
-    borderRadius: 12,
+    borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
   },
   cancelBtnText: {
     color: '#666',
