@@ -27,6 +27,21 @@ export default function TabLayout() {
             fontWeight: '600',
           },
           tabBarButton: HapticTab,
+          tabBarStyle: {
+            position: 'absolute',
+            bottom: 20,
+            left: 20,
+            right: 20,
+            height: 70,
+            borderRadius: 35,
+            backgroundColor: isDark ? Colors.dark.background : Colors.light.background,
+            borderTopWidth: 0,
+            elevation: 5,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+          },
         }}>
         <Tabs.Screen
           name="index"
@@ -61,3 +76,5 @@ export default function TabLayout() {
     </>
   );
 }
+
+
