@@ -431,11 +431,11 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                       />
                       <View style={styles.phoneStatusContainer}>
                         {verifying ? (
-                          <Text style={styles.statusText}>Verifying...</Text>
+                          <Text style={styles.phoneStatusText}>Verifying...</Text>
                         ) : verified ? (
-                          <Text style={styles.statusTextSuccess}>✓ Verified</Text>
+                          <Text style={styles.phoneStatusTextSuccess}>✓ Verified</Text>
                         ) : (
-                          <Text style={styles.statusText}>Enter a valid 10-digit number</Text>
+                          <Text style={styles.phoneStatusText}>Enter a valid 10-digit number</Text>
                         )}
                       </View>
                     </View>
@@ -657,11 +657,13 @@ const styles = StyleSheet.create({
   },
   phoneInputGroup: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
     marginBottom: 12,
   },
   phoneInput: {
-    flex: 1,
+    flex: 0,
+    width: 150,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -670,6 +672,18 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     borderWidth: 1,
     borderColor: '#ddd',
+  },
+  phoneStatusContainer: {
+    flex: 1,
+  },
+  phoneStatusText: {
+    color: '#666',
+    fontSize: 12,
+  },
+  phoneStatusTextSuccess: {
+    color: '#2e7d32',
+    fontSize: 12,
+    fontWeight: '700',
   },
   verifyBtn: {
     backgroundColor: '#d81b60',
@@ -754,12 +768,28 @@ const styles = StyleSheet.create({
   confirmActions: {
     flexDirection: 'row',
     gap: 8,
+    justifyContent: 'space-between',
   },
   proceedBtn: {
     backgroundColor: '#d81b60',
-    borderRadius: 8,
+    borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
+    flex: 1,
+    shadowColor: '#d81b60',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  cancelBtn: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d81b60',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    flex: 1,
   },
   proceedBtnDisabled: {
     opacity: 0.5,
@@ -769,15 +799,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
-  cancelBtn: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
   cancelBtnText: {
-    color: '#666',
-    fontWeight: '600',
+    color: '#d81b60',
+    fontWeight: '700',
     fontSize: 14,
   },
   statusFeedback: {

@@ -187,7 +187,7 @@ export default function AddCashModal({ visible, onClose, onSuccess }: AddCashMod
               <Text style={styles.inputLabel}>Phone Number</Text>
               <View style={styles.phoneInputGroup}>
                 <TextInput
-                  style={styles.phoneInput}
+                  style={[styles.phoneInput, styles.smallPhoneInput]}
                   placeholder="07XXXXXXXX"
                   keyboardType="phone-pad"
                   value={phone}
@@ -200,18 +200,9 @@ export default function AddCashModal({ visible, onClose, onSuccess }: AddCashMod
                   editable={!loading && !verifying}
                   maxLength={10}
                 />
-                <TouchableOpacity
-                  style={[
-                    styles.verifyBtn,
-                    (verifying || verified) && styles.verifyBtnDisabled,
-                  ]}
-                  onPress={verifyPhone}
-                  disabled={verifying || verified}
-                >
-                  <Text style={styles.verifyBtnText}>
-                    {verifying ? 'Verifying...' : verified ? '✓ Verified' : 'Verify'}
-                  </Text>
-                </TouchableOpacity>
+                <Text style={styles.statusText}>
+                  {verifying ? 'Verifying...' : verified ? '✓ Verified' : 'Enter 10-digit phone'}
+                </Text>
               </View>
 
               {phoneError ? (
@@ -312,10 +303,12 @@ const styles = StyleSheet.create({
   },
   phoneInputGroup: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   phoneInput: {
-    flex: 1,
+    flex: 0,
+    width: 150,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -324,6 +317,22 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     borderWidth: 1,
     borderColor: '#ddd',
+  },
+  smallPhoneInput: {
+    width: 150,
+  },
+  statusText: {
+    color: '#666',
+    fontSize: 12,
+  },
+  statusText: {
+    color: '#666',
+    fontSize: 12,
+  },
+  statusTextSuccess: {
+    color: '#2e7d32',
+    fontSize: 12,
+    fontWeight: '700',
   },
   verifyBtn: {
     backgroundColor: '#d81b60',
@@ -385,21 +394,28 @@ const styles = StyleSheet.create({
   },
   proceedBtn: {
     backgroundColor: '#d81b60',
-    borderRadius: 8,
+    borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
+    shadowColor: '#d81b60',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 3,
   },
   proceedBtnDisabled: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
   proceedBtnText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 15,
   },
   cancelBtn: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d81b60',
+    borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
   },

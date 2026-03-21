@@ -187,7 +187,7 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
               <Text style={styles.inputLabel}>Recipient Phone</Text>
               <View style={styles.phoneInputGroup}>
                 <TextInput
-                  style={styles.phoneInput}
+                  style={[styles.phoneInput, styles.smallPhoneInput]}
                   placeholder="07XXXXXXXX"
                   keyboardType="phone-pad"
                   value={recipientPhone}
@@ -200,18 +200,9 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
                   editable={!loading && !verifying}
                   maxLength={10}
                 />
-                <TouchableOpacity
-                  style={[
-                    styles.verifyBtn,
-                    (verifying || verified) && styles.verifyBtnDisabled,
-                  ]}
-                  onPress={verifyPhone}
-                  disabled={verifying || verified}
-                >
-                  <Text style={styles.verifyBtnText}>
-                    {verifying ? 'Verifying...' : verified ? '✓ Verified' : 'Verify'}
-                  </Text>
-                </TouchableOpacity>
+                <Text style={styles.statusText}>
+                  {verifying ? 'Verifying...' : verified ? '✓ Verified' : 'Enter 10-digit phone'}
+                </Text>
               </View>
 
               {phoneError ? (
@@ -385,21 +376,28 @@ const styles = StyleSheet.create({
   },
   proceedBtn: {
     backgroundColor: '#d81b60',
-    borderRadius: 8,
+    borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
+    shadowColor: '#d81b60',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 3,
   },
   proceedBtnDisabled: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
   proceedBtnText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 15,
   },
   cancelBtn: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d81b60',
+    borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
   },
