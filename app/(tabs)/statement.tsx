@@ -87,6 +87,7 @@ export default function StatementScreen() {
 
     try {
       const response = await transactionService.getTransactions(user.clientId, 50, 0);
+      console.log('Transactions API response:', response.data);
       const txs = response.data?.data?.data ?? response.data?.transactions ?? [];
       setTransactions(txs);
     } catch (err) {
