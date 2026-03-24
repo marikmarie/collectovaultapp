@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   },
   phoneInput: {
     flex: 0,
-    width: 180,
+    width: 220,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
   },
   smallPhoneInput: {
-    width: 180,
+    width: 220,
   },
   statusText: {
     color: '#666',

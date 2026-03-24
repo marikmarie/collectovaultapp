@@ -159,6 +159,13 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
     }
   }, [phone, verified, verifying]);
 
+  // Auto-navigate to confirm when a package is selected
+  useEffect(() => {
+    if (selectedId && step === 'select') {
+      setStep('confirm');
+    }
+  }, [selectedId, step]);
+
   // Handle payment
   const handleConfirmPayment = async () => {
     if (!selectedPackage) return;
@@ -184,7 +191,6 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
         reference: `BUYPOINTS-${Date.now()}`,
       });
 
-      console
       const data = res?.data;
       const apiStatus = String(data?.status || '');
       const transactionId = data?.data?.transactionId || data?.transactionId || null;
@@ -446,7 +452,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                       <View style={styles.accountBox}>
                         <Feather name="check-circle" size={20} color="#4caf50" />
                         <View style={styles.accountInfo}>
-                          <Text style={styles.accountLabel}>Recipient Name</Text>
+                          {/* <Text style={styles.accountLabel}>Recipient Name</Text> */}
                           <Text style={styles.accountName}>{accountName}</Text>
                         </View>
                       </View>
@@ -479,15 +485,6 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
 
           {/* Footer Actions */}
           <View style={styles.footer}>
-            {step === 'select' && selectedId && (
-              <TouchableOpacity
-                style={styles.proceedBtn}
-                onPress={() => setStep('confirm')}
-              >
-                <Text style={styles.proceedBtnText}>Continue to Payment</Text>
-              </TouchableOpacity>
-            )}
-
             {step === 'confirm' && (
               <View style={styles.confirmActions}>
                 <TouchableOpacity
@@ -663,7 +660,7 @@ const styles = StyleSheet.create({
   },
   phoneInput: {
     flex: 0,
-    width: 180,
+    width: 220,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,

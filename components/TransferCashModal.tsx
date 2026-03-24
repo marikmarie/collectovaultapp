@@ -213,7 +213,7 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
                 <View style={styles.accountBox}>
                   <Feather name="check-circle" size={20} color="#4caf50" />
                   <View style={styles.accountInfo}>
-                    <Text style={styles.accountLabel}>Recipient Name</Text>
+                    {/* <Text style={styles.accountLabel}>Recipient Name</Text> */}
                     <Text style={styles.accountName}>{accountName}</Text>
                   </View>
                 </View>
@@ -302,13 +302,14 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
   },
   phoneInputGroup: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginBottom: 12,
   },
   phoneInput: {
     flex: 0,
-    width: 180,
+    width: 220,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
   },
   smallPhoneInput: {
-    width: 180,
+    width: 220,
   },
   statusText: {
     fontSize: 12,

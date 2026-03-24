@@ -51,16 +51,13 @@ export default function DashboardHeader({ name, onProfilePress }: DashboardHeade
   return (
     <View style={styles.headerContainer}>
       <View style={styles.headerTopRow}>
+        <Image source={logo} style={styles.logo} resizeMode="contain" />
         <TouchableOpacity style={styles.profileButton} onPress={onProfilePress}>
           <Feather name="user" size={20} color="#d81b60" />
         </TouchableOpacity>
       </View>
-      <View style={styles.greetingRow}>
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
-        <View style={styles.greetingTextContainer}>
-          <Text style={styles.greetingText}>{`${greeting},`}</Text>
-          <Text style={styles.userName}>{displayName || ''}</Text>
-        </View>
+      <View style={styles.greetingSection}>
+        <Text style={styles.greetingText}>{`${greeting}, ${displayName.split(' ')[0]}`}</Text>
       </View>
     </View>
   );
@@ -75,13 +72,16 @@ const styles = StyleSheet.create({
   },
   headerTopRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 16,
   },
   logo: {
-    width: 120,
-    height: 35,
-    marginRight: 12,
+    width: 150,
+    height: 45,
+  },
+  greetingSection: {
+    alignItems: 'flex-start',
   },
   greetingRow: {
     flexDirection: 'row',
@@ -92,14 +92,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   greetingText: {
-    fontSize: 14,
+    fontSize: 24,
     color: '#d81b60',
-    marginBottom: 4,
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#d81b60',
+    fontWeight: '600',
   },
   profileButton: {
     width: 42,
