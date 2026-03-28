@@ -36,6 +36,8 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
   const [accountName, setAccountName] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [fetchedClientAddCash, setFetchedClientAddCash] = useState<any>(null);
+  const [chargeAmount, setChargeAmount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
 
   useEffect(() => {
     if (visible) {
@@ -131,6 +133,19 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
     }
   }, [phone, verified, verifying]);
 
+  useEffect(() => {
+    const numAmount = Number(amount) || 0;
+    const effectiveClientAddCash = clientAddCash || fetchedClientAddCash;
+    if (effectiveClientAddCash && effectiveClientAddCash.charge_client === 1) {
+      const charge = (numAmount * effectiveClientAddCash.charge) / 100;
+      setChargeAmount(charge);
+      setTotalAmount(numAmount + charge);
+    } else {
+      setChargeAmount(0);
+      setTotalAmount(numAmount);
+    }
+  }, [amount, clientAddCash, fetchedClientAddCash]);
+
   const handleAddCash = async () => {
     if (!verified) {
       Alert.alert('Verify phone', 'Please verify your phone number before proceeding.');
@@ -173,7 +188,6 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
         },
       });
 
-      //log request and response for debugging
       console.log('Add Cash Request Payload:', {
         vaultOTPToken,
         collectoId,
@@ -186,7 +200,7 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
           charge: 0,
           charge_client: 0,
         },
-      }); 
+      });
       console.log('Add Cash Response:', res.data);
 
       const status = String(res.data?.status ?? '').toLowerCase();
@@ -230,6 +244,16 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
                 onChangeText={setAmount}
                 editable={!loading}
               />
+              {chargeAmount > 0 && (
+                <View style={styles.chargeBreakdown}>
+                  <Text style={styles.chargeText}>
+                    Service Charge: UGX {chargeAmount.toLocaleString()}
+                  </Text>
+                  <Text style={styles.totalText}>
+                    Total to Pay: UGX {totalAmount.toLocaleString()}
+                  </Text>
+                </View>
+              )}
             </View>
 
             <View style={styles.inputGroup}>
@@ -468,5 +492,23 @@ const styles = StyleSheet.create({
     color: '#666',
     fontWeight: '600',
     fontSize: 14,
+  },
+  chargeBreakdown: {
+    marginTop: 8,
+    padding: 12,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  chargeText: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  totalText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#d81b60',
   },
 });
