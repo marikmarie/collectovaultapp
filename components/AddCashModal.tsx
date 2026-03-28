@@ -1,6 +1,7 @@
 import api from '@/src/api';
 import { useAuth } from '@/src/context/AuthContext';
 import storage from '@/src/utils/storage';
+import { customerService } from '@/src/api/customer';
 import { Feather } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
@@ -19,9 +20,13 @@ interface AddCashModalProps {
   visible: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  clientAddCash?: {
+    charge: number;
+    charge_client: number;
+  };
 }
 
-export default function AddCashModal({ visible, onClose, onSuccess }: AddCashModalProps) {
+export default function AddCashModal({ visible, onClose, onSuccess, clientAddCash }: AddCashModalProps) {
   const { user } = useAuth();
   const [amount, setAmount] = useState('');
   const [phone, setPhone] = useState('');
@@ -30,6 +35,7 @@ export default function AddCashModal({ visible, onClose, onSuccess }: AddCashMod
   const [verified, setVerified] = useState(false);
   const [accountName, setAccountName] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [fetchedClientAddCash, setFetchedClientAddCash] = useState<any>(null);
 
   useEffect(() => {
     if (visible) {
@@ -40,8 +46,25 @@ export default function AddCashModal({ visible, onClose, onSuccess }: AddCashMod
       setVerified(false);
       setAccountName(null);
       setPhoneError(null);
+
+      // Fetch clientAddCash if not provided
+      if (!clientAddCash && user?.clientId) {
+        fetchClientAddCash();
+      }
     }
-  }, [visible]);
+  }, [visible, clientAddCash, user?.clientId]);
+
+  const fetchClientAddCash = async () => {
+    try {
+      const collectoId = await storage.getItem('collectoId');
+      if (!collectoId || !user?.clientId) return;
+      const customerRes = await customerService.getCustomerData(collectoId, user.clientId);
+      const loyaltySettings = customerRes.data?.data?.loyaltySettings ?? {};
+      setFetchedClientAddCash(loyaltySettings?.client_add_cash);
+    } catch (err) {
+      console.error('Failed to fetch clientAddCash:', err);
+    }
+  };
 
   const handleClose = () => {
     onClose();
@@ -130,6 +153,12 @@ export default function AddCashModal({ visible, onClose, onSuccess }: AddCashMod
       const vaultOTPToken = await storage.getItem('vaultOtpToken');
       const collectoId = await storage.getItem('collectoId');
 
+      let effectiveClientAddCash = clientAddCash || fetchedClientAddCash;
+      if (effectiveClientAddCash) {
+        effectiveClientAddCash = { ...effectiveClientAddCash };
+        effectiveClientAddCash.charge = effectiveClientAddCash.charge_client === 1 ? effectiveClientAddCash.charge : 0;
+      }
+
       const res = await api.post('/requestToPay', {
         vaultOTPToken,
         collectoId,
@@ -138,7 +167,27 @@ export default function AddCashModal({ visible, onClose, onSuccess }: AddCashMod
         phone: trimmedPhone.replace(/^0/, '256'),
         amount: Number(amount),
         reference: `ADDCASH-${Date.now()}`,
+        clientAddCash: effectiveClientAddCash || {
+          charge: 0,
+          charge_client: 0,
+        },
       });
+
+      //log request and response for debugging
+      console.log('Add Cash Request Payload:', {
+        vaultOTPToken,
+        collectoId,
+        clientId: user?.clientId,
+        paymentOption: 'mobilemoney',
+        phone: trimmedPhone.replace(/^0/, '256'),
+        amount: Number(amount),
+        reference: `ADDCASH-${Date.now()}`,
+        clientAddCash: effectiveClientAddCash || {
+          charge: 0,
+          charge_client: 0,
+        },
+      }); 
+      console.log('Add Cash Response:', res.data);
 
       const status = String(res.data?.status ?? '').toLowerCase();
       if (status === '200' || status === 'success') {

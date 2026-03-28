@@ -46,6 +46,7 @@ export default function DashboardScreen() {
   const [tier, setTier] = useState('N/A');
   const [tierProgress, setTierProgress] = useState(0);
   const [loyaltyName, setLoyaltyName] = useState<string | undefined>();
+  const [loyaltySettings, setLoyaltySettings] = useState<any>(null);
 
   const [walletAmount, setWalletAmount] = useState<number | null>(null);
   const [ugxPerPoint, setUgxPerPoint] = useState<number>(0);
@@ -74,6 +75,8 @@ export default function DashboardScreen() {
       const customerRes = await customerService.getCustomerData(collectoId, clientId);
       console.log('Customer Data:', customerRes.data);
       const loyaltySettings = customerRes.data?.data?.loyaltySettings ?? {};
+
+      setLoyaltySettings(loyaltySettings);
 
       const loyaltyNameFromSettings =
         typeof loyaltySettings?.name === 'string' && loyaltySettings.name.trim()
@@ -388,6 +391,7 @@ export default function DashboardScreen() {
         onSuccess={() => {
           fetchData();
         }}
+        clientAddCash={loyaltySettings?.client_add_cash}
       />
 
       <TransferCashModal
