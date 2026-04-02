@@ -377,6 +377,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   footer: {
+    flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderTopWidth: 1,
@@ -384,6 +385,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   proceedBtn: {
+    flex: 0.7,
     backgroundColor: '#d81b60',
     borderRadius: 10,
     paddingVertical: 14,
@@ -403,6 +405,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   cancelBtn: {
+    flex: 0.3,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#d81b60',
