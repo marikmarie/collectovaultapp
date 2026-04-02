@@ -152,8 +152,14 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
       return;
     }
 
-    if (!amount || Number(amount) <= 0) {
+    const numAmount = Number(amount);
+    if (!amount || numAmount <= 0) {
       Alert.alert('Invalid amount', 'Please enter a valid amount to add.');
+      return;
+    }
+
+    if (numAmount <= 500) {
+      Alert.alert('Minimum amount', 'The amount must be greater than 500 UGX.');
       return;
     }
 
@@ -201,6 +207,7 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
           charge_client: 0,
         },
       });
+
       console.log('Add Cash Response:', res.data);
 
       const status = String(res.data?.status ?? '').toLowerCase();
@@ -238,7 +245,7 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
               <Text style={styles.inputLabel}>Amount (UGX)</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. 10000"
+                placeholder="e.g. 10000 (min 501 UGX)"
                 keyboardType="numeric"
                 value={amount}
                 onChangeText={setAmount}
