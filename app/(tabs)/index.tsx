@@ -73,7 +73,6 @@ export default function DashboardScreen() {
       setLoading(true);
       // Fetch customer profile
       const customerRes = await customerService.getCustomerData(collectoId, clientId);
-      console.log('Customer Data:', customerRes.data);
       const loyaltySettings = customerRes.data?.data?.loyaltySettings ?? {};
 
       setLoyaltySettings(loyaltySettings);
