@@ -48,6 +48,10 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
   const [txId, setTxId] = useState<string | number | null>(null);
   const [txStatus, setTxStatus] = useState<'idle' | 'pending' | 'success' | 'failed'>('idle');
 
+  const [fetchedClientAddCash, setFetchedClientAddCash] = useState<any>(null);
+  const [chargeAmount, setChargeAmount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
+
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const selectedPackage = packages.find((p) => String(p.id) === String(selectedId));
@@ -77,6 +81,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
           label: tier.name || `Package ${index + 1}`,
         }));
         setPackages(mapped);
+        setFetchedClientAddCash(loyaltySettings?.client_add_cash);
       } catch (err) {
         console.error('Failed to load packages', err);
         setError('Could not load packages. Please try again later.');
@@ -93,6 +98,8 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
     setVerified(false);
     setAccountName(null);
     setPhoneError(null);
+    setChargeAmount(0);
+    setTotalAmount(0);
 
     fetchPackages();
   }, [visible]);
@@ -158,7 +165,17 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
       verifyPhoneNumber();
     }
   }, [phone, verified, verifying]);
-
+  useEffect(() => {
+    const numAmount = selectedPackage?.price || 0;
+    if (fetchedClientAddCash && fetchedClientAddCash.charge_client === 1) {
+      const charge = (numAmount * fetchedClientAddCash.charge) / 100;
+      setChargeAmount(charge);
+      setTotalAmount(numAmount + charge);
+    } else {
+      setChargeAmount(0);
+      setTotalAmount(numAmount);
+    }
+  }, [selectedPackage, fetchedClientAddCash]);
   // Auto-navigate to confirm when a package is selected
   useEffect(() => {
     if (selectedId && step === 'select') {
@@ -170,6 +187,11 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
   const handleConfirmPayment = async () => {
     if (!selectedPackage) return;
 
+    if (selectedPackage.price <= 500) {
+      Alert.alert('Invalid package', 'The selected package price must be greater than 500 UGX.');
+      return;
+    }
+
     setProcessing(true);
     setError(null);
 
@@ -180,6 +202,12 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
 
       const formattedPhone = phone ? phone.replace(/^0/, '256') : phone;
 
+      let effectiveClientAddCash = fetchedClientAddCash;
+      if (effectiveClientAddCash) {
+        effectiveClientAddCash = { ...effectiveClientAddCash };
+        effectiveClientAddCash.charge = effectiveClientAddCash.charge_client === 1 ? effectiveClientAddCash.charge : 0;
+      }
+
       const res = await api.post('/requestToPay', {
         vaultOTPToken,
         collectoId,
@@ -188,6 +216,15 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
         paymentOption: paymentMode,
         amount: selectedPackage.price,
         points: { points_used: selectedPackage.points },
+        purchaseTier: {
+          cost: selectedPackage.price,
+          name: selectedPackage.label,
+          points: selectedPackage.points,
+        },
+        clientAddCash: effectiveClientAddCash || {
+          charge: 0,
+          charge_client: 0,
+        },
         reference: `BUYPOINTS-${Date.now()}`,
       });
 
@@ -412,6 +449,24 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                       UGX {selectedPackage.price.toLocaleString()}
                     </Text>
                   </View>
+                  {chargeAmount > 0 && (
+                    <>
+                      <View style={styles.divider} />
+                      <View>
+                        <Text style={styles.chargeLabel}>Service Charge</Text>
+                        <Text style={styles.chargeValue}>
+                          UGX {chargeAmount.toLocaleString()}
+                        </Text>
+                      </View>
+                      <View style={styles.divider} />
+                      <View>
+                        <Text style={styles.totalLabel}>Total to Pay</Text>
+                        <Text style={styles.totalValue}>
+                          UGX {totalAmount.toLocaleString()}
+                        </Text>
+                      </View>
+                    </>
+                  )}
                 </View>
 
                 {/* Phone Verification */}
@@ -642,6 +697,30 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   summaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#d81b60',
+    marginTop: 4,
+  },
+  chargeLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#666',
+    textTransform: 'uppercase',
+  },
+  chargeValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 4,
+  },
+  totalLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#999',
+    textTransform: 'uppercase',
+  },
+  totalValue: {
     fontSize: 18,
     fontWeight: '700',
     color: '#d81b60',

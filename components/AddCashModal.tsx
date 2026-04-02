@@ -293,7 +293,7 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
                 <View style={styles.accountBox}>
                   <Feather name="check-circle" size={20} color="#4caf50" />
                   <View style={styles.accountInfo}>
-                    <Text style={styles.accountLabel}>Recipient Name</Text>
+                    {/* <Text style={styles.accountLabel}>Recipient Name</Text> */}
                     <Text style={styles.accountName}>{accountName}</Text>
                   </View>
                 </View>
