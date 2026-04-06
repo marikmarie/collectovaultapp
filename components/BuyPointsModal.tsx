@@ -449,24 +449,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                       UGX {selectedPackage.price.toLocaleString()}
                     </Text>
                   </View>
-                  {/* {chargeAmount > 0 && (
-                    <>
-                      <View style={styles.divider} />
-                      <View>
-                        <Text style={styles.chargeLabel}>Service Charge</Text>
-                        <Text style={styles.chargeValue}>
-                          UGX {chargeAmount.toLocaleString()}
-                        </Text>
-                      </View>
-                      <View style={styles.divider} />
-                      <View>
-                        <Text style={styles.totalLabel}>Total to Pay</Text>
-                        <Text style={styles.totalValue}>
-                          UGX {totalAmount.toLocaleString()}
-                        </Text>
-                      </View>
-                    </>
-                  )} */}
+                 
                 </View>
 
                 {/* Phone Verification */}

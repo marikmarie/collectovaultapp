@@ -256,7 +256,7 @@ export default function DashboardScreen() {
             >
               <View style={styles.actionButtonContent}>
                 <Feather name="send" size={16} color="#d81b60" />
-                <Text style={styles.actionButtonText}>Transfer Cash</Text>
+                <Text style={styles.actionButtonText}>Use Cash</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity
