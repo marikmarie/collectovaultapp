@@ -173,6 +173,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
       setTotalAmount(numAmount + charge);
     } else {
       setChargeAmount(0);
+
       setTotalAmount(numAmount);
     }
   }, [selectedPackage, fetchedClientAddCash]);
@@ -474,14 +475,11 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                         maxLength={10}
                       />
                       <View style={styles.phoneStatusContainer}>
-                        {verifying ? (
-                          <Text style={styles.phoneStatusText}>Verifying...</Text>
-                        ) : verified ? (
-                          <Text style={styles.phoneStatusTextSuccess}>✓ Verified</Text>
-                        ) : (
-                          <Text style={styles.phoneStatusText}>Enter a valid 10-digit number</Text>
-                        )}
-                      </View>
+                      {verifying && <Text style={styles.phoneStatusText}>Verifying...</Text>}
+                      {!verifying && verified && (
+                        <Text style={styles.phoneStatusTextSuccess}>✓ Verified</Text>
+                      )}
+                    </View>
                     </View>
 
                     {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
@@ -556,15 +554,17 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity
-              style={styles.cancelBtn}
-              onPress={handleClose}
-              disabled={processing}
-            >
-              <Text style={styles.cancelBtnText}>
-                {step === 'select' ? 'Cancel' : 'Back'}
-              </Text>
-            </TouchableOpacity>
+            {step !== 'confirm' && (
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={handleClose}
+                disabled={processing}
+              >
+                <Text style={styles.cancelBtnText}>
+                  {step === 'select' ? 'Cancel' : 'Back'}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>
@@ -715,14 +715,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
   },
   phoneInputGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
     gap: 8,
     marginBottom: 12,
   },
   phoneInput: {
-    flex: 0,
-    width: 220,
+    width: '100%',
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -733,7 +731,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
   },
   phoneStatusContainer: {
-    flex: 1,
+    minHeight: 18,
   },
   phoneStatusText: {
     color: '#666',

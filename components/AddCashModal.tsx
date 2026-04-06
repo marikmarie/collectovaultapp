@@ -267,7 +267,7 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
               <Text style={styles.inputLabel}>Phone Number</Text>
               <View style={styles.phoneInputGroup}>
                 <TextInput
-                  style={[styles.phoneInput, styles.smallPhoneInput]}
+                  style={styles.phoneInput}
                   placeholder="07XXXXXXXX"
                   keyboardType="phone-pad"
                   value={phone}
@@ -280,9 +280,11 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
                   editable={!loading && !verifying}
                   maxLength={10}
                 />
-                <Text style={verifying ? styles.statusText : verified ? styles.statusTextSuccess : styles.statusText}>
-                  {verifying ? 'Verifying...' : verified ? '✓ Verified' : 'Enter 10-digit phone'}
-                </Text>
+                {(verifying || verified) && (
+                  <Text style={verifying ? styles.statusText : styles.statusTextSuccess}>
+                    {verifying ? 'Verifying...' : '✓ Verified'}
+                  </Text>
+                )}
               </View>
 
               {phoneError ? (
@@ -382,13 +384,11 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
   },
   phoneInputGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
     gap: 8,
   },
   phoneInput: {
-    flex: 0,
-    width: 220,
+    width: '100%',
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -397,9 +397,6 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     borderWidth: 1,
     borderColor: '#ddd',
-  },
-  smallPhoneInput: {
-    width: 220,
   },
   statusText: {
     color: '#666',

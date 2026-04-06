@@ -195,7 +195,7 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
               <Text style={styles.inputLabel}>Recipient Phone</Text>
               <View style={styles.phoneInputGroup}>
                 <TextInput
-                  style={[styles.phoneInput, styles.smallPhoneInput]}
+                  style={styles.phoneInput}
                   placeholder="07XXXXXXXX"
                   keyboardType="phone-pad"
                   value={recipientPhone}
@@ -208,20 +208,11 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
                   editable={!loading && !verifying}
                   maxLength={10}
                 />
-                <Text style={[styles.statusText, { color: verifying ? '#666' : verified ? '#2e7d32' : '#666' }]}>
-                  {verifying ? 'Verifying...' : verified ? '✓ Verified' : 'Enter 10-digit phone'}
-                </Text>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Staff ID</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter staff ID"
-                  value={staffId}
-                  onChangeText={setStaffId}
-                  editable={!loading}
-                />
+                {(verifying || verified) && (
+                  <Text style={[styles.statusText, { color: verifying ? '#666' : '#2e7d32' }]}> 
+                    {verifying ? 'Verifying...' : '✓ Verified'}
+                  </Text>
+                )}
               </View>
 
               {phoneError ? (
@@ -237,6 +228,17 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
                   </View>
                 </View>
               )}
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Staff ID</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter staff ID"
+                value={staffId}
+                onChangeText={setStaffId}
+                editable={!loading}
+              />
             </View>
 
             <Text style={styles.helpText}>
@@ -322,14 +324,12 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
   },
   phoneInputGroup: {
-   flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
     gap: 8,
     marginBottom: 12,
   },
   phoneInput: {
-    flex: 0,
-    width: 220,
+    width: '100%',
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -338,9 +338,6 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
     borderWidth: 1,
     borderColor: '#ddd',
-  },
-  smallPhoneInput: {
-    width: 220,
   },
   statusText: {
     fontSize: 12,
