@@ -25,6 +25,7 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
   const { user } = useAuth();
   const [amount, setAmount] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
+  const [staffId, setStaffId] = useState('');
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -35,6 +36,7 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
     if (visible) {
       setAmount('');
       setRecipientPhone('');
+      setStaffId('');
       setLoading(false);
       setVerifying(false);
       setVerified(false);
@@ -125,6 +127,11 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
       return;
     }
 
+    if (!staffId.trim()) {
+      Alert.alert('Missing staff ID', 'Please enter your staff ID to continue.');
+      return;
+    }
+
     setLoading(true);
     try {
       const vaultOTPToken = await storage.getItem('vaultOtpToken');
@@ -134,6 +141,7 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
         vaultOTPToken,
         collectoId,
         clientId: user?.clientId,
+        staffId: staffId.trim(),
         paymentOption: 'mobilemoney',
         phone: trimmedPhone.replace(/^0/, '256'),
         amount: Number(amount),
@@ -162,7 +170,7 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
       <View style={styles.overlay}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>Transfer Cash</Text>
+            <Text style={styles.title}>Use Cash</Text>
             <TouchableOpacity onPress={handleClose}>
               <Feather name="x" size={24} color="#666" />
             </TouchableOpacity>
@@ -205,6 +213,17 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
                 </Text>
               </View>
 
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Staff ID</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter staff ID"
+                  value={staffId}
+                  onChangeText={setStaffId}
+                  editable={!loading}
+                />
+              </View>
+
               {phoneError ? (
                 <Text style={styles.errorText}>{phoneError}</Text>
               ) : null}
@@ -234,13 +253,14 @@ export default function TransferCashModal({ visible, onClose, onSuccess }: Trans
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.proceedBtnText}>Send Transfer</Text>
+                <Text style={styles.proceedBtnText}>Use Cash</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelBtn} onPress={handleClose} disabled={loading}>
               <Text style={styles.cancelBtnText}>Cancel</Text>
             </TouchableOpacity>
           </View>
+          
         </View>
       </View>
     </Modal>
