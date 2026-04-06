@@ -449,7 +449,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                       UGX {selectedPackage.price.toLocaleString()}
                     </Text>
                   </View>
-                  {chargeAmount > 0 && (
+                  {/* {chargeAmount > 0 && (
                     <>
                       <View style={styles.divider} />
                       <View>
@@ -466,7 +466,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                         </Text>
                       </View>
                     </>
-                  )}
+                  )} */}
                 </View>
 
                 {/* Phone Verification */}
