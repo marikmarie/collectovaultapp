@@ -222,10 +222,10 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
           name: selectedPackage.label,
           points: selectedPackage.points,
         },
-        clientAddCash: effectiveClientAddCash || {
-          charge: 0,
-          charge_client: 0,
-        },
+        // clientAddCash: effectiveClientAddCash || {
+        //   charge: 0,
+        //   charge_client: 0,
+        // },
         reference: `BUYPOINTS-${Date.now()}`,
       });
 
