@@ -476,9 +476,7 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
                       />
                       <View style={styles.phoneStatusContainer}>
                       {verifying && <Text style={styles.phoneStatusText}>Verifying...</Text>}
-                      {!verifying && verified && (
-                        <Text style={styles.phoneStatusTextSuccess}>✓ Verified</Text>
-                      )}
+                      {!verifying && verified }
                     </View>
                     </View>
 
@@ -554,15 +552,13 @@ export default function BuyPointsModal({ visible, onClose, onSuccess }: BuyPoint
               </TouchableOpacity>
             )}
 
-            {step !== 'confirm' && (
+            {step === 'select' && (
               <TouchableOpacity
                 style={styles.cancelBtn}
                 onPress={handleClose}
                 disabled={processing}
               >
-                <Text style={styles.cancelBtnText}>
-                  {step === 'select' ? 'Cancel' : 'Back'}
-                </Text>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
             )}
           </View>

@@ -280,11 +280,15 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
                   editable={!loading && !verifying}
                   maxLength={10}
                 />
-                {(verifying || verified) && (
-                  <Text style={verifying ? styles.statusText : styles.statusTextSuccess}>
-                    {verifying ? 'Verifying...' : '✓ Verified'}
-                  </Text>
+                {/* // Remove verified  */}
+                {verifying && (
+                  <Text style={styles.statusText}>Verifying...</Text>
                 )}
+                {/* {(verifying || verified) && (
+                  <Text style={verifying ? styles.statusText : styles.statusTextSuccess}>
+                    {verifying ? 'Verifying...' }
+                  </Text>
+                )} */}
               </View>
 
               {phoneError ? (
