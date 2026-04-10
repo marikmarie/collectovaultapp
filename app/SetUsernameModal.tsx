@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: { backgroundColor: '#eee', marginRight: 8 },
-  confirmButton: { backgroundColor: '#67095D' },
+  confirmButton: { backgroundColor: '#d81b60' },
   cancelText: { color: '#333', fontWeight: 'bold' },
   confirmText: { color: '#fff', fontWeight: 'bold' },
   footer: { fontSize: 12, color: '#555', marginTop: 16, textAlign: 'center' },

@@ -106,6 +106,7 @@ export default function LoginScreen() {
 
       const resp = await authService.verifyCollectoOtp(verifyPayload);
       // update auth context from storage
+      console.log('OTP verify response:', resp);
       await refreshUser();
       
       // Check if user has a username, if not, show SetUsernameModal
