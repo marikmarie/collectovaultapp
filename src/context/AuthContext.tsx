@@ -129,7 +129,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Log state changes for debugging
   useEffect(() => {
-    console.log('[AuthContext] State changed - isLoggedIn:', user !== null, 'isLoading:', isLoading, 'user:', user?.clientId || 'none');
   }, [user, isLoading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
