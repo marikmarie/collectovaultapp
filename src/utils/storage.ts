@@ -50,13 +50,11 @@ const storage: StorageLike = {
   },
 
   async removeItem(key: string) {
-    console.log('[Storage] Removing key:', key);
     inMemory.delete(key);
     
     if (isSecureAvailable()) {
       try {
         await SecureStore.deleteItemAsync(key);
-        console.log('[Storage] Deleted from SecureStore:', key);
       } catch (e) {
         console.warn('[Storage] Failed to delete from SecureStore:', key, e);
       }

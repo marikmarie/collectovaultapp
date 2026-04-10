@@ -15,8 +15,7 @@ function RootLayoutContent() {
   const colorScheme = useColorScheme();
   const { isLoggedIn, isLoading } = useAuth();
 
-  console.log('[RootLayout] isLoggedIn:', isLoggedIn, 'isLoading:', isLoading);
-
+ 
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -25,8 +24,7 @@ function RootLayoutContent() {
     );
   }
 
-  console.log('[RootLayout] Rendering - showing:', isLoggedIn ? 'dashboard' : 'login');
-
+  
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>

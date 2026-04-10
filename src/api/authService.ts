@@ -103,7 +103,6 @@ export const authService = {
    * Logout and clear all stored auth data
    */
   logout: async () => {
-    console.log('[AuthService] Logout: removing all auth data');
     const results = await Promise.all([
       removeItem('clientId'),
       removeItem('collectoId'),
@@ -111,7 +110,6 @@ export const authService = {
       removeItem('vaultOtpToken'),
       removeItem('vaultOtpExpiresAt'),
     ]);
-    console.log('[AuthService] Logout complete - all auth data removed');
   },
 
   /**
