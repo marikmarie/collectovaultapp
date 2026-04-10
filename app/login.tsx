@@ -16,9 +16,10 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/src/context/AuthContext';
 import { authService } from '@/src/api/authService';
 import { setVaultOtpToken } from '@/src/api';
+import storage from '@/src/utils/storage';
 import SetUsernameModal from './SetUsernameModal';
 
-type LoginStep = 'id_entry' | 'otp_entry';
+type LoginStep = 'id_entry' | 'otp_entry' | 'username_setup';
 
 interface PendingPayload {
   id: string;
@@ -37,9 +38,6 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingPayload, setPendingPayload] = useState<PendingPayload | null>(null);
-  const [showClientIdDialog, setShowClientIdDialog] = useState(false);
-  const [showSetUsernameModal, setShowSetUsernameModal] = useState(false);
-  const [clientIdForUsername, setClientIdForUsername] = useState('');
 
   const buildAuthPayload = (id: string) => {
     return { type: 'client' as const, id };
@@ -109,14 +107,25 @@ export default function LoginScreen() {
       const resp = await authService.verifyCollectoOtp(verifyPayload);
       // update auth context from storage
       await refreshUser();
-      // navigate to root/dashboard
-      router.replace('/');
+      
+      // Check if user has a username, if not, show SetUsernameModal
+      const storedUsername = await storage.getItem('userName');
+      if (!storedUsername) {
+        setLoginStep('username_setup');
+      } else {
+        // navigate to root/dashboard
+        router.replace('/');
+      }
       return;
     } catch (err: any) {
       setError('Verification failed. Please try again.');
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleSetUsernameSuccess = async () => {
+    router.replace('/');
   };
 
   const handleResendOtp = async () => {
@@ -131,20 +140,6 @@ export default function LoginScreen() {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const handleSetUsernameClick = () => {
-    setShowClientIdDialog(true);
-    setClientIdForUsername('');
-  };
-
-  const handleClientIdSubmit = () => {
-    if (clientIdForUsername.trim().length < 3) {
-      setError('Please enter a valid client ID');
-      return;
-    }
-    setShowClientIdDialog(false);
-    setShowSetUsernameModal(true);
   };
 
   return (
@@ -169,12 +164,14 @@ export default function LoginScreen() {
           {/* Step Title */}
           <View style={styles.headerSection}>
             <Text style={styles.stepTitle}>
-              {loginStep === 'id_entry' ? 'Sign In' : 'Verify Identity'}
+              {loginStep === 'id_entry' ? 'Sign In' : loginStep === 'otp_entry' ? 'Verify Identity' : 'Create Your Username'}
             </Text>
             <Text style={styles.stepDescription}>
               {loginStep === 'id_entry'
                 ? 'Enter your Client ID or Username to continue'
-                : 'Enter the 6-digit code sent to your device'}
+                : loginStep === 'otp_entry'
+                ? 'Enter the 6-digit code sent to your device'
+                : 'Set up a unique username for your CollectoVault account'}
             </Text>
           </View>
 
@@ -229,14 +226,6 @@ export default function LoginScreen() {
                     <Text style={styles.primaryButtonIcon}>→</Text>
                   </>
                 )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={handleSetUsernameClick}
-              >
-                <Text style={styles.secondaryButtonIcon}>👤</Text>
-                <Text style={styles.secondaryButtonText}>Create Username</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -303,74 +292,21 @@ export default function LoginScreen() {
         <Text style={styles.footer}>© 2026 CollectoVault</Text>
       </ScrollView>
 
-      {/* Client ID Dialog Modal */}
-      <Modal
-        visible={showClientIdDialog}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowClientIdDialog(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Enter Client ID</Text>
-            <Text style={styles.modalDescription}>
-              Please enter your client ID to create a username
-            </Text>
-
-            {error && (
-              <View style={styles.modalErrorBox}>
-                <Text style={styles.modalErrorText}>{error}</Text>
-              </View>
-            )}
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g., 324CV38"
-              placeholderTextColor="#999"
-              value={clientIdForUsername}
-              onChangeText={(text) => {
-                setClientIdForUsername(text);
-                setError('');
-              }}
-              autoCapitalize="none"
-              autoFocus
-            />
-
-            <View style={styles.modalButtonContainer}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => {
-                  setShowClientIdDialog(false);
-                  setClientIdForUsername('');
-                  setError('');
-                }}
-              >
-                <Text style={styles.modalCancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.modalConfirmButton}
-                onPress={handleClientIdSubmit}
-              >
-                <Text style={styles.modalConfirmButtonText}>Continue</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Username creation modal */}
-      <SetUsernameModal
-        isOpen={showSetUsernameModal}
-        existingUsername={undefined}
-        clientId={clientIdForUsername}
-        onClose={() => setShowSetUsernameModal(false)}
-        onSuccess={(uname) => {
-          setShowSetUsernameModal(false);
-          setClientIdForUsername('');
-          setError(`Username "${uname}" created successfully!`);
-        }}
-      />
+      {/* Client ID Dialog Modal - REMOVED: Username is now set after first login */}
+      
+      {/* Username creation modal - shown after successful login if username doesn't exist */}
+      {loginStep === 'username_setup' && (
+        <SetUsernameModal
+          isOpen={true}
+          existingUsername={null}
+          clientId={pendingPayload?.id}
+          onClose={() => {
+            // Don't allow closing without setting username
+            setError('Please create a username to continue');
+          }}
+          onSuccess={handleSetUsernameSuccess}
+        />
+      )}
     </SafeAreaView>
   );
 }

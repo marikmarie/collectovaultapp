@@ -20,6 +20,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ProfileSettingsModal from '../../components/ProfileSettingsModal';
 
 interface Transaction {
   id: string;
@@ -152,20 +153,12 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" backgroundColor="#fff" />
-      <SetUsernameModal
+      <ProfileSettingsModal
         visible={showProfileModal}
-        username={username}
         onClose={() => setShowProfileModal(false)}
-        onSave={async (newUsername: string) => {
-          if (!clientId || !collectoId) return;
-          try {
-            await authService.setUsername(clientId, collectoId, newUsername, { clientId, username: newUsername, collectoId });
-            setUsername(newUsername);
-            await storage.setItem('userName', newUsername);
-            setShowProfileModal(false);
-          } catch (err) {
-            Alert.alert('Error', 'Failed to update username');
-          }
+        onLogout={() => {
+          // Navigate to login after logout
+          router.replace('/login');
         }}
       />
       {loading ? (
