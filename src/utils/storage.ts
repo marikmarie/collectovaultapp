@@ -50,21 +50,42 @@ const storage: StorageLike = {
   },
 
   async removeItem(key: string) {
+    console.log('[Storage] Removing key:', key);
+    inMemory.delete(key);
+    
     if (isSecureAvailable()) {
       try {
         await SecureStore.deleteItemAsync(key);
-        return;
+        console.log('[Storage] Deleted from SecureStore:', key);
       } catch (e) {
-        // ignore and fall through
+        console.warn('[Storage] Failed to delete from SecureStore:', key, e);
       }
     }
-
-    inMemory.delete(key);
   },
 
   async clear() {
+    console.log('[Storage] Clearing all storage');
     inMemory.clear();
-    // SecureStore has no global clear; keys stored there will remain.
+    
+    // Clear all known auth keys from SecureStore
+    const keysToDelete = [
+      'vaultOtpToken',
+      'vaultOtpExpiresAt', 
+      'clientId',
+      'collectoId',
+      'userName'
+    ];
+    
+    if (isSecureAvailable()) {
+      for (const key of keysToDelete) {
+        try {
+          await SecureStore.deleteItemAsync(key);
+          console.log('[Storage] Deleted from SecureStore:', key);
+        } catch (e) {
+          console.warn('[Storage] Failed to delete from SecureStore:', key, e);
+        }
+      }
+    }
   },
 };
 

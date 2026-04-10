@@ -56,12 +56,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const bootstrapAsync = async () => {
     try {
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
+      
+      // IMPORTANT: Clear all stored auth data to prevent reuse of old sessions
+      await authService.logout();
+      
+      setUser(null);
     } catch (err) {
-      console.error('Failed to restore user:', err);
+      console.error('Failed to bootstrap:', err);
+      setUser(null); // Ensure user is null even if logout fails
     } finally {
       setIsLoading(false);
+      
     }
   };
 
@@ -105,9 +110,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = async () => {
     try {
       const currentUser = await authService.getCurrentUser();
+      console.log('[AuthContext] refreshUser called - result:', currentUser ? 'user found' : 'no user');
       setUser(currentUser);
     } catch (err) {
       console.error('Failed to refresh user:', err);
+      setUser(null);
     }
   };
 
@@ -119,6 +126,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     refreshUser,
   };
+
+  // Log state changes for debugging
+  useEffect(() => {
+    console.log('[AuthContext] State changed - isLoggedIn:', user !== null, 'isLoading:', isLoading, 'user:', user?.clientId || 'none');
+  }, [user, isLoading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

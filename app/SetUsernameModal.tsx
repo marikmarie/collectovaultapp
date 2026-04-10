@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Modal,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import storage from '@/src/utils/storage';
 import { authService } from '@/src/api/authService';
@@ -121,59 +122,107 @@ export default function SetUsernameModal({
   if (!isOpen) return null;
 
   return (
-    <Modal visible={isOpen} transparent animationType="fade">
-      <View style={styles.backdrop} />
-      <View style={styles.container}>
-        <Text style={styles.title}>Create Username</Text>
-        <Text style={styles.description}>
-          Create a unique username to make it easier to login next time
-        </Text>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            placeholder="username"
-            value={username}
-            onChangeText={(t) => {
-              setUsername(t);
-              setError('');
-            }}
-            editable={!isLoading}
-            maxLength={100}
-            autoCapitalize="none"
-          />
-          <Text style={styles.charCount}>{username.length}/100</Text>
+    <Modal visible={isOpen} transparent animationType="slide">
+      <View style={styles.overlay}>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Create Username</Text>
+            <TouchableOpacity onPress={onClose} disabled={isLoading}>
+              <Text style={{ fontSize: 28, color: '#1a1a1a' }}>×</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.body}>
+            <Text style={styles.description}>
+              Create a unique username to make it easier to login next time
+            </Text>
+            
+            <View style={styles.inputWrapper}>
+              <Text style={styles.label}>Username</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter username"
+                value={username}
+                onChangeText={(t) => {
+                  setUsername(t);
+                  setError('');
+                }}
+                editable={!isLoading}
+                maxLength={100}
+                autoCapitalize="none"
+              />
+              <Text style={styles.charCount}>{username.length}/100</Text>
+            </View>
+
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {success ? <Text style={styles.success}>{success}</Text> : null}
+
+            <Text style={styles.footer}>
+              Username may only contain letters, numbers, _ and -
+            </Text>
+          </ScrollView>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={[styles.button, styles.cancelButton]}
+              disabled={isLoading}
+              onPress={onClose}
+            >
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.confirmButton]}
+              disabled={isLoading}
+              onPress={handleSubmit}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.confirmText}>Create</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-        {success ? <Text style={styles.success}>{success}</Text> : null}
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={[styles.button, styles.cancelButton]}
-            disabled={isLoading}
-            onPress={onClose}
-          >
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, styles.confirmButton]}
-            disabled={isLoading}
-            onPress={handleSubmit}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.confirmText}>Create</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.footer}>
-          Username may only contain letters, numbers, _ and -
-        </Text>
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  content: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: '90%',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  body: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  description: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 16,
+  },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -185,28 +234,74 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     elevation: 5,
   },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
-  description: { fontSize: 14, color: '#555', marginBottom: 16 },
-  inputWrapper: { marginBottom: 8 },
+  inputWrapper: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    padding: 10,
+    padding: 12,
+    fontSize: 16,
   },
-  charCount: { fontSize: 12, color: '#777', textAlign: 'right', marginTop: 4 },
-  error: { color: '#b00020', marginBottom: 8 },
-  success: { color: '#0a0', marginBottom: 8 },
-  buttonRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 },
+  charCount: {
+    fontSize: 12,
+    color: '#777',
+    textAlign: 'right',
+    marginTop: 4,
+  },
+  error: {
+    color: '#b00020',
+    marginBottom: 8,
+    fontSize: 14,
+  },
+  success: {
+    color: '#0a0',
+    marginBottom: 8,
+    fontSize: 14,
+  },
+  footer: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
   button: {
     flex: 1,
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  cancelButton: { backgroundColor: '#eee', marginRight: 8 },
-  confirmButton: { backgroundColor: '#d81b60' },
-  cancelText: { color: '#333', fontWeight: 'bold' },
-  confirmText: { color: '#fff', fontWeight: 'bold' },
-  footer: { fontSize: 12, color: '#555', marginTop: 16, textAlign: 'center' },
+  cancelButton: {
+    backgroundColor: '#eee',
+    marginRight: 8,
+  },
+  confirmButton: {
+    backgroundColor: '#d81b60',
+  },
+  cancelText: {
+    color: '#333',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  confirmText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });

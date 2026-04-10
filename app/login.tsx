@@ -17,9 +17,9 @@ import { useAuth } from '@/src/context/AuthContext';
 import { authService } from '@/src/api/authService';
 import { setVaultOtpToken } from '@/src/api';
 import storage from '@/src/utils/storage';
-import SetUsernameModal from './SetUsernameModal';
 
-type LoginStep = 'id_entry' | 'otp_entry' | 'username_setup';
+
+type LoginStep = 'id_entry' | 'otp_entry';
 
 interface PendingPayload {
   id: string;
@@ -109,24 +109,14 @@ export default function LoginScreen() {
       console.log('OTP verify response:', resp);
       await refreshUser();
       
-      // Check if user has a username, if not, show SetUsernameModal
-      const storedUsername = await storage.getItem('userName');
-      if (!storedUsername) {
-        setLoginStep('username_setup');
-      } else {
-        // navigate to root/dashboard
-        router.replace('/');
-      }
+      // navigate to root/dashboard
+      router.replace('/');
       return;
     } catch (err: any) {
       setError('Verification failed. Please try again.');
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const handleSetUsernameSuccess = async () => {
-    router.replace('/');
   };
 
   const handleResendOtp = async () => {
@@ -165,14 +155,12 @@ export default function LoginScreen() {
           {/* Step Title */}
           <View style={styles.headerSection}>
             <Text style={styles.stepTitle}>
-              {loginStep === 'id_entry' ? 'Sign In' : loginStep === 'otp_entry' ? 'Verify Identity' : 'Create Your Username'}
+              {loginStep === 'id_entry' ? 'Sign In' : 'Verify Identity'}
             </Text>
             <Text style={styles.stepDescription}>
               {loginStep === 'id_entry'
                 ? 'Enter your Client ID or Username to continue'
-                : loginStep === 'otp_entry'
-                ? 'Enter the 6-digit code sent to your device'
-                : 'Set up a unique username for your CollectoVault account'}
+                : 'Enter the 6-digit code sent to your device'}
             </Text>
           </View>
 
@@ -293,21 +281,7 @@ export default function LoginScreen() {
         <Text style={styles.footer}>© 2026 CollectoVault</Text>
       </ScrollView>
 
-      {/* Client ID Dialog Modal - REMOVED: Username is now set after first login */}
-      
-      {/* Username creation modal - shown after successful login if username doesn't exist */}
-      {loginStep === 'username_setup' && (
-        <SetUsernameModal
-          isOpen={true}
-          existingUsername={null}
-          clientId={pendingPayload?.id}
-          onClose={() => {
-            // Don't allow closing without setting username
-            setError('Please create a username to continue');
-          }}
-          onSuccess={handleSetUsernameSuccess}
-        />
-      )}
+
     </SafeAreaView>
   );
 }
