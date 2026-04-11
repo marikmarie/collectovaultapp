@@ -1,14 +1,14 @@
-import SetUsernameModal from '../../components/SetUsernameModal';
-import storage from '@/src/utils/storage';
-import BuyPointsModal from '@/components/BuyPointsModal';
-import DashboardHeader from '@/components/DashboardHeader';
-import { transactionService } from '@/src/api/collecto';
-import { customerService } from '@/src/api/customer';
-import { useAuth } from '@/src/context/AuthContext';
-import { Feather } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import SetUsernameModal from "../../components/SetUsernameModal";
+import storage from "@/src/utils/storage";
+import BuyPointsModal from "@/components/BuyPointsModal";
+import DashboardHeader from "@/components/DashboardHeader";
+import { transactionService } from "@/src/api/collecto";
+import { customerService } from "@/src/api/customer";
+import { useAuth } from "@/src/context/AuthContext";
+import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -18,9 +18,9 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import ProfileSettingsModal from '../../components/ProfileSettingsModal';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import ProfileSettingsModal from "../../components/ProfileSettingsModal";
 
 interface Transaction {
   id: string;
@@ -33,18 +33,17 @@ interface Transaction {
   transactionId?: string;
 }
 
-
-import { StatusBar } from 'expo-status-bar';
-import AddCashModal from '../../components/AddCashModal';
-import TransferCashModal from '../../components/TransferCashModal';
-import { authService } from '@/src/api/authService';
+import { StatusBar } from "expo-status-bar";
+import AddCashModal from "../../components/AddCashModal";
+import TransferCashModal from "../../components/TransferCashModal";
+import { authService } from "@/src/api/authService";
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
 
   const [pointsBalance, setPointsBalance] = useState(0);
-  const [tier, setTier] = useState('N/A');
+  const [tier, setTier] = useState("N/A");
   const [tierProgress, setTierProgress] = useState(0);
   const [loyaltyName, setLoyaltyName] = useState<string | undefined>();
   const [loyaltySettings, setLoyaltySettings] = useState<any>(null);
@@ -60,12 +59,13 @@ export default function DashboardScreen() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [buyPointsModalVisible, setBuyPointsModalVisible] = useState(false);
   const [addCashModalVisible, setAddCashModalVisible] = useState(false);
-  const [transferCashModalVisible, setTransferCashModalVisible] = useState(false);
+  const [transferCashModalVisible, setTransferCashModalVisible] =
+    useState(false);
 
-  const [clientId, setClientId] = useState(user?.clientId || '');
-  const [collectoId, setCollectoId] = useState(user?.collectoId || '');
+  const [clientId, setClientId] = useState(user?.clientId || "");
+  const [collectoId, setCollectoId] = useState(user?.collectoId || "");
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [username, setUsername] = useState(user?.userName || '');
+  const [username, setUsername] = useState(user?.userName || "");
 
   const fetchData = useCallback(async () => {
     if (!clientId) return;
@@ -73,13 +73,16 @@ export default function DashboardScreen() {
     try {
       setLoading(true);
       // Fetch customer profile
-      const customerRes = await customerService.getCustomerData(collectoId, clientId);
+      const customerRes = await customerService.getCustomerData(
+        collectoId,
+        clientId,
+      );
       const loyaltySettings = customerRes.data?.data?.loyaltySettings ?? {};
 
       setLoyaltySettings(loyaltySettings);
 
       const loyaltyNameFromSettings =
-        typeof loyaltySettings?.name === 'string' && loyaltySettings.name.trim()
+        typeof loyaltySettings?.name === "string" && loyaltySettings.name.trim()
           ? loyaltySettings.name.trim()
           : undefined;
       setLoyaltyName(loyaltyNameFromSettings);
@@ -96,21 +99,21 @@ export default function DashboardScreen() {
         loyaltySettings?.tier ||
         loyaltySettings?.tierName ||
         loyaltySettings?.membershipTier ||
-        'N/A';
+        "N/A";
       setTier(tierName);
 
       const tierProgressValue =
-        typeof loyaltySettings?.tier_progress === 'number'
+        typeof loyaltySettings?.tier_progress === "number"
           ? loyaltySettings.tier_progress
-          : typeof loyaltySettings?.tierProgress === 'number'
-          ? loyaltySettings.tierProgress
-          : 0;
+          : typeof loyaltySettings?.tierProgress === "number"
+            ? loyaltySettings.tierProgress
+            : 0;
       setTierProgress(tierProgressValue);
 
       const pointValue =
         loyaltySettings?.point_value ?? loyaltySettings?.pointValue ?? null;
       const perPoint =
-        typeof pointValue === 'number' && points > 0 ? pointValue / points : 0;
+        typeof pointValue === "number" && points > 0 ? pointValue / points : 0;
       setUgxPerPoint(perPoint);
       setWalletAmount(perPoint > 0 ? Math.round(points * perPoint) : null);
 
@@ -118,8 +121,8 @@ export default function DashboardScreen() {
       const txs = txRes.data?.data?.data ?? txRes.data?.transactions ?? [];
       setTransactions(Array.isArray(txs) ? txs : []);
     } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      Alert.alert('Error', 'Failed to load dashboard data');
+      console.error("Error fetching dashboard data:", err);
+      Alert.alert("Error", "Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
@@ -129,15 +132,15 @@ export default function DashboardScreen() {
     // Fetch IDs from storage if not in context
     const fetchIds = async () => {
       if (!clientId) {
-        const storedClientId = await storage.getItem('clientId');
+        const storedClientId = await storage.getItem("clientId");
         if (storedClientId) setClientId(storedClientId);
       }
       if (!collectoId) {
-        const storedCollectoId = await storage.getItem('collectoId');
+        const storedCollectoId = await storage.getItem("collectoId");
         if (storedCollectoId) setCollectoId(storedCollectoId);
       }
       if (!username) {
-        const storedUsername = await storage.getItem('userName');
+        const storedUsername = await storage.getItem("userName");
         if (storedUsername) setUsername(storedUsername);
       }
     };
@@ -158,7 +161,7 @@ export default function DashboardScreen() {
         onClose={() => setShowProfileModal(false)}
         onLogout={() => {
           // Navigate to login after logout
-          router.replace('/login');
+          router.replace("/login");
         }}
       />
       {loading ? (
@@ -170,7 +173,11 @@ export default function DashboardScreen() {
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#d81b60" />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#d81b60"
+            />
           }
         >
           {/* Header */}
@@ -186,30 +193,36 @@ export default function DashboardScreen() {
             end={{ x: 1, y: 1 }}
             style={styles.walletCard}
           >
+          
+            {/* Wallet Card — replace the walletCardHeader section */}
             <View style={styles.walletCardHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                {/* small card icon */}
+                <Feather
+                  name="credit-card"
+                  size={14}
+                  color="rgba(255,255,255,0.8)"
+                />
                 <Text style={styles.walletCardTitle}>Cash Balance</Text>
-                <TouchableOpacity
-                  onPress={() => setShowWalletAmount((v) => !v)}
-                  style={{ marginLeft: 8 }}
-                >
-                  <Feather
-                    name={showWalletAmount ? 'eye' : 'eye-off'}
-                    size={24}
-                    color="#fff"
-                  />
-                </TouchableOpacity>
               </View>
+              <TouchableOpacity onPress={() => setShowWalletAmount((v) => !v)}>
+                <Feather
+                  name={showWalletAmount ? "eye" : "eye-off"}
+                  size={20}
+                  color="rgba(255,255,255,0.8)"
+                />
+              </TouchableOpacity>
             </View>
-
             <Text style={styles.walletAmountText}>
               {showWalletAmount
                 ? walletAmount !== null
                   ? `UGX ${walletAmount.toLocaleString()}`
-                  : '—'
-                : '••••••'}
+                  : "—"
+                : "••••••••"}
             </Text>
-      
+
             <View style={styles.walletStatsRow}>
               <View style={styles.walletStat}>
                 <Text style={styles.walletStatLabel}>Earned Points</Text>
@@ -271,7 +284,7 @@ export default function DashboardScreen() {
                 <Feather
                   name="refresh-cw"
                   size={16}
-                  color={loading ? '#ccc' : '#d81b60'}
+                  color={loading ? "#ccc" : "#d81b60"}
                 />
               </TouchableOpacity>
             </View>
@@ -283,9 +296,9 @@ export default function DashboardScreen() {
             ) : (
               <>
                 {transactions.slice(0, 3).map((tx) => {
-                  const isInvoice = tx.reference === 'INVOICE_PURCHASE';
-                  const isConfirmed = ['success', 'confirmed'].includes(
-                    tx.paymentStatus?.toLowerCase()
+                  const isInvoice = tx.reference === "INVOICE_PURCHASE";
+                  const isConfirmed = ["success", "confirmed"].includes(
+                    tx.paymentStatus?.toLowerCase(),
                   );
                   return (
                     <View key={tx.id} style={styles.transactionCard}>
@@ -293,21 +306,25 @@ export default function DashboardScreen() {
                         style={[
                           styles.txIcon,
                           {
-                            backgroundColor: isInvoice ? '#e3f2fd' : '#e8f5e9',
+                            backgroundColor: isInvoice ? "#e3f2fd" : "#e8f5e9",
                           },
                         ]}
                       >
                         <Feather
-                          name={isInvoice ? 'arrow-up-right' : 'arrow-down-left'}
+                          name={
+                            isInvoice ? "arrow-up-right" : "arrow-down-left"
+                          }
                           size={20}
-                          color={isInvoice ? '#2196f3' : '#4caf50'}
+                          color={isInvoice ? "#2196f3" : "#4caf50"}
                         />
                       </View>
 
                       <View style={styles.txContent}>
                         <View style={styles.txHeader}>
                           <Text style={styles.txTitle}>
-                            {isInvoice ? 'Earned from Service' : 'Points Purchase'}
+                            {isInvoice
+                              ? "Earned from Service"
+                              : "Points Purchase"}
                           </Text>
                           <Text style={styles.txPoints}>
                             +{tx.points.toLocaleString()} pts
@@ -322,7 +339,9 @@ export default function DashboardScreen() {
                             style={[
                               styles.statusBadge,
                               {
-                                backgroundColor: isConfirmed ? '#e8f5e9' : '#fff3e0',
+                                backgroundColor: isConfirmed
+                                  ? "#e8f5e9"
+                                  : "#fff3e0",
                               },
                             ]}
                           >
@@ -330,7 +349,7 @@ export default function DashboardScreen() {
                               style={[
                                 styles.statusText,
                                 {
-                                  color: isConfirmed ? '#4caf50' : '#ff9800',
+                                  color: isConfirmed ? "#4caf50" : "#ff9800",
                                 },
                               ]}
                             >
@@ -352,9 +371,11 @@ export default function DashboardScreen() {
                 {transactions.length > 3 && (
                   <TouchableOpacity
                     style={styles.viewAllButton}
-                    onPress={() => router.push('/statement')}
+                    onPress={() => router.push("/statement")}
                   >
-                    <Text style={styles.viewAllText}>View All Transactions</Text>
+                    <Text style={styles.viewAllText}>
+                      View All Transactions
+                    </Text>
                     <Feather name="chevron-right" size={14} color="#d81b60" />
                   </TouchableOpacity>
                 )}
@@ -395,7 +416,6 @@ export default function DashboardScreen() {
           fetchData();
         }}
       />
-
     </SafeAreaView>
   );
 }
@@ -403,10 +423,10 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   scrollView: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   scrollContent: {
     paddingBottom: 100,
@@ -415,122 +435,122 @@ const styles = StyleSheet.create({
     margin: 16,
     borderRadius: 18,
     padding: 16,
-    backgroundColor: '#d81b60',
-    shadowColor: '#000',
+    backgroundColor: "#d81b60",
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
     elevation: 8,
   },
   walletCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 14,
   },
   walletCardTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
   },
   walletCardSubtitle: {
     fontSize: 12,
-    color: '#ffe6f1',
+    color: "#ffe6f1",
     marginTop: 2,
   },
   walletAmountText: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
     marginBottom: 4,
   },
   walletSubtext: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.85)',
+    color: "rgba(255,255,255,0.85)",
     marginBottom: 12,
   },
   walletStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: 12,
   },
   walletStat: {
     flex: 1,
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   walletStatLabel: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.8)',
-    textTransform: 'uppercase',
+    color: "rgba(255,255,255,0.8)",
+    textTransform: "uppercase",
     marginBottom: 2,
   },
   walletStatValue: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
   },
   viewAllButton: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 12,
     marginTop: 8,
     borderRadius: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: '#e5e5e5',
+    borderColor: "#e5e5e5",
   },
   viewAllText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#d81b60',
+    fontWeight: "600",
+    color: "#d81b60",
     marginRight: 6,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
   },
   tabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   tab: {
     flex: 1,
     paddingVertical: 16,
     paddingHorizontal: 12,
-    alignItems: 'center',
+    alignItems: "center",
     borderBottomWidth: 4,
-    borderBottomColor: 'transparent',
+    borderBottomColor: "transparent",
   },
   tabActive: {
-    borderBottomColor: '#d81b60',
+    borderBottomColor: "#d81b60",
   },
   tabValue: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 4,
   },
   tabValueActive: {
-    color: '#d81b60',
+    color: "#d81b60",
   },
   tabLabel: {
     fontSize: 10,
-    color: '#999',
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    color: "#999",
+    fontWeight: "600",
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   actionsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     marginBottom: 4,
   },
   actionButton: {
@@ -539,75 +559,75 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    borderColor: "#ddd",
+    backgroundColor: "#fff",
+    alignItems: "center",
   },
   actionButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
   },
   actionButtonPrimary: {
-    backgroundColor: '#d81b60',
-    borderColor: '#d81b60',
+    backgroundColor: "#d81b60",
+    borderColor: "#d81b60",
   },
   actionButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
   },
   actionButtonTextPrimary: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
   },
   section: {
     paddingHorizontal: 16,
     paddingVertical: 16,
   },
   activityHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
   },
   emptyState: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingVertical: 40,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#eee',
-    borderStyle: 'dashed',
+    borderColor: "#eee",
+    borderStyle: "dashed",
   },
   emptyStateText: {
-    color: '#999',
+    color: "#999",
     fontSize: 14,
   },
   transactionCard: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    backgroundColor: "#fff",
     paddingHorizontal: 12,
     paddingVertical: 12,
     marginBottom: 8,
     borderRadius: 12,
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
     borderWidth: 1,
-    borderColor: '#f0f0f0',
+    borderColor: "#f0f0f0",
   },
   txIcon: {
     width: 48,
     height: 48,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   txIconEmoji: {
@@ -617,35 +637,35 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   txHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 4,
   },
   txTitle: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
   },
   txPoints: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#d81b60',
+    fontWeight: "700",
+    color: "#d81b60",
   },
   txTxId: {
     fontSize: 10,
-    color: '#999',
-    fontFamily: 'monospace',
+    color: "#999",
+    fontFamily: "monospace",
     marginBottom: 6,
   },
   txFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   txDate: {
     fontSize: 11,
-    color: '#999',
+    color: "#999",
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -654,19 +674,19 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 9,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontWeight: "600",
+    textTransform: "uppercase",
   },
   txRight: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   txAmount: {
     fontSize: 11,
-    color: '#999',
+    color: "#999",
     marginTop: 4,
   },
   benefitsCard: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -676,31 +696,31 @@ const styles = StyleSheet.create({
   },
   benefitsTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    fontWeight: "700",
+    color: "#1a1a1a",
     marginBottom: 6,
   },
   benefitsDesc: {
     fontSize: 13,
-    color: '#666',
+    color: "#666",
     lineHeight: 18,
   },
   benefitsButton: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
     gap: 6,
   },
   benefitsButtonText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#d81b60',
+    fontWeight: "600",
+    color: "#d81b60",
   },
   progressCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderRadius: 8,
@@ -708,85 +728,85 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     borderRadius: 4,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 8,
   },
   progressFill: {
-    height: '100%',
-    backgroundColor: '#d81b60',
+    height: "100%",
+    backgroundColor: "#d81b60",
   },
   progressText: {
     fontSize: 12,
-    color: '#999',
+    color: "#999",
   },
   modalOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 1000,
   },
   modalBackdrop: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 20,
     marginHorizontal: 24,
     zIndex: 1001,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 12,
   },
   modalTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    fontWeight: "700",
+    color: "#1a1a1a",
     flex: 1,
   },
   modalDesc: {
     fontSize: 13,
-    color: '#666',
+    color: "#666",
     marginBottom: 16,
     lineHeight: 18,
   },
   modalCostBox: {
-    backgroundColor: '#fff5f5',
+    backgroundColor: "#fff5f5",
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 12,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#ffe0e6',
+    borderColor: "#ffe0e6",
   },
   modalCostLabel: {
     fontSize: 10,
-    color: '#d81b60',
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    color: "#d81b60",
+    fontWeight: "600",
+    textTransform: "uppercase",
     marginBottom: 4,
   },
   modalCostValue: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#d81b60',
+    fontWeight: "700",
+    color: "#d81b60",
   },
   modalActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   modalCloseButton: {
@@ -794,27 +814,27 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    alignItems: 'center',
+    borderColor: "#ddd",
+    alignItems: "center",
   },
   modalCloseText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
   },
   modalClaimButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: '#d81b60',
-    alignItems: 'center',
+    backgroundColor: "#d81b60",
+    alignItems: "center",
   },
   modalClaimButtonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
   },
   modalClaimText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
   },
 });
