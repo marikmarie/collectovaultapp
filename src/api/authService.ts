@@ -1,23 +1,23 @@
-import api, { setVaultOtpToken } from './index';
-import storage, { setItem, removeItem, getItem } from '@/src/utils/storage';
+import storage, { getItem, removeItem, setItem } from "@/src/utils/storage";
+import api, { setVaultOtpToken } from "./index";
 
 export const authService = {
   startCollectoAuth: async (payload: {
-    type: 'client';
+    type: "client";
     collectoId?: string;
     id?: string;
   }) => {
-    const resp = await api.post('/auth', payload);
+    const resp = await api.post("/auth", payload);
     return resp.data;
   },
 
   verifyCollectoOtp: async (payload: {
     id: string;
-    type?: 'client';
+    type?: "client";
     vaultOTP: string;
     vaultOTPToken?: string;
   }) => {
-    const resp = await api.post('/authVerify', payload);
+    const resp = await api.post("/authVerify", payload);
     const data = resp.data;
     const userData = data.data.data;
 
@@ -29,9 +29,9 @@ export const authService = {
 
     if (userData) {
       const { id, collectoId, userName } = userData;
-      await setItem('clientId', id);
-      await setItem('collectoId', collectoId.toString());
-      await setItem('userName', userName);
+      await setItem("clientId", id);
+      await setItem("collectoId", collectoId.toString());
+      await setItem("userName", userName);
     }
 
     return data;
@@ -40,22 +40,28 @@ export const authService = {
   /**
    * Set username for a customer after first login
    */
-  setUsername: async (clientId: string, collectoId: string, username: string, payload: {
-  clientId: string;
-  collectoId?: string;
-  username: string;
-  
-}) => {
+  setUsername: async (
+    clientId: string,
+    collectoId: string,
+    username: string,
+    payload: {
+      clientId: string;
+      collectoId?: string;
+      username: string;
+    },
+  ) => {
     try {
-      const resp = await api.post('/setUsername', payload);
+      const resp = await api.post("/setUsername", payload);
 
-      console.debug('[AuthService] setUsername response:', resp.data);
+      console.debug("[AuthService] setUsername response:", resp.data);
       if (resp.data.success) {
-        await setItem('userName', payload.username);
+        await setItem("userName", payload.username);
       }
       return resp.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to set username');
+      throw new Error(
+        error.response?.data?.message || "Failed to set username",
+      );
     }
   },
 
@@ -64,26 +70,25 @@ export const authService = {
    */
   getClientIdByUsername: async (username: string) => {
     try {
-      const resp = await api.post('/getByUsername', { username });
+      const resp = await api.post("/getByUsername", { username });
       if (resp.data.success) {
         return resp.data.data;
       }
-      throw new Error('Username not found');
+      throw new Error("Username not found");
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Username not found');
+      throw new Error(error.response?.data?.message || "Username not found");
     }
   },
 
   /**
    * Login by username (recommended for customers)
    */
-  loginByUsername: async (payload: {
-    username: string;
-    type: 'client';
-  }) => {
+  loginByUsername: async (payload: { username: string; type: "client" }) => {
     try {
       // Step 1: Get client ID by username
-      const userInfo = await authService.getClientIdByUsername(payload.username);
+      const userInfo = await authService.getClientIdByUsername(
+        payload.username,
+      );
 
       // Step 2: Start auth with the retrieved client ID
       const authPayload = {
@@ -103,13 +108,27 @@ export const authService = {
    * Logout and clear all stored auth data
    */
   logout: async () => {
-    const results = await Promise.all([
-      removeItem('clientId'),
-      removeItem('collectoId'),
-      removeItem('userName'),
-      removeItem('vaultOtpToken'),
-      removeItem('vaultOtpExpiresAt'),
+    console.log("[AuthService] Beginning logout process");
+
+    // Step 1: Remove individual auth keys
+    await Promise.all([
+      removeItem("clientId"),
+      removeItem("collectoId"),
+      removeItem("userName"),
+      removeItem("vaultOtpToken"),
+      removeItem("vaultOtpExpiresAt"),
     ]);
+
+    console.log("[AuthService] Removed individual auth keys");
+
+    // Step 2: For extra safety on web, do a complete storage clear
+    try {
+      const { clearStorage } = await import("@/src/utils/storage");
+      console.log("[AuthService] Triggering complete storage clear");
+      await clearStorage();
+    } catch (err) {
+      console.warn("[AuthService] Could not trigger complete clear:", err);
+    }
   },
 
   /**
@@ -119,28 +138,28 @@ export const authService = {
     try {
       await authService.getClientIdByUsername(username);
       // if the call succeeds the username is already taken
-      return { available: false, message: 'Username already taken' };
+      return { available: false, message: "Username already taken" };
     } catch {
-      return { available: true, message: 'Username is available' };
+      return { available: true, message: "Username is available" };
     }
   },
 
- 
   getCurrentUser: async () => {
-  
-    if (!storage || typeof (storage as any).getItem !== 'function') {
+    if (!storage || typeof (storage as any).getItem !== "function") {
       return null;
     }
 
     try {
-      const clientId = await getItem('clientId');
-      
+      const clientId = await getItem("clientId");
+
       // If no clientId, user is not logged in
       if (!clientId) return null;
 
       // CRITICAL: Validate that the vaultOtpToken is still valid locally
-      const hasValidToken = await import('./index').then(m => m.hasVaultOtpToken());
-      
+      const hasValidToken = await import("./index").then((m) =>
+        m.hasVaultOtpToken(),
+      );
+
       if (!hasValidToken) {
         // Token is missing or expired, clear all user data
         await authService.logout();
@@ -148,27 +167,30 @@ export const authService = {
       }
 
       // Additionally, validate with API by making a test call
-      const collectoId = await getItem('collectoId');
+      const collectoId = await getItem("collectoId");
       if (collectoId) {
         try {
           // Try to fetch customer data to validate token
-          await api.post('/loyaltySettings', {
+          await api.post("/loyaltySettings", {
             collectoId,
             clientId,
           });
         } catch (apiErr: any) {
-          console.warn('API validation failed, logging out:', apiErr?.message || apiErr);
+          console.warn(
+            "API validation failed, logging out:",
+            apiErr?.message || apiErr,
+          );
           await authService.logout();
           return null;
         }
       }
 
-      const userName = await getItem('userName');
+      const userName = await getItem("userName");
 
       return { clientId, collectoId, userName };
     } catch (err: any) {
       // Only log if something unexpected happens, avoid repeated null-module noise
-      console.debug('[AuthService] Error in getCurrentUser:', err.message);
+      console.debug("[AuthService] Error in getCurrentUser:", err.message);
       return null;
     }
   },
