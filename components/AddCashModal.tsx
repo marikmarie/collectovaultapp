@@ -1,20 +1,22 @@
-import api from '@/src/api';
-import { useAuth } from '@/src/context/AuthContext';
-import storage from '@/src/utils/storage';
-import { customerService } from '@/src/api/customer';
-import { Feather } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import api from "@/src/api";
+import { customerService } from "@/src/api/customer";
+import { useAuth } from "@/src/context/AuthContext";
+import storage from "@/src/utils/storage";
+import { Feather } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 interface AddCashModalProps {
   visible: boolean;
@@ -26,10 +28,15 @@ interface AddCashModalProps {
   };
 }
 
-export default function AddCashModal({ visible, onClose, onSuccess, clientAddCash }: AddCashModalProps) {
+export default function AddCashModal({
+  visible,
+  onClose,
+  onSuccess,
+  clientAddCash,
+}: AddCashModalProps) {
   const { user } = useAuth();
-  const [amount, setAmount] = useState('');
-  const [phone, setPhone] = useState('');
+  const [amount, setAmount] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -41,8 +48,8 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
 
   useEffect(() => {
     if (visible) {
-      setAmount('');
-      setPhone('');
+      setAmount("");
+      setPhone("");
       setLoading(false);
       setVerifying(false);
       setVerified(false);
@@ -58,13 +65,16 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
 
   const fetchClientAddCash = async () => {
     try {
-      const collectoId = await storage.getItem('collectoId');
+      const collectoId = await storage.getItem("collectoId");
       if (!collectoId || !user?.clientId) return;
-      const customerRes = await customerService.getCustomerData(collectoId, user.clientId);
+      const customerRes = await customerService.getCustomerData(
+        collectoId,
+        user.clientId,
+      );
       const loyaltySettings = customerRes.data?.data?.loyaltySettings ?? {};
       setFetchedClientAddCash(loyaltySettings?.client_add_cash);
     } catch (err) {
-      console.error('Failed to fetch clientAddCash:', err);
+      console.error("Failed to fetch clientAddCash:", err);
     }
   };
 
@@ -73,20 +83,20 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
   };
 
   const verifyPhone = async () => {
-    const trimmed = String(phone || '').trim();
+    const trimmed = String(phone || "").trim();
     if (!trimmed || trimmed.length < 10) {
-      setPhoneError('Please enter a valid 10-digit phone number');
+      setPhoneError("Please enter a valid 10-digit phone number");
       return;
     }
 
     try {
       setVerifying(true);
       setPhoneError(null);
-      const vaultOTPToken = await storage.getItem('vaultOtpToken');
-      const collectoId = await storage.getItem('collectoId');
+      const vaultOTPToken = await storage.getItem("vaultOtpToken");
+      const collectoId = await storage.getItem("collectoId");
       const clientId = user?.clientId;
 
-      const res = await api.post('/verifyPhoneNumber', {
+      const res = await api.post("/verifyPhoneNumber", {
         vaultOTPToken,
         collectoId,
         clientId,
@@ -105,8 +115,8 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
 
       const verifiedFlag = Boolean(
         nested?.verifyPhoneNumber ??
-          deeper?.verifyPhoneNumber ??
-          String(payload?.status_message ?? '').toLowerCase() === 'success'
+        deeper?.verifyPhoneNumber ??
+        String(payload?.status_message ?? "").toLowerCase() === "success",
       );
 
       if (verifiedFlag) {
@@ -116,12 +126,12 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
       } else {
         setVerified(false);
         setAccountName(null);
-        setPhoneError(nested?.message ?? 'Could not verify the phone number');
+        setPhoneError(nested?.message ?? "Could not verify the phone number");
       }
     } catch (err: any) {
       setAccountName(null);
       setVerified(false);
-      setPhoneError(err?.response?.data?.message ?? 'Could not verify phone');
+      setPhoneError(err?.response?.data?.message ?? "Could not verify phone");
     } finally {
       setVerifying(false);
     }
@@ -148,44 +158,50 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
 
   const handleAddCash = async () => {
     if (!verified) {
-      Alert.alert('Verify phone', 'Please verify your phone number before proceeding.');
+      Alert.alert(
+        "Verify phone",
+        "Please verify your phone number before proceeding.",
+      );
       return;
     }
 
     const numAmount = Number(amount);
     if (!amount || numAmount <= 0) {
-      Alert.alert('Invalid amount', 'Please enter a valid amount to add.');
+      Alert.alert("Invalid amount", "Please enter a valid amount to add.");
       return;
     }
 
     if (numAmount <= 500) {
-      Alert.alert('Minimum amount', 'The amount must be greater than 500 UGX.');
+      Alert.alert("Minimum amount", "The amount must be greater than 500 UGX.");
       return;
     }
 
     const trimmedPhone = phone.trim();
     if (!trimmedPhone) {
-      Alert.alert('Missing phone', 'Please enter your mobile money number.');
+      Alert.alert("Missing phone", "Please enter your mobile money number.");
       return;
     }
 
     setLoading(true);
     try {
-      const vaultOTPToken = await storage.getItem('vaultOtpToken');
-      const collectoId = await storage.getItem('collectoId');
+      const vaultOTPToken = await storage.getItem("vaultOtpToken");
+      const collectoId = await storage.getItem("collectoId");
 
       let effectiveClientAddCash = clientAddCash || fetchedClientAddCash;
       if (effectiveClientAddCash) {
         effectiveClientAddCash = { ...effectiveClientAddCash };
-        effectiveClientAddCash.charge = effectiveClientAddCash.charge_client === 1 ? effectiveClientAddCash.charge : 0;
+        effectiveClientAddCash.charge =
+          effectiveClientAddCash.charge_client === 1
+            ? effectiveClientAddCash.charge
+            : 0;
       }
 
-      const res = await api.post('/requestToPay', {
+      const res = await api.post("/requestToPay", {
         vaultOTPToken,
         collectoId,
         clientId: user?.clientId,
-        paymentOption: 'mobilemoney',
-        phone: trimmedPhone.replace(/^0/, '256'),
+        paymentOption: "mobilemoney",
+        phone: trimmedPhone.replace(/^0/, "256"),
         amount: Number(amount),
         reference: `ADDCASH-${Date.now()}`,
         clientAddCash: effectiveClientAddCash || {
@@ -194,12 +210,12 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
         },
       });
 
-      console.log('Add Cash Request Payload:', {
+      console.log("Add Cash Request Payload:", {
         vaultOTPToken,
         collectoId,
         clientId: user?.clientId,
-        paymentOption: 'mobilemoney',
-        phone: trimmedPhone.replace(/^0/, '256'),
+        paymentOption: "mobilemoney",
+        phone: trimmedPhone.replace(/^0/, "256"),
         amount: Number(amount),
         reference: `ADDCASH-${Date.now()}`,
         clientAddCash: effectiveClientAddCash || {
@@ -208,20 +224,31 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
         },
       });
 
-      console.log('Add Cash Response:', res.data);
+      console.log("Add Cash Response:", res.data);
 
-      const status = String(res.data?.status ?? '').toLowerCase();
-      if (status === '200' || status === 'success') {
+      const status = String(res.data?.status ?? "").toLowerCase();
+      if (status === "200" || status === "success") {
         Alert.alert(
-          'Payment Initiated',
-          'A mobile money prompt has been sent. Follow the instructions on your phone.',
-          [{ text: 'OK', onPress: () => { handleClose(); onSuccess?.(); } }]
+          "Payment Initiated",
+          "A mobile money prompt has been sent. Follow the instructions on your phone.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                handleClose();
+                onSuccess?.();
+              },
+            },
+          ],
         );
       } else {
-        Alert.alert('Failed', res.data?.message ?? 'Could not initiate payment');
+        Alert.alert(
+          "Failed",
+          res.data?.message ?? "Could not initiate payment",
+        );
       }
     } catch (err: any) {
-      Alert.alert('Error', err?.message ?? 'Something went wrong');
+      Alert.alert("Error", err?.message ?? "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -229,7 +256,10 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.overlay}
+      >
         <View style={styles.content}>
           <View style={styles.header}>
             <Text style={styles.title}>Add Cash</Text>
@@ -238,9 +268,15 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={styles.body}>
-            <Text style={styles.sectionTitle}>Add funds using mobile money</Text>
-            
+          <ScrollView
+            contentContainerStyle={styles.body}
+            keyboardShouldPersistTaps="handled"
+            scrollEnabled={true}
+          >
+            <Text style={styles.sectionTitle}>
+              Add funds using mobile money
+            </Text>
+
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Amount (UGX)</Text>
               <TextInput
@@ -307,7 +343,8 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
             </View>
 
             <Text style={styles.helpText}>
-              After confirming the payment on your phone, your wallet and transaction history will update shortly.
+              After confirming the payment on your phone, your wallet and
+              transaction history will update shortly.
             </Text>
           </ScrollView>
 
@@ -323,12 +360,16 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
                 <Text style={styles.proceedBtnText}>Request Payment</Text>
               )}
             </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelBtn} onPress={handleClose} disabled={loading}>
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={handleClose}
+              disabled={loading}
+            >
               <Text style={styles.cancelBtnText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -336,28 +377,28 @@ export default function AddCashModal({ visible, onClose, onSuccess, clientAddCas
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   content: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    maxHeight: '90%',
+    maxHeight: "90%",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   title: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    fontWeight: "700",
+    color: "#1a1a1a",
   },
   body: {
     paddingHorizontal: 16,
@@ -365,7 +406,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    color: '#555',
+    color: "#555",
     marginBottom: 16,
   },
   inputGroup: {
@@ -373,70 +414,70 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 14,
-    color: '#1a1a1a',
+    color: "#1a1a1a",
   },
   phoneInputGroup: {
-    flexDirection: 'column',
+    flexDirection: "column",
     gap: 8,
   },
   phoneInput: {
-    width: '100%',
-    backgroundColor: '#f5f5f5',
+    width: "100%",
+    backgroundColor: "#f5f5f5",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: '#1a1a1a',
+    color: "#1a1a1a",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   statusText: {
-    color: '#666',
+    color: "#666",
     fontSize: 12,
   },
   statusTextSuccess: {
-    color: '#2e7d32',
+    color: "#2e7d32",
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   verifyBtn: {
-    backgroundColor: '#d81b60',
+    backgroundColor: "#d81b60",
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   verifyBtnDisabled: {
     opacity: 0.7,
-    backgroundColor: '#999',
+    backgroundColor: "#999",
   },
   verifyBtnText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
     fontSize: 13,
   },
   errorText: {
-    color: '#f44336',
+    color: "#f44336",
     fontSize: 12,
     marginTop: 8,
   },
   accountBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e8f5e9',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#e8f5e9",
     borderRadius: 8,
     padding: 12,
     marginTop: 12,
@@ -447,36 +488,36 @@ const styles = StyleSheet.create({
   },
   accountLabel: {
     fontSize: 10,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
   },
   accountName: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#2e7d32',
+    fontWeight: "700",
+    color: "#2e7d32",
   },
   helpText: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
     lineHeight: 18,
     marginTop: 8,
     marginBottom: 16,
   },
   footer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: "#eee",
     gap: 8,
   },
   proceedBtn: {
     flex: 0.7,
-    backgroundColor: '#d81b60',
+    backgroundColor: "#d81b60",
     borderRadius: 10,
     paddingVertical: 14,
-    alignItems: 'center',
-    shadowColor: '#d81b60',
+    alignItems: "center",
+    shadowColor: "#d81b60",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 5,
@@ -486,40 +527,40 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   proceedBtnText: {
-    color: '#fff',
-    fontWeight: '700',
+    color: "#fff",
+    fontWeight: "700",
     fontSize: 15,
   },
   cancelBtn: {
     flex: 0.3,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: '#d81b60',
+    borderColor: "#d81b60",
     borderRadius: 10,
     paddingVertical: 14,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelBtnText: {
-    color: '#666',
-    fontWeight: '600',
+    color: "#666",
+    fontWeight: "600",
     fontSize: 14,
   },
   chargeBreakdown: {
     marginTop: 8,
     padding: 12,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
   },
   chargeText: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
     marginBottom: 4,
   },
   totalText: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#d81b60',
+    fontWeight: "700",
+    color: "#d81b60",
   },
 });
