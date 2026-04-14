@@ -1,5 +1,3 @@
-import { Platform } from "react-native";
-
 type StorageLike = {
   getItem: (key: string) => Promise<string | null>;
   setItem: (key: string, value: string) => Promise<void>;
@@ -31,13 +29,8 @@ const isWebBrowser = () => {
 
 const getIsWeb = () => {
   const web = isWebBrowser();
-  console.log("[Storage] Platform.OS:", Platform.OS, "| isWebBrowser:", web);
   return web;
 };
-
-console.log("[Storage] Initializing - Platform.OS:", Platform.OS);
-console.log("[Storage] isWebBrowser:", isWebBrowser());
-console.log("[Storage] SecureStore available:", !!SecureStore);
 
 const inMemory = new Map<string, string>();
 
@@ -50,10 +43,7 @@ const storage: StorageLike = {
     if (getIsWeb()) {
       try {
         const value = window.localStorage.getItem(key);
-        console.log(
-          `[Storage] Web localStorage.getItem(${key}):`,
-          value ? "found" : "null",
-        );
+
         return value;
       } catch (e) {
         console.warn("[Storage] Failed to read from localStorage:", e);
@@ -79,7 +69,6 @@ const storage: StorageLike = {
     if (getIsWeb()) {
       try {
         window.localStorage.setItem(key, value);
-        console.log(`[Storage] Web localStorage.setItem(${key})`);
         return;
       } catch (e) {
         console.warn("[Storage] Failed to write to localStorage:", e);
@@ -105,7 +94,6 @@ const storage: StorageLike = {
     if (getIsWeb()) {
       try {
         window.localStorage.removeItem(key);
-        console.log(`[Storage] Web localStorage.removeItem(${key})`);
       } catch (e) {
         console.warn("[Storage] Failed to remove from localStorage:", e);
       }
@@ -128,15 +116,7 @@ const storage: StorageLike = {
     // On web, clear localStorage
     if (getIsWeb()) {
       try {
-        console.log(
-          "[Storage] Clearing web localStorage - current keys:",
-          Object.keys(window.localStorage),
-        );
         window.localStorage.clear();
-        console.log(
-          "[Storage] Web localStorage cleared - keys after clear:",
-          Object.keys(window.localStorage),
-        );
       } catch (e) {
         console.warn("[Storage] Failed to clear localStorage:", e);
       }
@@ -158,7 +138,6 @@ const storage: StorageLike = {
       for (const key of keysToDelete) {
         try {
           await SecureStore.deleteItemAsync(key);
-          console.log("[Storage] Deleted from SecureStore:", key);
         } catch (e) {
           console.warn("[Storage] Failed to delete from SecureStore:", key, e);
         }

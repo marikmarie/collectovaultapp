@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "collectovaultapp",
-    "slug": "collectovaultapp",
+    "name": "collectovault",
+    "slug": "collectovault",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "collectovaultapp",
+    "scheme": "collectovault",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
@@ -47,6 +47,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d2374aca-3ed2-4dcf-8f3d-310577a25321"
+      }
     }
   }
 }
