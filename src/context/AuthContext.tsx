@@ -117,6 +117,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
       }
 
+      // CRITICAL FIX: Force verify that clientId is also cleared
+      try {
+        const { getItem: verifyGetItem } = await import("@/src/utils/storage");
+        const clientId = await verifyGetItem("clientId");
+        const collectoId = await verifyGetItem("collectoId");
+        const userName = await verifyGetItem("userName");
+
+        if (clientId || collectoId || userName) {
+          console.error(
+            "[AuthContext] CRITICAL: Auth data still in storage after clear!",
+            { clientId, collectoId, userName },
+          );
+          // Force remove them individually
+          const { removeItem: forceRemove } =
+            await import("@/src/utils/storage");
+          await forceRemove("clientId");
+          await forceRemove("collectoId");
+          await forceRemove("userName");
+          console.warn("[AuthContext] Force-cleared remaining auth data");
+        }
+      } catch (err) {
+        console.warn("[AuthContext] Could not verify auth data clear:", err);
+      }
+
       setUser(null);
       console.log("[AuthContext] Bootstrap complete - user cleared");
     } catch (err) {
