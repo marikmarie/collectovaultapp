@@ -1,26 +1,26 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import {
-  getConversation,
-  sendChatMessage,
-  markChatMessageAsRead,
+    getConversation,
+    markChatMessageAsRead,
+    sendChatMessage,
 } from "../src/api/feedback";
 
 interface ChatMessage {
   id: number;
   customerId: number;
-  senderType: 'customer' | 'support';
+  senderType: "customer" | "support";
   message: string;
   isRead: boolean;
   createdAt: string;
@@ -56,7 +56,7 @@ export default function LiveChatModal({
 
       // Mark unread messages as read
       for (const msg of data) {
-        if (!msg.isRead && msg.senderType === 'support') {
+        if (!msg.isRead && msg.senderType === "support") {
           await markChatMessageAsRead(msg.id);
         }
       }
@@ -93,8 +93,8 @@ export default function LiveChatModal({
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -106,7 +106,7 @@ export default function LiveChatModal({
       transparent
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
         <View style={styles.container}>
@@ -125,6 +125,8 @@ export default function LiveChatModal({
             onContentSizeChange={() =>
               scrollViewRef.current?.scrollToEnd({ animated: true })
             }
+            keyboardShouldPersistTaps="handled"
+            scrollEnabled={true}
           >
             {messages.length === 0 ? (
               <View style={styles.emptyState}>
@@ -138,7 +140,7 @@ export default function LiveChatModal({
                   key={msg.id}
                   style={[
                     styles.messageRow,
-                    msg.senderType === 'customer'
+                    msg.senderType === "customer"
                       ? styles.customerMessageRow
                       : styles.supportMessageRow,
                   ]}
@@ -146,7 +148,7 @@ export default function LiveChatModal({
                   <View
                     style={[
                       styles.messageBubble,
-                      msg.senderType === 'customer'
+                      msg.senderType === "customer"
                         ? styles.customerMessage
                         : styles.supportMessage,
                     ]}
@@ -154,7 +156,7 @@ export default function LiveChatModal({
                     <Text
                       style={[
                         styles.messageText,
-                        msg.senderType === 'customer'
+                        msg.senderType === "customer"
                           ? styles.customerMessageText
                           : styles.supportMessageText,
                       ]}
@@ -164,7 +166,7 @@ export default function LiveChatModal({
                     <Text
                       style={[
                         styles.messageTime,
-                        msg.senderType === 'customer'
+                        msg.senderType === "customer"
                           ? styles.customerMessageTime
                           : styles.supportMessageTime,
                       ]}
@@ -210,9 +212,7 @@ export default function LiveChatModal({
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.charCount}>
-              {newMessage.length}/500
-            </Text>
+            <Text style={styles.charCount}>{newMessage.length}/500</Text>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#E5E7EB",
     paddingHorizontal: 12,
     paddingVertical: 8,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
+    paddingBottom: Platform.OS === "ios" ? 24 : 12,
     backgroundColor: "white",
   },
   errorContainer: {

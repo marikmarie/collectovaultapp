@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { createRating } from "../api/feedback";
 
@@ -49,9 +51,7 @@ function StarRating({ label, value, onChange }: StarRatingProps) {
           </TouchableOpacity>
         ))}
       </View>
-      {value > 0 && (
-        <Text style={styles.ratingValue}>{value} star(s)</Text>
-      )}
+      {value > 0 && <Text style={styles.ratingValue}>{value} star(s)</Text>}
     </View>
   );
 }
@@ -117,14 +117,21 @@ export default function RatingModal({
       onRequestClose={onClose}
       transparent
     >
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
         <View style={styles.content}>
           <Text style={styles.title}>Rate Your Experience</Text>
           <Text style={styles.subtitle}>
             Please rate your experience with our service
           </Text>
 
-          <ScrollView style={styles.scrollView}>
+          <ScrollView
+            style={styles.scrollView}
+            keyboardShouldPersistTaps="handled"
+            scrollEnabled={true}
+          >
             <StarRating
               label="Order Quality"
               value={orderRating}
@@ -150,7 +157,9 @@ export default function RatingModal({
             />
 
             <View style={styles.commentsSection}>
-              <Text style={styles.commentLabel}>Additional Comments (Optional)</Text>
+              <Text style={styles.commentLabel}>
+                Additional Comments (Optional)
+              </Text>
               <TextInput
                 style={styles.commentInput}
                 placeholder="Share your feedback..."
@@ -191,7 +200,7 @@ export default function RatingModal({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

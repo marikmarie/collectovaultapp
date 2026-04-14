@@ -12,7 +12,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View
+    View,
 } from "react-native";
 
 interface TransferCashModalProps {
@@ -192,7 +192,7 @@ export default function TransferCashModal({
   return (
     <Modal visible={visible} transparent animationType="slide">
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.overlay}
       >
         <View style={styles.content}>

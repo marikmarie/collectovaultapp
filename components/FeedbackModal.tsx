@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
+    ActivityIndicator,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { createFeedback } from "../src/api/feedback";
 
@@ -16,7 +16,7 @@ interface FeedbackModalProps {
   onClose: () => void;
   customerId: number;
   onSuccess?: () => void;
-  initialType?: 'order' | 'service' | 'app' | 'general';
+  initialType?: "order" | "service" | "app" | "general";
 }
 
 export default function FeedbackModal({
@@ -24,9 +24,11 @@ export default function FeedbackModal({
   onClose,
   customerId,
   onSuccess,
-  initialType = 'general',
+  initialType = "general",
 }: FeedbackModalProps) {
-  const [feedbackType, setFeedbackType] = useState<'order' | 'service' | 'app' | 'general'>(initialType);
+  const [feedbackType, setFeedbackType] = useState<
+    "order" | "service" | "app" | "general"
+  >(initialType);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,10 +36,10 @@ export default function FeedbackModal({
   const [success, setSuccess] = useState(false);
 
   const feedbackTypes = [
-    { value: 'general', label: 'General' },
-    { value: 'order', label: 'Order Related' },
-    { value: 'service', label: 'Service Quality' },
-    { value: 'app', label: 'App/Website' },
+    { value: "general", label: "General" },
+    { value: "order", label: "Order Related" },
+    { value: "service", label: "Service Quality" },
+    { value: "app", label: "App/Website" },
   ];
 
   const handleSubmit = async () => {
@@ -61,7 +63,7 @@ export default function FeedbackModal({
       setTimeout(() => {
         setTitle("");
         setMessage("");
-        setFeedbackType('general');
+        setFeedbackType("general");
         setSuccess(false);
         onClose();
         onSuccess?.();
@@ -80,12 +82,17 @@ export default function FeedbackModal({
       onRequestClose={onClose}
       transparent
     >
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
         <View style={styles.content}>
           {success ? (
             <View style={styles.successContainer}>
               <Text style={styles.successEmoji}>✓</Text>
-              <Text style={styles.successTitle}>Thank you for your feedback!</Text>
+              <Text style={styles.successTitle}>
+                Thank you for your feedback!
+              </Text>
               <Text style={styles.successMessage}>
                 We appreciate your input and will review it soon.
               </Text>
@@ -94,7 +101,11 @@ export default function FeedbackModal({
             <>
               <Text style={styles.title}>Send Feedback</Text>
 
-              <ScrollView style={styles.scrollView}>
+              <ScrollView
+                style={styles.scrollView}
+                keyboardShouldPersistTaps="handled"
+                scrollEnabled={true}
+              >
                 <View style={styles.section}>
                   <Text style={styles.label}>Feedback Category *</Text>
                   <ScrollView horizontal style={styles.typeButtons}>
@@ -103,7 +114,8 @@ export default function FeedbackModal({
                         key={type.value}
                         style={[
                           styles.typeButton,
-                          feedbackType === type.value && styles.typeButtonActive,
+                          feedbackType === type.value &&
+                            styles.typeButtonActive,
                         ]}
                         onPress={() => setFeedbackType(type.value as any)}
                       >
@@ -178,7 +190,7 @@ export default function FeedbackModal({
             </>
           )}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
