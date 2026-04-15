@@ -253,9 +253,9 @@ export default function DashboardScreen() {
                 </Text>
               </View>
               <View style={styles.walletStat}>
-                <Text style={styles.walletStatLabel}>Total Points</Text>
+                <Text style={styles.walletStatLabel}>Point Value</Text>
                 <Text style={styles.walletStatValue}>
-                  {(earnedPoints + boughtPoints).toLocaleString()} pts
+                  UGX {(loyaltySettings?.point_value ?? 0).toLocaleString()}
                 </Text>
               </View>
             </View>
@@ -311,80 +311,95 @@ export default function DashboardScreen() {
               </View>
             ) : (
               <>
-                {transactions.slice(0, 3).map((tx) => {
-                  const isInvoice = tx.reference === "INVOICE_PURCHASE";
-                  const isConfirmed = ["success", "confirmed"].includes(
-                    tx.paymentStatus?.toLowerCase(),
-                  );
-                  return (
-                    <View key={tx.id} style={styles.transactionCard}>
-                      <View
-                        style={[
-                          styles.txIcon,
-                          {
-                            backgroundColor: isInvoice ? "#e3f2fd" : "#e8f5e9",
-                          },
-                        ]}
-                      >
-                        <Feather
-                          name={
-                            isInvoice ? "arrow-up-right" : "arrow-down-left"
-                          }
-                          size={20}
-                          color={isInvoice ? "#2196f3" : "#4caf50"}
-                        />
-                      </View>
-
-                      <View style={styles.txContent}>
-                        <View style={styles.txHeader}>
-                          <Text style={styles.txTitle}>
-                            {isInvoice
-                              ? "Earned from Service"
-                              : "Points Purchase"}
-                          </Text>
-                          <Text style={styles.txPoints}>
-                            +{tx.points.toLocaleString()} pts
-                          </Text>
+                {transactions
+                  .filter(
+                    (tx) =>
+                      !tx.status ||
+                      ["success", "pending"].includes(
+                        tx.status.toLowerCase()
+                      )
+                  )
+                  .slice(0, 3)
+                  .map((tx) => {
+                    const isInvoice = tx.reference === "INVOICE_PURCHASE";
+                    const isConfirmed = ["success", "confirmed"].includes(
+                      tx.paymentStatus?.toLowerCase(),
+                    );
+                    return (
+                      <View key={tx.id} style={styles.transactionCard}>
+                        <View
+                          style={[
+                            styles.txIcon,
+                            {
+                              backgroundColor: isInvoice ? "#e3f2fd" : "#e8f5e9",
+                            },
+                          ]}
+                        >
+                          <Feather
+                            name={
+                              isInvoice ? "arrow-up-right" : "arrow-down-left"
+                            }
+                            size={20}
+                            color={isInvoice ? "#2196f3" : "#4caf50"}
+                          />
                         </View>
-                        <Text style={styles.txTxId}>{tx.transactionId}</Text>
-                        <View style={styles.txFooter}>
-                          <Text style={styles.txDate}>
-                            {new Date(tx.createdAt).toLocaleDateString()}
-                          </Text>
-                          <View
-                            style={[
-                              styles.statusBadge,
-                              {
-                                backgroundColor: isConfirmed
-                                  ? "#e8f5e9"
-                                  : "#fff3e0",
-                              },
-                            ]}
-                          >
-                            <Text
+
+                        <View style={styles.txContent}>
+                          <View style={styles.txHeader}>
+                            <Text style={styles.txTitle}>
+                              {isInvoice
+                                ? "Earned from Service"
+                                : "Points Purchase"}
+                            </Text>
+                            <Text style={styles.txPoints}>
+                              +{tx.points.toLocaleString()} pts
+                            </Text>
+                          </View>
+                          <Text style={styles.txTxId}>{tx.transactionId}</Text>
+                          <View style={styles.txFooter}>
+                            <Text style={styles.txDate}>
+                              {new Date(tx.createdAt).toLocaleDateString()}
+                            </Text>
+                            <View
                               style={[
-                                styles.statusText,
+                                styles.statusBadge,
                                 {
-                                  color: isConfirmed ? "#4caf50" : "#ff9800",
+                                  backgroundColor: isConfirmed
+                                    ? "#e8f5e9"
+                                    : "#fff3e0",
                                 },
                               ]}
                             >
-                              {tx.paymentStatus}
-                            </Text>
+                              <Text
+                                style={[
+                                  styles.statusText,
+                                  {
+                                    color: isConfirmed ? "#4caf50" : "#ff9800",
+                                  },
+                                ]}
+                              >
+                                {tx.paymentStatus}
+                              </Text>
+                            </View>
                           </View>
                         </View>
-                      </View>
 
-                      <View style={styles.txRight}>
-                        <Text style={styles.txAmount}>
-                          {(tx.amount || 0).toLocaleString()} UGX
-                        </Text>
+                        <View style={styles.txRight}>
+                          <Text style={styles.txAmount}>
+                            {(tx.amount || 0).toLocaleString()} UGX
+                          </Text>
+                        </View>
                       </View>
-                    </View>
-                  );
-                })}
+                    );
+                  })}
 
-                {transactions.length > 3 && (
+                {transactions.filter(
+                  (tx) =>
+                    !tx.status ||
+                    ["success", "pending"].includes(
+                      tx.status.toLowerCase()
+                    )
+                ).length > 3 && (
                   <TouchableOpacity
                     style={styles.viewAllButton}
                     onPress={() => router.push("/statement")}

@@ -615,13 +615,14 @@ export default function StatementScreen() {
         />
       ) : (
         <FlatList
-          data={transactions}
+          data={transactions.filter((tx) =>
+            !tx.status || ["success", "pending"].includes(tx.status.toLowerCase())
+          )}
           keyExtractor={(item) => item.id}
           renderItem={({ item: tx }) => {
             const isConfirmed = ['success', 'confirmed'].includes(
-              (tx.paymentStatus || '').toLowerCase()
+              (tx.status || tx.paymentStatus || '').toLowerCase()
             );
-            const isInvoice = tx.reference === 'INVOICE_PURCHASE';
 
             return (
               <View style={styles.itemCard}>
@@ -629,23 +630,27 @@ export default function StatementScreen() {
                   style={[
                     styles.itemIcon,
                     { 
-                      backgroundColor: isInvoice ? '#e3f2fd' : '#e8f5e9',
+                      backgroundColor: '#f0f0f0',
                     },
                   ]}
                 >
                   <Feather
-                    name={isInvoice ? 'arrow-up-right' : 'arrow-down-left'}
+                    name="arrow-down-left"
                     size={20}
-                    color={isInvoice ? '#2196f3' : '#4caf50'}
+                    color="#4caf50"
                   />
                 </View>
                 <View style={styles.itemContent}>
                   <Text style={styles.itemTitle}>
-                    {isInvoice ? 'Service Purchase' : 'Points Added'}
+                    {tx.cash_type || 'Transaction'}
                   </Text>
                   <View style={styles.itemMeta}>
                     <Text style={styles.itemDate}>
-                      {new Date(tx.createdAt).toLocaleDateString()}
+                      {tx.cash_date || new Date(tx.createdAt || tx.updated_on).toLocaleDateString()}
+                    </Text>
+                    <Text style={styles.itemMetaSeparator}>•</Text>
+                    <Text style={styles.itemStatus}>
+                      {tx.user_type || 'CLIENT'}
                     </Text>
                     <Text style={styles.itemMetaSeparator}>•</Text>
                     <Text
@@ -656,16 +661,18 @@ export default function StatementScreen() {
                         },
                       ]}
                     >
-                      {tx.paymentStatus}
+                      {tx.status || tx.paymentStatus || 'PENDING'}
                     </Text>
                   </View>
+                  {tx.reference && (
+                    <Text style={styles.itemSubtext}>
+                      Ref: {tx.reference}
+                    </Text>
+                  )}
                 </View>
                 <View style={styles.itemRight}>
-                  <Text style={styles.itemPoints}>
-                    {tx.points > 0 ? '+' : ''}{tx.points.toLocaleString()} pts
-                  </Text>
                   <Text style={styles.itemAmount}>
-                    {(tx.amount || 0).toLocaleString()} UGX
+                    UGX {Number(tx.amount || 0).toLocaleString()}
                   </Text>
                 </View>
               </View>
