@@ -314,9 +314,9 @@ export default function DashboardScreen() {
                 {transactions
                   .filter(
                     (tx) =>
-                      !tx.status ||
+                      !tx.paymentStatus ||
                       ["success", "pending"].includes(
-                        tx.status.toLowerCase()
+                        tx.paymentStatus?.toLowerCase() || ""
                       )
                   )
                   .slice(0, 3)
@@ -395,9 +395,9 @@ export default function DashboardScreen() {
 
                 {transactions.filter(
                   (tx) =>
-                    !tx.status ||
+                    !tx.paymentStatus ||
                     ["success", "pending"].includes(
-                      tx.status.toLowerCase()
+                      tx.paymentStatus?.toLowerCase() || ""
                     )
                 ).length > 3 && (
                   <TouchableOpacity
