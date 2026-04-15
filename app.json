@@ -1,18 +1,14 @@
 {
   "expo": {
-    "name": "collectovault",
-    "slug": "collectovault",
+    "name": "collectoVault",
+    "slug": "collectoVault",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "collectovault",
+    "scheme": "collectovaultapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.collectovault",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.collectovault"
+      "package": "com.anonymous.collectovaultapp"
     },
     "web": {
       "output": "static",
@@ -51,12 +47,6 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "d2374aca-3ed2-4dcf-8f3d-310577a25321"
-      }
     }
   }
 }

@@ -86,6 +86,22 @@ export default function StatementScreen() {
     if (!user?.clientId) return;
 
     try {
+      // Try to get transactions from loyaltySettings first
+      const collectoId = await storage.getItem('collectoId');
+      const { customerService } = await import('@/src/api/customer');
+      
+      const customerRes = await customerService.getCustomerData(collectoId || "", user.clientId);
+      const loyaltySettings = customerRes.data?.data?.loyaltySettings ?? {};
+      const cashDetails = loyaltySettings?.client_cash_details ?? {};
+      const cashTransactions = Array.isArray(cashDetails?.transactions) ? cashDetails.transactions : [];
+      
+      if (cashTransactions.length > 0) {
+        console.log('Using transactions from cashDetails:', cashTransactions);
+        setTransactions(cashTransactions);
+        return;
+      }
+
+      // Fallback to transactionService
       const response = await transactionService.getTransactions(user.clientId, 50, 0);
       console.log('Transactions API response:', response.data);
       const txs = response.data?.data?.data ?? response.data?.transactions ?? [];
@@ -169,6 +185,14 @@ export default function StatementScreen() {
       setPointsBalance(points || 0);
       setTier('N/A');
       setTierProgress(0);
+
+      // Use transactions from cashDetails if available
+      const cashDetails = loyaltySettings?.client_cash_details ?? {};
+      const cashTransactions = Array.isArray(cashDetails?.transactions) ? cashDetails.transactions : [];
+      
+      if (cashTransactions.length > 0) {
+        setTransactions(cashTransactions);
+      }
 
       // Use loyalty settings point value if available. The API returns `point_value` as the total
       // value for all points (e.g. 8 points = 100 UGX), so derive per-point value.

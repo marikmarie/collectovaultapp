@@ -49,6 +49,7 @@ export default function DashboardScreen() {
   const [loyaltySettings, setLoyaltySettings] = useState<any>(null);
 
   const [walletAmount, setWalletAmount] = useState<number | null>(null);
+  const [cashBalance, setCashBalance] = useState<number | null>(null);
   const [ugxPerPoint, setUgxPerPoint] = useState<number>(0);
   const [showWalletAmount, setShowWalletAmount] = useState(true);
   const [earnedPoints, setEarnedPoints] = useState(0);
@@ -95,6 +96,19 @@ export default function DashboardScreen() {
       setEarnedPoints(earned);
       setBoughtPoints(bought);
 
+      // Get cash balance from cashDetails instead of calculating from points
+      const cashDetails = loyaltySettings?.client_cash_details ?? {};
+      const balanceAmount = typeof cashDetails?.balance === 'number' 
+        ? cashDetails.balance 
+        : 0;
+      
+      setWalletAmount(balanceAmount);
+      setCashBalance(balanceAmount);
+
+      // Use transactions from cashDetails if available
+      const cashTransactions = Array.isArray(cashDetails?.transactions) ? cashDetails.transactions : [];
+      setTransactions(cashTransactions.slice(0, 10)); // Show last 10 transactions
+
       const tierName =
         loyaltySettings?.tier ||
         loyaltySettings?.tierName ||
@@ -115,11 +129,13 @@ export default function DashboardScreen() {
       const perPoint =
         typeof pointValue === "number" && points > 0 ? pointValue / points : 0;
       setUgxPerPoint(perPoint);
-      setWalletAmount(perPoint > 0 ? Math.round(points * perPoint) : null);
 
+      // Fallback: also fetch from transactionService if needed
       const txRes = await transactionService.getTransactions(clientId, 10, 0);
       const txs = txRes.data?.data?.data ?? txRes.data?.transactions ?? [];
-      setTransactions(Array.isArray(txs) ? txs : []);
+      if (txs.length > 0 && cashTransactions.length === 0) {
+        setTransactions(Array.isArray(txs) ? txs : []);
+      }
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
       Alert.alert("Error", "Failed to load dashboard data");
@@ -217,8 +233,8 @@ export default function DashboardScreen() {
             </View>
             <Text style={styles.walletAmountText}>
               {showWalletAmount
-                ? walletAmount !== null
-                  ? `UGX ${walletAmount.toLocaleString()}`
+                ? cashBalance !== null
+                  ? `UGX ${cashBalance.toLocaleString()}`
                   : "—"
                 : "••••••••"}
             </Text>

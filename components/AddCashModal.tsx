@@ -3,7 +3,7 @@ import { customerService } from "@/src/api/customer";
 import { useAuth } from "@/src/context/AuthContext";
 import storage from "@/src/utils/storage";
 import { Feather } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -46,6 +46,17 @@ export default function AddCashModal({
   const [chargeAmount, setChargeAmount] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
 
+  // Payment result / status tracking
+  const [paymentResult, setPaymentResult] = useState<null | {
+    transactionId: string | null;
+    message?: string;
+    status?: string;
+  }>(null);
+  const [queryLoading, setQueryLoading] = useState(false);
+  const [queryError, setQueryError] = useState<string | null>(null);
+  const [lastQueriedStatus, setLastQueriedStatus] = useState<string | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     if (visible) {
       setAmount("");
@@ -55,13 +66,56 @@ export default function AddCashModal({
       setVerified(false);
       setAccountName(null);
       setPhoneError(null);
+      setPaymentResult(null);
+      setQueryError(null);
+      setLastQueriedStatus(null);
 
       // Fetch clientAddCash if not provided
       if (!clientAddCash && user?.clientId) {
         fetchClientAddCash();
       }
+    } else {
+      // Clean up polling on close
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
     }
   }, [visible, clientAddCash, user?.clientId]);
+
+  // Auto-polling effect
+  useEffect(() => {
+    const txId = paymentResult?.transactionId ?? null;
+
+    if (!txId) {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      return;
+    }
+
+    if (lastQueriedStatus === "success" || lastQueriedStatus === "failed") {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      return;
+    }
+
+    if (!pollIntervalRef.current) {
+      pollIntervalRef.current = setInterval(async () => {
+        await queryTxStatus(txId);
+      }, 3000);
+    }
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, [paymentResult?.transactionId, lastQueriedStatus]);
 
   const fetchClientAddCash = async () => {
     try {
@@ -79,6 +133,14 @@ export default function AddCashModal({
   };
 
   const handleClose = () => {
+    // Clean up polling before closing
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+    setPaymentResult(null);
+    setLastQueriedStatus(null);
+    setQueryError(null);
     onClose();
   };
 
@@ -156,6 +218,79 @@ export default function AddCashModal({
     }
   }, [amount, clientAddCash, fetchedClientAddCash]);
 
+  const queryTxStatus = async (txIdParam?: string | null) => {
+    const finalTxId = txIdParam ?? paymentResult?.transactionId;
+
+    if (!finalTxId) {
+      setQueryError("No transaction ID found to track.");
+      return;
+    }
+
+    setQueryLoading(true);
+    setQueryError(null);
+
+    try {
+      const vaultOTPToken = await storage.getItem("vaultOtpToken");
+      const collectoId = await storage.getItem("collectoId");
+      const clientId = user?.clientId;
+
+      const res = await api.post("/requestToPayStatus", {
+        vaultOTPToken,
+        collectoId,
+        clientId,
+        transactionId: String(finalTxId),
+        clientAddCash: clientAddCash || fetchedClientAddCash || undefined,
+      });
+
+      const data = res?.data ?? {};
+
+      const statusRaw =
+        data?.status ??
+        data?.payment?.status ??
+        data?.paymentStatus ??
+        data?.data?.status ??
+        data?.data?.paymentStatus ??
+        data?.status_message ??
+        data?.payment?.status_message ??
+        "pending";
+
+      const status = String(statusRaw).toLowerCase().trim();
+
+      const message =
+        data?.message ??
+        data?.status_message ??
+        data?.payment?.message ??
+        null;
+
+      if (["confirmed", "success", "paid", "completed", "true", "successful", "successfull"].includes(status)) {
+        setLastQueriedStatus("success");
+        setPaymentResult((prev) =>
+          prev ? { ...prev, status: "success", message } : prev,
+        );
+        onSuccess?.();
+      } else if (["pending", "processing", "in_progress"].includes(status)) {
+        setLastQueriedStatus("pending");
+        setPaymentResult((prev) =>
+          prev ? { ...prev, status: "pending", message } : prev,
+        );
+      } else if (["failed", "false"].includes(status)) {
+        setLastQueriedStatus("failed");
+        setPaymentResult((prev) =>
+          prev ? { ...prev, status: "failed", message } : prev,
+        );
+      } else {
+        setQueryError(message || "Transaction status unknown.");
+      }
+    } catch (err: any) {
+      console.error("Status Query Error:", err);
+      setQueryError(
+        err?.response?.data?.message || "Unable to reach payment server.",
+      );
+    } finally {
+      setQueryLoading(false);
+    }
+  };
+
   const handleAddCash = async () => {
     if (!verified) {
       Alert.alert(
@@ -226,25 +361,25 @@ export default function AddCashModal({
 
       console.log("Add Cash Response:", res.data);
 
-      const status = String(res.data?.status ?? "").toLowerCase();
-      if (status === "200" || status === "success") {
-        Alert.alert(
-          "Payment Initiated",
-          "A mobile money prompt has been sent. Follow the instructions on your phone.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                handleClose();
-                onSuccess?.();
-              },
-            },
-          ],
-        );
+      const responseData = res.data ?? {};
+      const innerData = responseData.data ?? responseData;
+      const txId = innerData.transactionId ?? innerData.transaction_id ?? innerData.id ?? responseData.transactionId ?? responseData.transaction_id ?? responseData.id ?? null;
+      const status = String(responseData?.status ?? "").toLowerCase();
+
+      if (txId && (status === "200" || status === "success" || txId)) {
+        // Set payment result to start polling
+        setPaymentResult({
+          transactionId: txId,
+          status: "pending",
+          message: innerData?.message ?? responseData?.message ?? "Payment request sent. Waiting for confirmation...",
+        });
+        setLastQueriedStatus("pending");
+        // Start querying immediately
+        setTimeout(() => queryTxStatus(txId), 1000);
       } else {
         Alert.alert(
           "Failed",
-          res.data?.message ?? "Could not initiate payment",
+          innerData?.message ?? responseData?.message ?? "Could not initiate payment",
         );
       }
     } catch (err: any) {
@@ -273,100 +408,197 @@ export default function AddCashModal({
             keyboardShouldPersistTaps="handled"
             scrollEnabled={true}
           >
-            <Text style={styles.sectionTitle}>
-              Add funds using mobile money
-            </Text>
+            {!paymentResult ? (
+              <>
+                <Text style={styles.sectionTitle}>
+                  Add funds using mobile money
+                </Text>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Amount (UGX)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. 10000 (min 501 UGX)"
-                keyboardType="numeric"
-                value={amount}
-                onChangeText={setAmount}
-                editable={!loading}
-              />
-              {chargeAmount > 0 && (
-                <View style={styles.chargeBreakdown}>
-                  <Text style={styles.chargeText}>
-                    Service Charge: UGX {chargeAmount.toLocaleString()}
-                  </Text>
-                  <Text style={styles.totalText}>
-                    Total to Pay: UGX {totalAmount.toLocaleString()}
-                  </Text>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Amount (UGX)</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. 10000 (min 501 UGX)"
+                    keyboardType="numeric"
+                    value={amount}
+                    onChangeText={setAmount}
+                    editable={!loading}
+                  />
+                  {chargeAmount > 0 && (
+                    <View style={styles.chargeBreakdown}>
+                      <Text style={styles.chargeText}>
+                        Service Charge: UGX {chargeAmount.toLocaleString()}
+                      </Text>
+                      <Text style={styles.totalText}>
+                        Total to Pay: UGX {totalAmount.toLocaleString()}
+                      </Text>
+                    </View>
+                  )}
                 </View>
-              )}
-            </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Phone Number</Text>
-              <View style={styles.phoneInputGroup}>
-                <TextInput
-                  style={styles.phoneInput}
-                  placeholder="07XXXXXXXX"
-                  keyboardType="phone-pad"
-                  value={phone}
-                  onChangeText={(value) => {
-                    setPhone(value);
-                    setVerified(false);
-                    setAccountName(null);
-                    setPhoneError(null);
-                  }}
-                  editable={!loading && !verifying}
-                  maxLength={10}
-                />
-                {/* // Remove verified  */}
-                {verifying && (
-                  <Text style={styles.statusText}>Verifying...</Text>
-                )}
-                {/* {(verifying || verified) && (
-                  <Text style={verifying ? styles.statusText : styles.statusTextSuccess}>
-                    {verifying ? 'Verifying...' }
-                  </Text>
-                )} */}
-              </View>
-
-              {phoneError ? (
-                <Text style={styles.errorText}>{phoneError}</Text>
-              ) : null}
-
-              {verified && accountName && (
-                <View style={styles.accountBox}>
-                  <Feather name="check-circle" size={20} color="#4caf50" />
-                  <View style={styles.accountInfo}>
-                    {/* <Text style={styles.accountLabel}>Recipient Name</Text> */}
-                    <Text style={styles.accountName}>{accountName}</Text>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Phone Number</Text>
+                  <View style={styles.phoneInputGroup}>
+                    <TextInput
+                      style={styles.phoneInput}
+                      placeholder="07XXXXXXXX"
+                      keyboardType="phone-pad"
+                      value={phone}
+                      onChangeText={(value) => {
+                        setPhone(value);
+                        setVerified(false);
+                        setAccountName(null);
+                        setPhoneError(null);
+                      }}
+                      editable={!loading && !verifying}
+                      maxLength={10}
+                    />
+                    {verifying && (
+                      <Text style={styles.statusText}>Verifying...</Text>
+                    )}
                   </View>
-                </View>
-              )}
-            </View>
 
-            <Text style={styles.helpText}>
-              After confirming the payment on your phone, your wallet and
-              transaction history will update shortly.
-            </Text>
+                  {phoneError ? (
+                    <Text style={styles.errorText}>{phoneError}</Text>
+                  ) : null}
+
+                  {verified && accountName && (
+                    <View style={styles.accountBox}>
+                      <Feather name="check-circle" size={20} color="#4caf50" />
+                      <View style={styles.accountInfo}>
+                        <Text style={styles.accountName}>{accountName}</Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
+
+                <Text style={styles.helpText}>
+                  After confirming the payment on your phone, your wallet and
+                  transaction history will update shortly.
+                </Text>
+              </>
+            ) : (
+              <View style={styles.statusContainer}>
+                {paymentResult.status === "pending" && (
+                  <>
+                    <View style={styles.statusIcon}>
+                      <ActivityIndicator size="large" color="#1976d2" />
+                    </View>
+                    <Text style={styles.statusTitle}>Processing</Text>
+                    <Text style={styles.statusMessage}>
+                      {paymentResult.message || "Verifying your payment..."}
+                    </Text>
+                  </>
+                )}
+
+                {paymentResult.status === "success" && (
+                  <>
+                    <View style={[styles.statusIcon, { backgroundColor: "#e8f5e9" }]}>
+                      <Feather name="check-circle" size={48} color="#4caf50" />
+                    </View>
+                    <Text style={[styles.statusTitle, { color: "#2e7d32" }]}>Payment Confirmed</Text>
+                    <Text style={styles.statusMessage}>
+                      {paymentResult.message || "Your cash has been added successfully!"}
+                    </Text>
+                    <View style={styles.txIdBox}>
+                      <Text style={styles.txIdLabel}>Transaction ID</Text>
+                      <Text style={styles.txIdValue}>{paymentResult.transactionId}</Text>
+                    </View>
+                  </>
+                )}
+
+                {paymentResult.status === "failed" && (
+                  <>
+                    <View style={[styles.statusIcon, { backgroundColor: "#ffebee" }]}>
+                      <Feather name="alert-circle" size={48} color="#c62828" />
+                    </View>
+                    <Text style={[styles.statusTitle, { color: "#c62828" }]}>Payment Failed</Text>
+                    <Text style={styles.statusMessage}>
+                      {paymentResult.message || "Your payment could not be processed."}
+                    </Text>
+                  </>
+                )}
+
+                {queryError && (
+                  <View style={styles.errorBox}>
+                    <Text style={styles.errorText}>{queryError}</Text>
+                  </View>
+                )}
+              </View>
+            )}
           </ScrollView>
 
           <View style={styles.footer}>
-            <TouchableOpacity
-              style={[styles.proceedBtn, loading && styles.proceedBtnDisabled]}
-              onPress={handleAddCash}
-              disabled={loading || !verified || !amount}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.proceedBtnText}>Request Payment</Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.cancelBtn}
-              onPress={handleClose}
-              disabled={loading}
-            >
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
+            {!paymentResult ? (
+              <>
+                <TouchableOpacity
+                  style={[styles.proceedBtn, loading && styles.proceedBtnDisabled]}
+                  onPress={handleAddCash}
+                  disabled={loading || !verified || !amount}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.proceedBtnText}>Request Payment</Text>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  onPress={handleClose}
+                  disabled={loading}
+                >
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                {paymentResult.status === "pending" && (
+                  <>
+                    <TouchableOpacity
+                      style={[styles.proceedBtn, queryLoading && styles.proceedBtnDisabled]}
+                      onPress={() => queryTxStatus(paymentResult.transactionId)}
+                      disabled={queryLoading}
+                    >
+                      {queryLoading ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <Text style={styles.proceedBtnText}>Check Status</Text>
+                      )}
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                {paymentResult.status === "success" && (
+                  <TouchableOpacity
+                    style={styles.proceedBtn}
+                    onPress={handleClose}
+                  >
+                    <Text style={styles.proceedBtnText}>Close</Text>
+                  </TouchableOpacity>
+                )}
+
+                {paymentResult.status === "failed" && (
+                  <>
+                    <TouchableOpacity
+                      style={styles.proceedBtn}
+                      onPress={() => {
+                        setPaymentResult(null);
+                        setLastQueriedStatus(null);
+                        setQueryError(null);
+                      }}
+                    >
+                      <Text style={styles.proceedBtnText}>Try Again</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.cancelBtn}
+                      onPress={handleClose}
+                    >
+                      <Text style={styles.cancelBtnText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </>
+            )}
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -562,5 +794,62 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: "#d81b60",
+  },
+  statusContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 32,
+  },
+  statusIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#e3f2fd",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  statusTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1976d2",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  statusMessage: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  txIdBox: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: "#f1f8e9",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#c6e6a8",
+    width: "100%",
+  },
+  txIdLabel: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 4,
+  },
+  txIdValue: {
+    fontSize: 13,
+    fontFamily: "monospace",
+    fontWeight: "700",
+    color: "#333",
+  },
+  errorBox: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: "#ffebee",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#f8bbd0",
+    width: "100%",
   },
 });
