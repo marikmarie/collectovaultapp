@@ -2,7 +2,6 @@ import SetUsernameModal from "../../components/SetUsernameModal";
 import storage from "@/src/utils/storage";
 import BuyPointsModal from "@/components/BuyPointsModal";
 import DashboardHeader from "@/components/DashboardHeader";
-import { transactionService } from "@/src/api/collecto";
 import { customerService } from "@/src/api/customer";
 import { useAuth } from "@/src/context/AuthContext";
 import { Feather } from "@expo/vector-icons";
