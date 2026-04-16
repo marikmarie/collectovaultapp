@@ -68,20 +68,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const bootstrapAsync = async () => {
     try {
-      // IMPORTANT: Clear all stored auth data to prevent reuse of old sessions
-      console.log("[AuthContext] Starting bootstrap - clearing all auth data");
-
+     
       // Use authService logout to remove specific auth keys
       await authService.logout();
-      console.log("[AuthContext] Auth service logout complete");
-
-      // On web, we need to be extra thorough - dynamically import and clear all storage
+      
       try {
         const storageModule = await import("@/src/utils/storage");
         if (storageModule.clearStorage) {
-          console.log(
-            "[AuthContext] Calling complete storage clear for web safety",
-          );
+         
           await storageModule.clearStorage();
         }
       } catch (storageErr) {
@@ -96,14 +90,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const verify = await import("@/src/utils/storage");
         const testVal = await verify.getItem("vaultOtpToken");
         if (testVal) {
-          console.error(
-            "[AuthContext] CRITICAL: vaultOtpToken still found after clear!",
-            testVal,
-          );
-          // Try manual localStorage clear as final resort
+         
           if (typeof window !== "undefined" && window.localStorage) {
-            console.error("[AuthContext] Forcing manual localStorage.clear()");
-            window.localStorage.clear();
+           
           }
         } else {
           console.log(
@@ -125,17 +114,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userName = await verifyGetItem("userName");
 
         if (clientId || collectoId || userName) {
-          console.error(
-            "[AuthContext] CRITICAL: Auth data still in storage after clear!",
-            { clientId, collectoId, userName },
-          );
-          // Force remove them individually
+         
           const { removeItem: forceRemove } =
             await import("@/src/utils/storage");
           await forceRemove("clientId");
           await forceRemove("collectoId");
           await forceRemove("userName");
-          console.warn("[AuthContext] Force-cleared remaining auth data");
+        
         }
       } catch (err) {
         console.warn("[AuthContext] Could not verify auth data clear:", err);
@@ -187,9 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshUser = async () => {
-    console.log(
-      "[AuthContext] refreshUser called - attempting to fetch current user",
-    );
+   
     try {
       const currentUser = await authService.getCurrentUser();
       console.log(
