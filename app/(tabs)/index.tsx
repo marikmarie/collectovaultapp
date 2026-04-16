@@ -352,7 +352,7 @@ export default function DashboardScreen() {
                                 : "Points Purchase"}
                             </Text>
                             <Text style={styles.txPoints}>
-                              +{tx.points.toLocaleString()} pts
+                              +{(tx.points || 0).toLocaleString()} pts
                             </Text>
                           </View>
                           <Text style={styles.txTxId}>{tx.transactionId}</Text>
