@@ -23,13 +23,13 @@ import ProfileSettingsModal from "../../components/ProfileSettingsModal";
 
 interface Transaction {
   id: string;
-  type: string;
+  cash_type?: string;
   amount: number;
-  points: number;
-  paymentStatus: string;
-  createdAt: string;
+  status?: string;
+  cash_date?: string;
   reference?: string;
-  transactionId?: string;
+  user_type?: string;
+  updated_on?: string;
 }
 
 import { StatusBar } from "expo-status-bar";
@@ -128,13 +128,6 @@ export default function DashboardScreen() {
       const perPoint =
         typeof pointValue === "number" && points > 0 ? pointValue / points : 0;
       setUgxPerPoint(perPoint);
-
-      // Fallback: also fetch from transactionService if needed
-      const txRes = await transactionService.getTransactions(clientId, 10, 0);
-      const txs = txRes.data?.data?.data ?? txRes.data?.transactions ?? [];
-      if (txs.length > 0 && cashTransactions.length === 0) {
-        setTransactions(Array.isArray(txs) ? txs : []);
-      }
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
       Alert.alert("Error", "Failed to load dashboard data");
@@ -295,13 +288,26 @@ export default function DashboardScreen() {
           <View style={styles.section}>
             <View style={styles.activityHeader}>
               <Text style={styles.sectionTitle}>Recent Activity</Text>
-              <TouchableOpacity onPress={fetchData}>
-                <Feather
-                  name="refresh-cw"
-                  size={16}
-                  color={loading ? "#ccc" : "#d81b60"}
-                />
-              </TouchableOpacity>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {transactions.length > 3 && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      router.push("/(tabs)/statement");
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: "#d81b60", fontWeight: "600" }}>
+                      View All
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={fetchData}>
+                  <Feather
+                    name="refresh-cw"
+                    size={16}
+                    color={loading ? "#ccc" : "#d81b60"}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {transactions.length === 0 ? (
@@ -311,53 +317,43 @@ export default function DashboardScreen() {
             ) : (
               <>
                 {transactions
-                  .filter(
-                    (tx) =>
-                      !tx.paymentStatus ||
-                      ["success", "pending"].includes(
-                        tx.paymentStatus?.toLowerCase() || ""
-                      )
-                  )
                   .slice(0, 3)
                   .map((tx) => {
-                    const isInvoice = tx.reference === "INVOICE_PURCHASE";
-                    const isConfirmed = ["success", "confirmed"].includes(
-                      tx.paymentStatus?.toLowerCase(),
+                    const isAdded = tx.cash_type === "ADDED";
+                    const isConfirmed = ["success", "SUCCESSFUL"].includes(
+                      (tx.status || "").toUpperCase(),
                     );
+                    const displayDate = tx.cash_date || new Date(tx.updated_on || "").toLocaleDateString();
+                    const amount = Number(String(tx.amount || 0).replace(/,/g, ''));
                     return (
                       <View key={tx.id} style={styles.transactionCard}>
                         <View
                           style={[
                             styles.txIcon,
                             {
-                              backgroundColor: isInvoice ? "#e3f2fd" : "#e8f5e9",
+                              backgroundColor: isAdded ? "#e3f2fd" : "#e8f5e9",
                             },
                           ]}
                         >
                           <Feather
                             name={
-                              isInvoice ? "arrow-up-right" : "arrow-down-left"
+                              isAdded ? "arrow-up-right" : "arrow-down-left"
                             }
                             size={20}
-                            color={isInvoice ? "#2196f3" : "#4caf50"}
+                            color={isAdded ? "#2196f3" : "#4caf50"}
                           />
                         </View>
 
                         <View style={styles.txContent}>
                           <View style={styles.txHeader}>
                             <Text style={styles.txTitle}>
-                              {isInvoice
-                                ? "Earned from Service"
-                                : "Points Purchase"}
-                            </Text>
-                            <Text style={styles.txPoints}>
-                              +{(tx.points || 0).toLocaleString()} pts
+                              {tx.cash_type || "Transaction"}
                             </Text>
                           </View>
-                          <Text style={styles.txTxId}>{tx.transactionId}</Text>
+                          <Text style={styles.txTxId}>{tx.reference}</Text>
                           <View style={styles.txFooter}>
                             <Text style={styles.txDate}>
-                              {new Date(tx.createdAt).toLocaleDateString()}
+                              {displayDate}
                             </Text>
                             <View
                               style={[
@@ -377,7 +373,7 @@ export default function DashboardScreen() {
                                   },
                                 ]}
                               >
-                                {tx.paymentStatus}
+                                {tx.status}
                               </Text>
                             </View>
                           </View>
@@ -385,7 +381,7 @@ export default function DashboardScreen() {
 
                         <View style={styles.txRight}>
                           <Text style={styles.txAmount}>
-                            {(tx.amount || 0).toLocaleString()} UGX
+                            UGX {amount.toLocaleString()}
                           </Text>
                         </View>
                       </View>
@@ -394,9 +390,9 @@ export default function DashboardScreen() {
 
                 {transactions.filter(
                   (tx) =>
-                    !tx.paymentStatus ||
-                    ["success", "pending"].includes(
-                      tx.paymentStatus?.toLowerCase() || ""
+                    !tx.status ||
+                    ["success", "pending", "SUCCESSFUL", "PENDING"].includes(
+                      (tx.status || "").toUpperCase()
                     )
                 ).length > 3 && (
                   <TouchableOpacity

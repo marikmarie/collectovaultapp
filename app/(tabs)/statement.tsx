@@ -15,19 +15,23 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '@/src/context/AuthContext';
-import { transactionService, invoiceService } from '@/src/api/collecto';
+import { invoiceService } from '@/src/api/collecto';
+import { customerService } from '@/src/api/customer';
 import storage from '@/src/utils/storage';
 import InvoiceDetailModal from '@/components/InvoiceDetailModal';
 import api from '@/src/api';
 
 interface TransactionItem {
   id: string;
+  cash_type?: string;
   amount: number;
-  points: number;
-  paymentStatus: string;
-  createdAt: string;
+  status?: string;
+  cash_date?: string;
   reference?: string;
-  transactionId?: string;
+  user_type?: string;
+  updated_on?: string;
+  createdAt?: string;
+  paymentStatus?: string;
 }
 
 interface InvoiceItem {
@@ -86,26 +90,15 @@ export default function StatementScreen() {
     if (!user?.clientId) return;
 
     try {
-      // Try to get transactions from loyaltySettings first
+      // Get transactions from loyaltySettings
       const collectoId = await storage.getItem('collectoId');
-      const { customerService } = await import('@/src/api/customer');
       
       const customerRes = await customerService.getCustomerData(collectoId || "", user.clientId);
       const loyaltySettings = customerRes.data?.data?.loyaltySettings ?? {};
       const cashDetails = loyaltySettings?.client_cash_details ?? {};
       const cashTransactions = Array.isArray(cashDetails?.transactions) ? cashDetails.transactions : [];
       
-      if (cashTransactions.length > 0) {
-        console.log('Using transactions from cashDetails:', cashTransactions);
-        setTransactions(cashTransactions);
-        return;
-      }
-
-      // Fallback to transactionService
-      const response = await transactionService.getTransactions(user.clientId, 50, 0);
-      console.log('Transactions API response:', response.data);
-      const txs = response.data?.data?.data ?? response.data?.transactions ?? [];
-      setTransactions(txs);
+      setTransactions(cashTransactions);
     } catch (err) {
       console.error('Error fetching transactions:', err);
     }
@@ -171,7 +164,6 @@ export default function StatementScreen() {
     if (!user?.clientId) return;
 
     try {
-      const { customerService } = await import('@/src/api/customer');
       const collectoId = await storage.getItem('collectoId');
 
       const customerRes = await customerService.getCustomerData(collectoId || "", user.clientId);
@@ -186,14 +178,6 @@ export default function StatementScreen() {
       setTier('N/A');
       setTierProgress(0);
 
-      // Use transactions from cashDetails if available
-      const cashDetails = loyaltySettings?.client_cash_details ?? {};
-      const cashTransactions = Array.isArray(cashDetails?.transactions) ? cashDetails.transactions : [];
-      
-      if (cashTransactions.length > 0) {
-        setTransactions(cashTransactions);
-      }
-
       // Use loyalty settings point value if available. The API returns `point_value` as the total
       // value for all points (e.g. 8 points = 100 UGX), so derive per-point value.
       const pointValue =
@@ -201,17 +185,6 @@ export default function StatementScreen() {
 
       if (typeof pointValue === 'number' && pointValue > 0 && points > 0) {
         setUgxPerPoint(pointValue / points);
-      } else if (collectoId) {
-        // Fallback: compute UGX per point from package cost/points data
-        const packagesRes = await api.get(`/vaultPackages/${collectoId}`);
-        const packages = packagesRes.data?.data ?? [];
-        if (packages.length > 0) {
-          const totalPoints = packages.reduce((s: number, p: any) => s + (p.pointsAmount || 0), 0);
-          const totalPrice = packages.reduce((s: number, p: any) => s + (p.price || 0), 0);
-          if (totalPoints > 0) {
-            setUgxPerPoint(totalPrice / totalPoints);
-          }
-        }
       }
     } catch (err) {
       console.error('Error fetching customer data:', err);
@@ -615,9 +588,7 @@ export default function StatementScreen() {
         />
       ) : (
         <FlatList
-          data={transactions.filter((tx) =>
-            !tx.status || ["success", "pending"].includes(tx.status.toLowerCase())
-          )}
+          data={transactions}
           keyExtractor={(item) => item.id}
           renderItem={({ item: tx }) => {
             const isConfirmed = ['success', 'confirmed'].includes(
@@ -646,7 +617,7 @@ export default function StatementScreen() {
                   </Text>
                   <View style={styles.itemMeta}>
                     <Text style={styles.itemDate}>
-                      {tx.cash_date || new Date(tx.createdAt || tx.updated_on).toLocaleDateString()}
+                      {tx.cash_date || new Date(tx.updated_on || tx.createdAt || new Date()).toLocaleDateString()}
                     </Text>
                     <Text style={styles.itemMetaSeparator}>•</Text>
                     <Text style={styles.itemStatus}>
@@ -672,7 +643,7 @@ export default function StatementScreen() {
                 </View>
                 <View style={styles.itemRight}>
                   <Text style={styles.itemAmount}>
-                    UGX {Number(tx.amount || 0).toLocaleString()}
+                    UGX {Number(String(tx.amount || 0).replace(/,/g, '')).toLocaleString()}
                   </Text>
                 </View>
               </View>
