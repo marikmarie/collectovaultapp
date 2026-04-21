@@ -19,6 +19,7 @@ import { invoiceService } from '@/src/api/collecto';
 import { customerService } from '@/src/api/customer';
 import storage from '@/src/utils/storage';
 import InvoiceDetailModal from '@/components/InvoiceDetailModal';
+import TransactionDetailModal from '@/components/TransactionDetailModal';
 import api from '@/src/api';
 
 interface TransactionItem {
@@ -56,6 +57,8 @@ export default function StatementScreen() {
   const [activeTab, setActiveTab] = useState<'invoices' | 'transactions'>('invoices');
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceItem | null>(null);
   const [invoiceModalVisible, setInvoiceModalVisible] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<TransactionItem | null>(null);
+  const [transactionModalVisible, setTransactionModalVisible] = useState(false);
 
   // Payment modal state
   const [payingInvoice, setPayingInvoice] = useState<string | null>(null);
@@ -83,6 +86,7 @@ export default function StatementScreen() {
   const [tier, setTier] = useState<string | null>(null);
   const [tierProgress, setTierProgress] = useState<number>(0);
   const [ugxPerPoint, setUgxPerPoint] = useState<number>(1);
+  const [clientAddCash, setClientAddCash] = useState<any>(null);
 
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -96,8 +100,10 @@ export default function StatementScreen() {
       const customerRes = await customerService.getCustomerData(collectoId || "", user.clientId);
       const loyaltySettings = customerRes.data?.data?.loyaltySettings ?? {};
       const cashDetails = loyaltySettings?.client_cash_details ?? {};
+      const clientAddCashSettings = loyaltySettings?.client_add_cash;
       const cashTransactions = Array.isArray(cashDetails?.transactions) ? cashDetails.transactions : [];
       
+      setClientAddCash(clientAddCashSettings || null);
       setTransactions(cashTransactions);
     } catch (err) {
       console.error('Error fetching transactions:', err);
@@ -596,7 +602,13 @@ export default function StatementScreen() {
             );
 
             return (
-              <View style={styles.itemCard}>
+              <TouchableOpacity 
+                style={styles.itemCard}
+                onPress={() => {
+                  setSelectedTransaction(tx);
+                  setTransactionModalVisible(true);
+                }}
+              >
                 <View
                   style={[
                     styles.itemIcon,
@@ -646,7 +658,7 @@ export default function StatementScreen() {
                     UGX {Number(String(tx.amount || 0).replace(/,/g, '')).toLocaleString()}
                   </Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           }}
           ListEmptyComponent={
@@ -889,6 +901,17 @@ export default function StatementScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Transaction Detail Modal */}
+      <TransactionDetailModal
+        visible={transactionModalVisible}
+        transaction={selectedTransaction}
+        clientAddCashProp={clientAddCash}
+        onClose={() => {
+          setTransactionModalVisible(false);
+          setSelectedTransaction(null);
+        }}
+      />
     </SafeAreaView>
   );
 }

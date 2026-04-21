@@ -325,7 +325,7 @@ export default function BuyPointsModal({
     if (!pollIntervalRef.current) {
       pollIntervalRef.current = setInterval(async () => {
         await queryTxStatus(queryId);
-      }, 3000);
+      }, 10000);
     }
 
     return () => {

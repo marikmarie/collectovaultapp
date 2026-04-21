@@ -48,6 +48,7 @@ export const authService = {
       clientId: string;
       collectoId?: string;
       username: string;
+      action?: 'create' | 'update';
     },
   ) => {
     try {

@@ -99,7 +99,7 @@ export default function SetUsernameModal({
             storedClientId,
             collectoId,
             trimmed,
-            { clientId: storedClientId, collectoId, username: trimmed }
+            { clientId: storedClientId, collectoId, username: trimmed, action: existingUsername ? 'update' : 'create' }
           );
 
       if (resp.success) {

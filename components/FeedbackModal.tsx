@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import {
     ActivityIndicator,
+    KeyboardAvoidingView,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,

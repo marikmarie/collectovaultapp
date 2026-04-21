@@ -106,7 +106,7 @@ export default function AddCashModal({
     if (!pollIntervalRef.current) {
       pollIntervalRef.current = setInterval(async () => {
         await queryTxStatus(txId);
-      }, 3000);
+      }, 10000);
     }
 
     return () => {
@@ -264,17 +264,20 @@ export default function AddCashModal({
 
       if (["confirmed", "success", "paid", "completed", "true", "successful", "successfull"].includes(status)) {
         setLastQueriedStatus("success");
+        setQueryError(null);
         setPaymentResult((prev) =>
           prev ? { ...prev, status: "success", message } : prev,
         );
         onSuccess?.();
       } else if (["pending", "processing", "in_progress"].includes(status)) {
         setLastQueriedStatus("pending");
+        setQueryError(null);
         setPaymentResult((prev) =>
           prev ? { ...prev, status: "pending", message } : prev,
         );
       } else if (["failed", "false"].includes(status)) {
         setLastQueriedStatus("failed");
+        setQueryError(null);
         setPaymentResult((prev) =>
           prev ? { ...prev, status: "failed", message } : prev,
         );
