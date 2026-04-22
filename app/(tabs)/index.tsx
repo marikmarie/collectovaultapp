@@ -133,6 +133,12 @@ export default function DashboardScreen() {
       const perPoint =
         typeof pointValue === "number" && points > 0 ? pointValue / points : 0;
       setUgxPerPoint(perPoint);
+
+      // Store username in storage if available
+      if (loyaltySettings?.username) {
+        await storage.setItem("userName", loyaltySettings.username);
+        setUsername(loyaltySettings.username);
+      }
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
       Alert.alert("Error", "Failed to load dashboard data");
