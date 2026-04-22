@@ -13,6 +13,7 @@ import { Feather } from '@expo/vector-icons';
 import { useAuth } from '@/src/context/AuthContext';
 import storage from '@/src/utils/storage';
 import SetUsernameModal from '../app/SetUsernameModal';
+import { customerService } from '@/src/api/customer';
 
 interface ProfileSettingsModalProps {
   visible: boolean;
@@ -26,25 +27,62 @@ export default function ProfileSettingsModal({
   onLogout,
 }: ProfileSettingsModalProps) {
   const { user, logout } = useAuth();
-  const [displayName, setDisplayName] = useState(user?.name || '');
+  const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState(user?.userName || '');
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingData, setIsFetchingData] = useState(false);
+
+  const fetchLoyaltySettings = async () => {
+    if (!user?.clientId || !user?.collectoId) return;
+
+    try {
+      setIsFetchingData(true);
+      const customerRes = await customerService.getCustomerData(
+        user.collectoId,
+        user.clientId,
+      );
+      const loyaltySettings = customerRes.data?.data?.loyaltySettings ?? {};
+
+      const loyaltyNameFromSettings =
+        typeof loyaltySettings?.name === "string" && loyaltySettings.name.trim()
+          ? loyaltySettings.name.trim()
+          : undefined;
+      setDisplayName(loyaltyNameFromSettings || '');
+
+      const usernameFromSettings =
+        typeof loyaltySettings?.username === "string" && loyaltySettings.username.trim()
+          ? loyaltySettings.username.trim()
+          : undefined;
+      setUsername(usernameFromSettings || '');
+
+      // Store the data in storage for persistence
+      if (loyaltyNameFromSettings) {
+        await storage.setItem("name", loyaltyNameFromSettings);
+      }
+      if (usernameFromSettings) {
+        await storage.setItem("userName", usernameFromSettings);
+      }
+    } catch (err) {
+      console.error("Error fetching loyalty settings:", err);
+      // Fallback to storage if API fails
+      const loadFromStorage = async () => {
+        const storedName = await storage.getItem('name');
+        const storedUsername = await storage.getItem('userName');
+        if (storedName) setDisplayName(storedName);
+        if (storedUsername) setUsername(storedUsername);
+      };
+      loadFromStorage();
+    } finally {
+      setIsFetchingData(false);
+    }
+  };
 
   useEffect(() => {
-    // Load name and username from storage if not in context
-    const loadUserInfo = async () => {
-      if (!displayName) {
-        const storedName = await storage.getItem('name');
-        if (storedName) setDisplayName(storedName);
-      }
-      if (!username) {
-        const stored = await storage.getItem('userName');
-        if (stored) setUsername(stored);
-      }
-    };
-    if (visible) loadUserInfo();
-  }, [visible, displayName, username]);
+    if (visible) {
+      fetchLoyaltySettings();
+    }
+  }, [visible, user?.clientId, user?.collectoId]);
 
   const handleLogout = () => {
     Alert.alert(
@@ -75,6 +113,8 @@ export default function ProfileSettingsModal({
     setUsername(newUsername);
     await storage.setItem('userName', newUsername);
     setShowUsernameModal(false);
+    // Refresh data to get updated loyalty settings
+    fetchLoyaltySettings();
   };
 
   return (
@@ -94,9 +134,12 @@ export default function ProfileSettingsModal({
           <View style={{ width: 24 }} />
         </View>
 
-        {isLoading ? (
+        {isLoading || isFetchingData ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#d81b60" />
+            {isFetchingData && (
+              <Text style={styles.loadingText}>Loading profile data...</Text>
+            )}
           </View>
         ) : (
           <ScrollView style={styles.content}>
@@ -223,6 +266,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
   content: {
     flex: 1,
