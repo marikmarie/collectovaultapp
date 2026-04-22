@@ -368,13 +368,21 @@ export default function StatementScreen() {
       const collectoId = await storage.getItem('collectoId');
       const clientId = user?.clientId;
 
-      const res = await api.post('/requestToPayStatus', {
+      const requestBody: any = {
         vaultOTPToken,
         collectoId,
         clientId,
         transactionId: String(finalTxId),
-      });
+      };
 
+      // If transaction cash_type is ADDED, include clientAddCash
+      if (selectedTransaction?.cash_type === 'ADDED' && clientAddCash) {
+        requestBody.clientAddCash = clientAddCash;
+      }
+
+      const res = await api.post('/requestToPayStatus', requestBody);
+
+      const payload = res?.data ?? {};
       const data = res?.data ?? {};
 
       const statusRaw = data?.status ??
