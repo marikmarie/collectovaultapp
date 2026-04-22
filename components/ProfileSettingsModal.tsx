@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '@/src/context/AuthContext';
-import { authService } from '@/src/api/authService';
 import storage from '@/src/utils/storage';
 import SetUsernameModal from '../app/SetUsernameModal';
 
