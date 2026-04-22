@@ -282,15 +282,28 @@ export default function BuyPointsModal({
       const collectoId = await storage.getItem("collectoId");
       const clientId = user?.clientId;
 
-      const res = await api.post("/queryTransactionStatus", {
+      const res = await api.post("/requestToPayStatus", {
         vaultOTPToken,
         collectoId,
         clientId,
-        transactionId: txId,
+        transactionId: String(txId),
       });
 
-      const status = String(res.data?.status ?? "").toLowerCase();
-      if (status === "success") {
+      const data = res?.data ?? {};
+
+      const statusRaw =
+        data?.status ??
+        data?.payment?.status ??
+        data?.paymentStatus ??
+        data?.data?.status ??
+        data?.data?.paymentStatus ??
+        data?.status_message ??
+        data?.payment?.status_message ??
+        "pending";
+
+      const status = String(statusRaw).toLowerCase().trim();
+
+      if (["confirmed", "success", "paid", "completed", "true", "successful", "successfull"].includes(status)) {
         setTxStatus("success");
         setStep("success");
         onSuccess?.(selectedPackage?.points || 0);
@@ -298,7 +311,7 @@ export default function BuyPointsModal({
         if (pollIntervalRef.current) {
           clearInterval(pollIntervalRef.current);
         }
-      } else if (status === "failed") {
+      } else if (["failed", "false"].includes(status)) {
         setTxStatus("failed");
         setStep("failure");
         if (pollIntervalRef.current) {

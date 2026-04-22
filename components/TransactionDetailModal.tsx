@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import api from '@/src/api';
+import { useAuth } from '@/src/context/AuthContext';
 import { customerService } from '@/src/api/customer';
 import storage from '@/src/utils/storage';
 
@@ -29,7 +30,7 @@ export default function TransactionDetailModal({
 }: TransactionDetailModalProps) {
   const [querying, setQuerying] = useState(false);
   const [clientAddCash, setClientAddCash] = useState<any>(clientAddCashProp || null);
-
+ const { user } = useAuth();
   useEffect(() => {
     if (clientAddCashProp) {
       setClientAddCash(clientAddCashProp);
@@ -96,16 +97,25 @@ export default function TransactionDetailModal({
 
     setQuerying(true);
     try {
+      const vaultOTPToken = await storage.getItem('vaultOtpToken');
+      const collectoId = await storage.getItem('collectoId');
+      const clientId = user?.clientId;
+
       const requestBody: any = {
+        
         transactionId: transaction.reference,
       };
 
+      
       // If transaction cash_type is ADDED, include clientAddCash from loyalty settings
       if (transaction.cash_type === 'ADDED' && clientAddCash) {
         requestBody.clientAddCash = clientAddCash;
       }
 
-      const res = await api.post('/queryTransactionStatus', requestBody);
+      console.log('Querying with request body:', requestBody);
+      const res = await api.post('/requestToPayStatus', requestBody);
+
+      console.log('Query response:', res.data); 
 
       if (res.data?.status === '200') {
         Alert.alert('Status', res.data?.message || 'Status queried successfully');
