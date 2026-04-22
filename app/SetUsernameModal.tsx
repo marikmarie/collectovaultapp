@@ -18,6 +18,7 @@ interface SetUsernameModalProps {
   onSuccess: (username: string) => void;
   existingUsername?: string | null;
   clientId?: string;
+  displayName?: string;
 }
 
 export default function SetUsernameModal({
@@ -26,6 +27,7 @@ export default function SetUsernameModal({
   onSuccess,
   existingUsername,
   clientId: passedClientId,
+  displayName,
 }: SetUsernameModalProps) {
   const [username, setUsername] = useState(existingUsername || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -119,15 +121,33 @@ export default function SetUsernameModal({
       <View style={styles.overlay}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>Create Username</Text>
+            <Text style={styles.title}>
+              {existingUsername ? 'Update Username' : 'Set Username'}
+            </Text>
             <TouchableOpacity onPress={onClose} disabled={isLoading}>
               <Text style={{ fontSize: 28, color: '#1a1a1a' }}>×</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.body}>
+            {displayName && (
+              <View style={styles.userInfoCard}>
+                <Text style={styles.userInfoLabel}>Account Name</Text>
+                <Text style={styles.userInfoValue}>{displayName}</Text>
+              </View>
+            )}
+
+            {existingUsername && (
+              <View style={styles.userInfoCard}>
+                <Text style={styles.userInfoLabel}>Current Username</Text>
+                <Text style={styles.userInfoValue}>@{existingUsername}</Text>
+              </View>
+            )}
+
             <Text style={styles.description}>
-              Create a unique username to make it easier to login next time
+              {existingUsername
+                ? 'Update your username to make it unique'
+                : 'Create a unique username to make it easier to login next time'}
             </Text>
             
             <View style={styles.inputWrapper}>
@@ -171,7 +191,9 @@ export default function SetUsernameModal({
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.confirmText}>Create</Text>
+                <Text style={styles.confirmText}>
+                  {existingUsername ? 'Update' : 'Set Username'}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -210,6 +232,25 @@ const styles = StyleSheet.create({
   body: {
     paddingHorizontal: 16,
     paddingVertical: 16,
+  },
+  userInfoCard: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#d81b60',
+  },
+  userInfoLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 4,
+  },
+  userInfoValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
   },
   description: {
     fontSize: 14,

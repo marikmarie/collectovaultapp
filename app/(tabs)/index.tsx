@@ -87,6 +87,11 @@ export default function DashboardScreen() {
           : undefined;
       setLoyaltyName(loyaltyNameFromSettings);
 
+      // Store name in storage for ProfileSettingsModal
+      if (loyaltyNameFromSettings) {
+        await storage.setItem("name", loyaltyNameFromSettings);
+      }
+
       const earned = loyaltySettings?.loyalty_points?.earned ?? 0;
       const bought = loyaltySettings?.loyalty_points?.bought ?? 0;
       const points = loyaltySettings?.points ?? earned + bought;

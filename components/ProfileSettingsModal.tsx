@@ -26,20 +26,25 @@ export default function ProfileSettingsModal({
   onLogout,
 }: ProfileSettingsModalProps) {
   const { user, logout } = useAuth();
+  const [displayName, setDisplayName] = useState(user?.name || '');
   const [username, setUsername] = useState(user?.userName || '');
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Load username from storage if not in context
-    const loadUsername = async () => {
+    // Load name and username from storage if not in context
+    const loadUserInfo = async () => {
+      if (!displayName) {
+        const storedName = await storage.getItem('name');
+        if (storedName) setDisplayName(storedName);
+      }
       if (!username) {
         const stored = await storage.getItem('userName');
         if (stored) setUsername(stored);
       }
     };
-    if (visible) loadUsername();
-  }, [visible, username]);
+    if (visible) loadUserInfo();
+  }, [visible, displayName, username]);
 
   const handleLogout = () => {
     Alert.alert(
@@ -114,7 +119,7 @@ export default function ProfileSettingsModal({
 
                 <View style={[styles.profileField, styles.borderTop]}>
                   <Text style={styles.profileLabel}>Display Name</Text>
-                  <Text style={styles.profileValue}>{user?.userName || '—'}</Text>
+                  <Text style={styles.profileValue}>{displayName || '—'}</Text>
                 </View>
               </View>
             </View>
@@ -135,7 +140,7 @@ export default function ProfileSettingsModal({
                   />
                   <View style={styles.actionButtonText}>
                     <Text style={styles.actionButtonTitle}>
-                      {username ? 'Update Username' : 'Create Username'}
+                      {username ? 'Update Username' : 'Set Username'}
                     </Text>
                     <Text style={styles.actionButtonDescription}>
                       {username
@@ -186,6 +191,7 @@ export default function ProfileSettingsModal({
           onClose={() => setShowUsernameModal(false)}
           onSuccess={handleUsernameSuccess}
           existingUsername={username || undefined}
+          displayName={displayName || undefined}
           clientId={user?.clientId}
         />
       )}
