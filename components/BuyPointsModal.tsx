@@ -200,7 +200,7 @@ export default function BuyPointsModal({
   const handleConfirmPayment = async () => {
     if (!selectedPackage) return;
 
-    if (selectedPackage.price <= 500) {
+    if (selectedPackage.price < 500) {
       Alert.alert(
         "Invalid package",
         "The selected package price must be greater than 500 UGX.",

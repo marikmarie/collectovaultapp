@@ -309,7 +309,7 @@ export default function AddCashModal({
       return;
     }
 
-    if (numAmount <= 500) {
+    if (numAmount < 500) {
       Alert.alert("Minimum amount", "The amount must be greater than 500 UGX.");
       return;
     }
