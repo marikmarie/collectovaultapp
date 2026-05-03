@@ -11,6 +11,8 @@ import {
   Modal,
   TextInput,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -700,21 +702,26 @@ export default function StatementScreen() {
 
       {/* Payment Modal */}
       <Modal visible={paymentModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Pay Invoice</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setPaymentModalVisible(false);
-                  setPayingInvoice(null);
-                }}
-              >
-                <Feather name="x" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 90}
+          style={styles.keyboardAvoidingView}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Pay Invoice</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setPaymentModalVisible(false);
+                    setPayingInvoice(null);
+                  }}
+                >
+                  <Feather name="x" size={24} color="#666" />
+                </TouchableOpacity>
+              </View>
 
-            <ScrollView style={styles.modalBody}>
+              <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalBodyContent} keyboardShouldPersistTaps="handled">
               {paymentResult ? (
                 // Payment result view
                 <View style={styles.resultContainer}>
@@ -778,109 +785,99 @@ export default function StatementScreen() {
                     </View>
                   </View>
 
-                  {/* Points slider */}
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Apply Points</Text>
-                    <Text style={styles.sectionSubtitle}>Slide to use points for discount</Text>
-                    
-                    <View style={styles.pointsInfo}>
-                      <Text style={styles.pointsLabel}>Balance: {pointsBalance.toLocaleString()} pts</Text>
-                      <Text style={styles.pointsValue}>UGX {pointsToUGX(pointsBalance).toLocaleString()}</Text>
+                  {/* Points and amount inputs side-by-side */}
+                  <View style={styles.row}>
+                    <View style={styles.halfColumn}>
+                      <Text style={styles.sectionTitle}>Points to Use</Text>
+                      <TextInput
+                        style={[styles.input, styles.halfInput]}
+                        value={pointsToUse.toString()}
+                        onChangeText={(text) => {
+                          const pts = Math.max(0, Math.min(computeMaxPointsForInvoice(
+                            Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0),
+                            ugxToPoints(Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0))
+                          ), parseInt(text) || 0));
+                          setPointsToUse(pts);
+                          const remaining = Math.max(0, Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0) - pointsToUGX(pts));
+                          setMobileAmount(remaining);
+                        }}
+                        keyboardType="numeric"
+                        placeholder="Points"
+                      />
+                      <Text style={styles.pointHelpText}>Balance: {pointsBalance.toLocaleString()} pts</Text>
                     </View>
-
-                    <TextInput
-                      style={styles.sliderInput}
-                      value={pointsToUse.toString()}
-                      onChangeText={(text) => {
-                        const pts = Math.max(0, Math.min(computeMaxPointsForInvoice(
-                          Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0),
-                          ugxToPoints(Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0))
-                        ), parseInt(text) || 0));
-                        setPointsToUse(pts);
-                        const remaining = Math.max(0, Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0) - pointsToUGX(pts));
-                        setMobileAmount(remaining);
-                      }}
-                      keyboardType="numeric"
-                      placeholder="Points to use"
-                    />
-
-                    <View style={styles.pointsSummary}>
-                      <Text style={styles.pointsApplied}>Points applied: {pointsToUse.toLocaleString()} pts</Text>
-                      <Text style={styles.valueApplied}>Value: UGX {pointsToUGX(pointsToUse).toLocaleString()}</Text>
+                    <View style={styles.halfColumn}>
+                      <Text style={styles.sectionTitle}>Mobile Money</Text>
+                      <TextInput
+                        style={[styles.input, styles.halfInput]}
+                        value={typeof mobileAmount === 'number' ? mobileAmount.toString() : ''}
+                        onChangeText={(text) => {
+                          const newMobile = Math.max(0, parseInt(text) || 0);
+                          setMobileAmount(newMobile);
+                          const impliedPointsUGX = Math.max(0, Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0) - newMobile);
+                          const impliedPoints = ugxToPoints(impliedPointsUGX);
+                          const maxPoints = computeMaxPointsForInvoice(
+                            Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0),
+                            ugxToPoints(Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0))
+                          );
+                          const newPts = Math.max(0, Math.min(maxPoints, impliedPoints));
+                          setPointsToUse(newPts);
+                        }}
+                        keyboardType="numeric"
+                        placeholder="Amount"
+                      />
+                      <Text style={styles.amountNote}>
+                        Total: UGX {Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0).toLocaleString()}
+                      </Text>
                     </View>
                   </View>
 
-                  {/* Mobile amount input */}
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Mobile Money Amount</Text>
-                    <TextInput
-                      style={styles.amountInput}
-                      value={typeof mobileAmount === 'number' ? mobileAmount.toString() : ''}
-                      onChangeText={(text) => {
-                        const newMobile = Math.max(0, parseInt(text) || 0);
-                        setMobileAmount(newMobile);
-                        const impliedPointsUGX = Math.max(0, Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0) - newMobile);
-                        const impliedPoints = ugxToPoints(impliedPointsUGX);
-                        const maxPoints = computeMaxPointsForInvoice(
-                          Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0),
-                          ugxToPoints(Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0))
-                        );
-                        const newPts = Math.max(0, Math.min(maxPoints, impliedPoints));
-                        setPointsToUse(newPts);
-                      }}
-                      keyboardType="numeric"
-                      placeholder="Amount"
-                    />
-                    <Text style={styles.amountNote}>
-                      Total invoice: UGX {Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0).toLocaleString()}
-                    </Text>
+                  {/* Phone number and staff ID row */}
+                  <View style={styles.row}> 
+                    <View style={styles.phoneColumn}>
+                      <Text style={styles.sectionTitle}>Phone Number</Text>
+                      <TextInput
+                        style={[styles.input, verified && styles.inputVerified, phoneError && styles.inputError]}
+                        value={payPhone}
+                        onChangeText={(text) => {
+                          const digits = text.replace(/\D/g, '').slice(0, 10);
+                          setPayPhone(digits);
+                          setAccountName(null);
+                          setVerified(false);
+                          setPhoneError(null);
+                          if (digits.length === 10) verifyPhoneNumber(digits);
+                        }}
+                        placeholder="07XXXXXXXX"
+                        keyboardType="phone-pad"
+                        maxLength={10}
+                      />
+                    </View>
+                    <View style={styles.staffColumn}>
+                      <Text style={styles.sectionTitle}>Staff ID</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={staffId}
+                        onChangeText={setStaffId}
+                        placeholder="Staff ID"
+                      />
+                    </View>
                   </View>
 
-                  {/* Staff ID */}
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Staff ID (Optional)</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={staffId}
-                      onChangeText={setStaffId}
-                      placeholder="Enter staff ID"
-                    />
-                  </View>
-
-                  {/* Phone number */}
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Phone Number</Text>
-                    <TextInput
-                      style={[styles.input, verified && styles.inputVerified, phoneError && styles.inputError]}
-                      value={payPhone}
-                      onChangeText={(text) => {
-                        const digits = text.replace(/\D/g, '').slice(0, 10);
-                        setPayPhone(digits);
-                        setAccountName(null);
-                        setVerified(false);
-                        setPhoneError(null);
-                        if (digits.length === 10) verifyPhoneNumber(digits);
-                      }}
-                      placeholder="07XXXXXXXX"
-                      keyboardType="phone-pad"
-                      maxLength={10}
-                    />
-                    {verifying && (
-                      <ActivityIndicator size="small" color="#d81b60" style={styles.verifyingIndicator} />
-                    )}
-                    {accountName && (
-                      <View style={styles.verifiedContainer}>
-                        <Feather name="check-circle" size={16} color="#4caf50" />
-                        <Text style={styles.verifiedText}>{accountName}</Text>
-                      </View>
-                    )}
-                    {phoneError && (
-                      <View style={styles.errorContainer}>
-                        <Feather name="alert-circle" size={16} color="#f44336" />
-                        <Text style={styles.errorTextInline}>{phoneError}</Text>
-                      </View>
-                    )}
-                  </View>
+                  {verifying && (
+                    <ActivityIndicator size="small" color="#d81b60" style={styles.verifyingIndicator} />
+                  )}
+                  {accountName && (
+                    <View style={styles.verifiedContainer}>
+                      <Feather name="check-circle" size={16} color="#4caf50" />
+                      <Text style={styles.verifiedText}>{accountName}</Text>
+                    </View>
+                  )}
+                  {phoneError && (
+                    <View style={styles.errorContainer}>
+                      <Feather name="alert-circle" size={16} color="#f44336" />
+                      <Text style={styles.errorTextInline}>{phoneError}</Text>
+                    </View>
+                  )}
 
                   {/* Action buttons */}
                   <View style={styles.buttonContainer}>
@@ -908,6 +905,7 @@ export default function StatementScreen() {
             </ScrollView>
           </View>
         </View>
+      </KeyboardAvoidingView>
       </Modal>
 
       {/* Transaction Detail Modal */}
@@ -1109,6 +1107,36 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: 20,
+  },
+  modalBodyContent: {
+    paddingBottom: 40,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 20,
+  },
+  phoneColumn: {
+    flex: 0.6,
+  },
+  staffColumn: {
+    flex: 0.4,
+  },
+  halfColumn: {
+    flex: 1,
+  },
+  halfInput: {
+    width: '100%',
+  },
+  pointHelpText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 8,
   },
   resultContainer: {
     alignItems: 'center',
