@@ -102,7 +102,7 @@ export default function TransactionDetailModal({
       const clientId = user?.clientId;
 
       const requestBody: any = {
-        
+        vaultOTPToken, collectoId, clientId,
         transactionId: transaction.reference,
       };
 
@@ -112,15 +112,14 @@ export default function TransactionDetailModal({
         requestBody.clientAddCash = clientAddCash;
       }
 
-      console.log('Querying with request body:', requestBody);
       const res = await api.post('/requestToPayStatus', requestBody);
 
       console.log('Query response:', res.data); 
 
-      if (res.data?.status === '200') {
-        Alert.alert('Status', res.data?.message || 'Status queried successfully');
+      if (res.data?.payment.status === 'SUCCESSFUL') {
+        Alert.alert('Status', res.data?.payment.message || 'Status queried successfully');
       } else {
-        Alert.alert('Error', res.data?.message || 'Failed to query transaction status');
+        Alert.alert('Error', res.data?.payment.message || 'Failed to query transaction status');
       }
     } catch (err: any) {
       console.error('Query error:', err);
@@ -129,6 +128,8 @@ export default function TransactionDetailModal({
       setQuerying(false);
     }
   };
+
+
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>

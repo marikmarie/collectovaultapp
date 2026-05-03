@@ -235,17 +235,16 @@ export default function BuyPointsModal({
         paymentOption: paymentMode,
         amount: selectedPackage.price,
         points: { points_used: selectedPackage.points },
-        purchaseTier: {
+        purchaseTiers: {
           cost: selectedPackage.price,
           name: selectedPackage.label,
           points: selectedPackage.points,
         },
-        // clientAddCash: effectiveClientAddCash || {
-        //   charge: 0,
-        //   charge_client: 0,
-        // },
         reference: `BUYPOINTS-${Date.now()}`,
       });
+      
+      //log request and resp
+      console.log("Buy points resp :", res.data);
 
       const data = res?.data;
       const apiStatus = String(data?.status || "");
@@ -533,7 +532,6 @@ export default function BuyPointsModal({
                             Verifying...
                           </Text>
                         )}
-                        {!verifying && verified}
                       </View>
                     </View>
 
@@ -664,6 +662,7 @@ const styles = StyleSheet.create({
   body: {
     paddingHorizontal: 16,
     paddingVertical: 16,
+    paddingBottom: 80,
   },
   loadingContainer: {
     justifyContent: "center",
@@ -849,6 +848,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 40,
+    minHeight: 250,
   },
   successTitle: {
     fontSize: 18,
@@ -866,6 +866,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 40,
+    minHeight: 250,
   },
   failureTitle: {
     fontSize: 18,
