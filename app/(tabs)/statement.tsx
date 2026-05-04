@@ -503,6 +503,7 @@ export default function StatementScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#d81b60" />
+        <Text style={styles.loadingText}>Fetching invoices...</Text>
       </View>
     );
   }
@@ -935,6 +936,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#555',
   },
   header: {
     paddingHorizontal: 16,
