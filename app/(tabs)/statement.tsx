@@ -803,6 +803,7 @@ export default function StatementScreen() {
                         }}
                         keyboardType="numeric"
                         placeholder="Points"
+                        placeholderTextColor="#999"
                       />
                       <Text style={styles.pointHelpText}>Balance: {pointsBalance.toLocaleString()} pts</Text>
                     </View>
@@ -825,6 +826,7 @@ export default function StatementScreen() {
                         }}
                         keyboardType="numeric"
                         placeholder="Amount"
+                        placeholderTextColor="#999"
                       />
                       <Text style={styles.amountNote}>
                         Total: UGX {Number(getInvoiceById(payingInvoice)?.amount_less ?? getInvoiceById(payingInvoice)?.details?.invoice_amount ?? 0).toLocaleString()}
@@ -848,6 +850,7 @@ export default function StatementScreen() {
                           if (digits.length === 10) verifyPhoneNumber(digits);
                         }}
                         placeholder="07XXXXXXXX"
+                        placeholderTextColor="#999"
                         keyboardType="phone-pad"
                         maxLength={10}
                       />
@@ -859,6 +862,7 @@ export default function StatementScreen() {
                         value={staffId}
                         onChangeText={setStaffId}
                         placeholder="Staff ID"
+                        placeholderTextColor="#999"
                       />
                     </View>
                   </View>
