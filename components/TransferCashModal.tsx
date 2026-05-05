@@ -217,6 +217,7 @@ export default function TransferCashModal({
               <TextInput
                 style={styles.input}
                 placeholder="e.g. 10000"
+                placeholderTextColor="#999"
                 keyboardType="numeric"
                 value={amount}
                 onChangeText={setAmount}
@@ -230,6 +231,7 @@ export default function TransferCashModal({
                 <TextInput
                   style={styles.phoneInput}
                   placeholder="07XXXXXXXX"
+                  placeholderTextColor="#999"
                   keyboardType="phone-pad"
                   value={recipientPhone}
                   onChangeText={(value) => {
@@ -273,6 +275,7 @@ export default function TransferCashModal({
               <TextInput
                 style={styles.input}
                 placeholder="Enter staff ID"
+                placeholderTextColor="#999"
                 value={staffId}
                 onChangeText={setStaffId}
                 editable={!loading}

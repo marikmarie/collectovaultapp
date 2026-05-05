@@ -140,6 +140,7 @@ export default function FeedbackModal({
                   <TextInput
                     style={styles.input}
                     placeholder="Brief subject of your feedback..."
+                    placeholderTextColor="#999"
                     value={title}
                     onChangeText={setTitle}
                     maxLength={255}
@@ -152,6 +153,7 @@ export default function FeedbackModal({
                   <TextInput
                     style={[styles.input, styles.messageInput]}
                     placeholder="Describe your feedback in detail..."
+                    placeholderTextColor="#999"
                     value={message}
                     onChangeText={setMessage}
                     multiline

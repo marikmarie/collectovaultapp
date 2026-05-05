@@ -155,6 +155,7 @@ export default function SetUsernameModal({
               <TextInput
                 style={styles.input}
                 placeholder="Enter username"
+                placeholderTextColor="#999"
                 value={username}
                 onChangeText={(t) => {
                   setUsername(t);

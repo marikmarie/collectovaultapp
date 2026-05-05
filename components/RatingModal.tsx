@@ -163,6 +163,7 @@ export default function RatingModal({
               <TextInput
                 style={styles.commentInput}
                 placeholder="Share your feedback..."
+                placeholderTextColor="#999"
                 value={comment}
                 onChangeText={setComment}
                 multiline

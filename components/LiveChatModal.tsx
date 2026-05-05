@@ -191,6 +191,7 @@ export default function LiveChatModal({
               <TextInput
                 style={styles.input}
                 placeholder="Type your message..."
+                placeholderTextColor="#999"
                 value={newMessage}
                 onChangeText={setNewMessage}
                 maxLength={500}

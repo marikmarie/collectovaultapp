@@ -224,7 +224,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.otpInput}
                   placeholder="000000"
-                  placeholderTextColor="#ccc"
+                  placeholderTextColor="#999"
                   value={otpValue}
                   onChangeText={(text) => {
                     const val = text.replace(/\D/g, '');

@@ -514,7 +514,7 @@ export default function BuyPointsModal({
                       <TextInput
                         style={styles.phoneInput}
                         placeholder="07XXXXXXXX"
-                        placeholderTextColor="#ccc"
+                        placeholderTextColor="#999"
                         value={phone}
                         onChangeText={(value) => {
                           setPhone(value);

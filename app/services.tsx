@@ -277,7 +277,7 @@ export default function ServicesScreen() {
             <TextInput
               style={styles.searchInput}
               placeholder="Search..."
-              placeholderTextColor="#aaa"
+              placeholderTextColor="#999"
               value={searchQuery}
               onChangeText={setSearchQuery}
             />

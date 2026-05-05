@@ -422,6 +422,7 @@ export default function AddCashModal({
                   <TextInput
                     style={styles.input}
                     placeholder="e.g. 10000 (min 501 UGX)"
+                    placeholderTextColor="#999"
                     keyboardType="numeric"
                     value={amount}
                     onChangeText={setAmount}
@@ -445,6 +446,7 @@ export default function AddCashModal({
                     <TextInput
                       style={styles.phoneInput}
                       placeholder="07XXXXXXXX"
+                      placeholderTextColor="#999"
                       keyboardType="phone-pad"
                       value={phone}
                       onChangeText={(value) => {

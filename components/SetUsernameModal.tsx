@@ -21,6 +21,7 @@ export default function SetUsernameModal({ visible, username, onClose, onSave }:
             value={newUsername}
             onChangeText={setNewUsername}
             placeholder="Enter username"
+            placeholderTextColor="#999"
             autoCapitalize="none"
             autoCorrect={false}
           />
