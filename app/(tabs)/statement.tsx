@@ -705,22 +705,21 @@ export default function StatementScreen() {
       <Modal visible={paymentModalVisible} transparent animationType="slide">
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 90}
-          style={styles.keyboardAvoidingView}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 20}
+          style={styles.modalOverlay}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Pay Invoice</Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    setPaymentModalVisible(false);
-                    setPayingInvoice(null);
-                  }}
-                >
-                  <Feather name="x" size={24} color="#666" />
-                </TouchableOpacity>
-              </View>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Pay Invoice</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setPaymentModalVisible(false);
+                  setPayingInvoice(null);
+                }}
+              >
+                <Feather name="x" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
 
               <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalBodyContent} keyboardShouldPersistTaps="handled">
               {paymentResult ? (
@@ -908,7 +907,6 @@ export default function StatementScreen() {
                 </>
               )}
             </ScrollView>
-          </View>
         </View>
       </KeyboardAvoidingView>
       </Modal>
@@ -1102,6 +1100,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     maxHeight: '90%',
     minHeight: '70%',
+    paddingBottom: 20,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1121,9 +1120,6 @@ const styles = StyleSheet.create({
   },
   modalBodyContent: {
     paddingBottom: 40,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
   },
   row: {
     flexDirection: 'row',
