@@ -465,6 +465,20 @@ export default function StatementScreen() {
     };
   }, [paymentResult?.transactionId, lastQueriedStatus]);
 
+  // Show post-payment feedback when payment succeeds
+  useEffect(() => {
+    if (lastQueriedStatus === 'success' && payingInvoice && paymentModalVisible) {
+      // Delay showing feedback to let payment modal settle
+      const timer = setTimeout(() => {
+        const invoice = invoices.find((inv) => inv.details?.id === payingInvoice);
+        const amount = Number(invoice?.amount_less ?? invoice?.details?.invoice_amount ?? 0);
+        setLastPaymentData({ invoiceId: payingInvoice, amount });
+        setShowPostPaymentFeedback(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastQueriedStatus, payingInvoice, paymentModalVisible, invoices]);
+
   // Reset payment modal state when opening
   useEffect(() => {
     if (!payingInvoice) {
