@@ -111,8 +111,7 @@ const storage: StorageLike = {
   },
 
   async clear() {
-    console.log("[Storage] clear() called");
-
+   
     // On web, clear localStorage
     if (getIsWeb()) {
       try {

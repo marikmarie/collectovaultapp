@@ -120,12 +120,10 @@ export const authService = {
       removeItem("vaultOtpExpiresAt"),
     ]);
 
-    console.log("[AuthService] Removed individual auth keys");
-
+   
     // Step 2: For extra safety on web, do a complete storage clear
     try {
       const { clearStorage } = await import("@/src/utils/storage");
-      console.log("[AuthService] Triggering complete storage clear");
       await clearStorage();
     } catch (err) {
       console.warn("[AuthService] Could not trigger complete clear:", err);

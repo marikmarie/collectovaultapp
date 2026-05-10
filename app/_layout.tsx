@@ -24,15 +24,12 @@ function RootLayoutContent() {
   // Explicitly navigate when auth state changes
   useEffect(() => {
     if (isLoading) {
-      console.log("[RootLayout] Still loading, waiting for auth state...");
       return;
     }
 
     if (isLoggedIn) {
-      console.log("[RootLayout] User logged in - navigating to dashboard");
       router.replace("/(tabs)");
     } else {
-      console.log("[RootLayout] User not logged in - navigating to login");
       router.replace("/login");
     }
   }, [isLoggedIn, isLoading, router]);
