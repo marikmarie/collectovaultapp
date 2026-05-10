@@ -21,62 +21,66 @@ export default function TabLayout() {
         backgroundColor={isDark ? Colors.dark.background : Colors.light.background}
         translucent={false}
       />
-      <Tabs
-        screenOptions={{
-          tabBarActiveTintColor: '#000',
-          tabBarInactiveTintColor: '#999',
-          headerShown: false,
-          tabBarLabelStyle: {
-            fontSize: 12,
-            fontWeight: '600',
-          },
-          tabBarButton: HapticTab,
-          tabBarStyle: {
-            position: 'absolute',
-            bottom: 20,
-            left: 20,
-            right: 20,
-            height: 70,
-            borderRadius: 35,
-            backgroundColor: '#fff',
-            borderTopWidth: 0,
-            elevation: 5,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-          },
-        }}>
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: 'Home',
+      <View style={{ flex: 1 }}>
+        <Tabs
+          screenOptions={{
+            tabBarActiveTintColor: '#000',
+            tabBarInactiveTintColor: '#999',
             headerShown: false,
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="statement"
-          options={{
-            title: 'Statement',
-            tabBarIcon: ({ color }) => <IconSymbol size={32} name="doc.text.fill" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="services"
-          options={{
-            title: 'Services',
-            tabBarIcon: ({ color }) => <IconSymbol size={32} name="bag.fill" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="help"
-          options={{
-            title: 'Help',
-            tabBarIcon: ({ color }) => <IconSymbol size={32} name="info.circle.fill" color={color} />,
-          }}
-        />
-      </Tabs>
+            tabBarLabelStyle: {
+              fontSize: 12,
+              fontWeight: '600',
+            },
+            tabBarButton: HapticTab,
+            tabBarStyle: {
+              position: 'absolute',
+              bottom: 20,
+              left: 20,
+              right: 20,
+              height: 70,
+              borderRadius: 35,
+              backgroundColor: '#fff',
+              borderTopWidth: 0,
+              elevation: 5,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+            },
+          }}>
+          <Tabs.Screen
+            name="index"
+            options={{
+              title: 'Home',
+              headerShown: false,
+              tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="statement"
+            options={{
+              title: 'Statement',
+              tabBarIcon: ({ color }) => <IconSymbol size={32} name="doc.text.fill" color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="services"
+            options={{
+              title: 'Services',
+              tabBarIcon: ({ color }) => <IconSymbol size={32} name="bag.fill" color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="help"
+            options={{
+              title: 'Help',
+              tabBarIcon: ({ color }) => <IconSymbol size={32} name="info.circle.fill" color={color} />,
+            }}
+          />
+        </Tabs>
+        <FloatingHelpButton />
+        <HelpHubModal />
+      </View>
     </>
   );
 }
