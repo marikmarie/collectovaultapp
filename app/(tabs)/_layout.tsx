@@ -6,6 +6,9 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { StatusBar } from 'expo-status-bar';
+import HelpHubModal from '@/components/HelpHubModal';
+import FloatingHelpButton from '@/components/FloatingHelpButton';
+import { View } from 'react-native';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();

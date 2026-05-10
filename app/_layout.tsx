@@ -10,6 +10,7 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider, useAuth } from "@/src/context/AuthContext";
+import { HelpFeedbackProvider } from "@/src/context/HelpFeedbackContext";
 import { ActivityIndicator, View } from "react-native";
 
 export const unstable_settings = {
@@ -63,7 +64,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <RootLayoutContent />
+        <HelpFeedbackProvider>
+          <RootLayoutContent />
+        </HelpFeedbackProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );
