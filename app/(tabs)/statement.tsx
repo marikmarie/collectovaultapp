@@ -17,11 +17,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '@/src/context/AuthContext';
+import { useHelpFeedback } from '@/src/context/HelpFeedbackContext';
 import { invoiceService } from '@/src/api/collecto';
 import { customerService } from '@/src/api/customer';
 import storage from '@/src/utils/storage';
 import InvoiceDetailModal from '@/components/InvoiceDetailModal';
 import TransactionDetailModal from '@/components/TransactionDetailModal';
+import PostPaymentFeedback from '@/components/PostPaymentFeedback';
 import api from '@/src/api';
 
 interface TransactionItem {
@@ -52,6 +54,7 @@ interface InvoiceItem {
 
 export default function StatementScreen() {
   const { user } = useAuth();
+  const { openRatingModal, setContextData, openFeedbackModal } = useHelpFeedback();
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +64,10 @@ export default function StatementScreen() {
   const [invoiceModalVisible, setInvoiceModalVisible] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionItem | null>(null);
   const [transactionModalVisible, setTransactionModalVisible] = useState(false);
+
+  // Post-payment feedback state
+  const [showPostPaymentFeedback, setShowPostPaymentFeedback] = useState(false);
+  const [lastPaymentData, setLastPaymentData] = useState<{ invoiceId: string; amount: number } | null>(null);
 
   // Payment modal state
   const [payingInvoice, setPayingInvoice] = useState<string | null>(null);
