@@ -932,6 +932,41 @@ export default function StatementScreen() {
       </KeyboardAvoidingView>
       </Modal>
 
+      {/* Post-Payment Feedback */}
+      {lastPaymentData && (
+        <PostPaymentFeedback
+          visible={showPostPaymentFeedback}
+          invoiceId={lastPaymentData.invoiceId}
+          amount={lastPaymentData.amount}
+          onClose={() => {
+            setShowPostPaymentFeedback(false);
+            setLastPaymentData(null);
+            // Reset payment modal
+            setPaymentModalVisible(false);
+            setPayingInvoice(null);
+            setPaymentResult(null);
+            setLastQueriedStatus(null);
+            setPointsToUse(0);
+            setMobileAmount(undefined);
+            setPayPhone('');
+            setStaffId('');
+            setVerified(false);
+            setAccountName(null);
+            setPhoneError(null);
+          }}
+          onOpenFeedback={() => {
+            setContextData({ invoiceId: lastPaymentData.invoiceId, feedbackType: 'order' });
+            openFeedbackModal('order');
+          }}
+          onOpenRating={() => {
+            // Note: For rating, we would need the transaction ID from the payment
+            // For now, we'll open feedback instead
+            setContextData({ invoiceId: lastPaymentData.invoiceId, feedbackType: 'service' });
+            openFeedbackModal('service');
+          }}
+        />
+      )}
+
       {/* Transaction Detail Modal */}
       <TransactionDetailModal
         visible={transactionModalVisible}
