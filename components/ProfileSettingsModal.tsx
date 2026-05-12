@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import { customerService } from "@/src/api/customer";
+import { useAuth } from "@/src/context/AuthContext";
+import storage from "@/src/utils/storage";
+import { Feather } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  Modal,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Alert,
   ActivityIndicator,
-} from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { useAuth } from '@/src/context/AuthContext';
-import storage from '@/src/utils/storage';
-import SetUsernameModal from '../app/SetUsernameModal';
-import { customerService } from '@/src/api/customer';
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import SetUsernameModal from "../app/SetUsernameModal";
 
 interface ProfileSettingsModalProps {
   visible: boolean;
@@ -27,8 +27,8 @@ export default function ProfileSettingsModal({
   onLogout,
 }: ProfileSettingsModalProps) {
   const { user, logout } = useAuth();
-  const [displayName, setDisplayName] = useState('');
-  const [username, setUsername] = useState(user?.userName || '');
+  const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState(user?.userName || "");
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
@@ -48,13 +48,14 @@ export default function ProfileSettingsModal({
         typeof loyaltySettings?.name === "string" && loyaltySettings.name.trim()
           ? loyaltySettings.name.trim()
           : undefined;
-      setDisplayName(loyaltyNameFromSettings || '');
+      setDisplayName(loyaltyNameFromSettings || "");
 
       const usernameFromSettings =
-        typeof loyaltySettings?.username === "string" && loyaltySettings.username.trim()
+        typeof loyaltySettings?.username === "string" &&
+        loyaltySettings.username.trim()
           ? loyaltySettings.username.trim()
           : undefined;
-      setUsername(usernameFromSettings || '');
+      setUsername(usernameFromSettings || "");
 
       // Store the data in storage for persistence
       if (loyaltyNameFromSettings) {
@@ -67,8 +68,8 @@ export default function ProfileSettingsModal({
       console.error("Error fetching loyalty settings:", err);
       // Fallback to storage if API fails
       const loadFromStorage = async () => {
-        const storedName = await storage.getItem('name');
-        const storedUsername = await storage.getItem('userName');
+        const storedName = await storage.getItem("name");
+        const storedUsername = await storage.getItem("userName");
         if (storedName) setDisplayName(storedName);
         if (storedUsername) setUsername(storedUsername);
       };
@@ -85,33 +86,29 @@ export default function ProfileSettingsModal({
   }, [visible, user?.clientId, user?.collectoId]);
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsLoading(true);
-              await logout();
-              onClose();
-              onLogout();
-            } catch (err) {
-              Alert.alert('Error', 'Failed to logout');
-              setIsLoading(false);
-            }
-          },
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setIsLoading(true);
+            await logout();
+            onClose();
+            onLogout();
+          } catch (err) {
+            Alert.alert("Error", "Failed to logout");
+            setIsLoading(false);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleUsernameSuccess = async (newUsername: string) => {
     setUsername(newUsername);
-    await storage.setItem('userName', newUsername);
+    await storage.setItem("userName", newUsername);
     setShowUsernameModal(false);
     // Refresh data to get updated loyalty settings
     fetchLoyaltySettings();
@@ -123,108 +120,122 @@ export default function ProfileSettingsModal({
       transparent
       animationType="slide"
       onRequestClose={onClose}
+      presentationStyle="overFullScreen"
     >
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose}>
-            <Feather name="x" size={24} color="#1a1a1a" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Settings</Text>
-          <View style={{ width: 24 }} />
-        </View>
-
-        {isLoading || isFetchingData ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#d81b60" />
-            {isFetchingData && (
-              <Text style={styles.loadingText}>Loading profile data...</Text>
-            )}
+      <View style={styles.overlay}>
+        <TouchableOpacity
+          style={styles.backgroundOverlay}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onClose}>
+              <Feather name="x" size={24} color="#1a1a1a" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Settings</Text>
+            <View style={{ width: 24 }} />
           </View>
-        ) : (
-          <ScrollView style={styles.content}>
-            {/* Profile Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Profile</Text>
-              
-              <View style={styles.profileCard}>
-                <View style={styles.profileField}>
-                  <Text style={styles.profileLabel}>Client ID</Text>
-                  <Text style={styles.profileValue}>{user?.clientId || '—'}</Text>
-                </View>
 
-                <View style={[styles.profileField, styles.borderTop]}>
-                  <Text style={styles.profileLabel}>Username</Text>
-                  <Text style={styles.profileValue}>
-                    {username ? `@${username}` : 'Not set'}
-                  </Text>
-                </View>
+          {isLoading || isFetchingData ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#d81b60" />
+              {isFetchingData && (
+                <Text style={styles.loadingText}>Loading profile data...</Text>
+              )}
+            </View>
+          ) : (
+            <ScrollView style={styles.content}>
+              {/* Profile Section */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Profile</Text>
 
-                <View style={[styles.profileField, styles.borderTop]}>
-                  <Text style={styles.profileLabel}>Display Name</Text>
-                  <Text style={styles.profileValue}>{displayName || '—'}</Text>
+                <View style={styles.profileCard}>
+                  <View style={styles.profileField}>
+                    <Text style={styles.profileLabel}>Client ID</Text>
+                    <Text style={styles.profileValue}>
+                      {user?.clientId || "—"}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.profileField, styles.borderTop]}>
+                    <Text style={styles.profileLabel}>Username</Text>
+                    <Text style={styles.profileValue}>
+                      {username ? `@${username}` : "Not set"}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.profileField, styles.borderTop]}>
+                    <Text style={styles.profileLabel}>Display Name</Text>
+                    <Text style={styles.profileValue}>
+                      {displayName || "—"}
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </View>
 
-            {/* Username Management Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Username Management</Text>
-              
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => setShowUsernameModal(true)}
-              >
-                <View style={styles.actionButtonContent}>
-                  <Feather
-                    name={username ? 'edit-2' : 'plus'}
-                    size={20}
-                    color="#d81b60"
-                  />
-                  <View style={styles.actionButtonText}>
-                    <Text style={styles.actionButtonTitle}>
-                      {username ? 'Update Username' : 'Set Username'}
-                    </Text>
-                    <Text style={styles.actionButtonDescription}>
-                      {username
-                        ? 'Change your current username'
-                        : 'Set up a unique username for your account'}
-                    </Text>
+              {/* Username Management Section */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Username Management</Text>
+
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => setShowUsernameModal(true)}
+                >
+                  <View style={styles.actionButtonContent}>
+                    <Feather
+                      name={username ? "edit-2" : "plus"}
+                      size={20}
+                      color="#d81b60"
+                    />
+                    <View style={styles.actionButtonText}>
+                      <Text style={styles.actionButtonTitle}>
+                        {username ? "Update Username" : "Set Username"}
+                      </Text>
+                      <Text style={styles.actionButtonDescription}>
+                        {username
+                          ? "Change your current username"
+                          : "Set up a unique username for your account"}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-                <Feather name="chevron-right" size={20} color="#ccc" />
-              </TouchableOpacity>
-            </View>
+                  <Feather name="chevron-right" size={20} color="#ccc" />
+                </TouchableOpacity>
+              </View>
 
-            {/* Account Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Account</Text>
-              
-              <TouchableOpacity
-                style={[styles.actionButton, styles.dangerButton]}
-                onPress={handleLogout}
-              >
-                <View style={styles.actionButtonContent}>
-                  <Feather name="log-out" size={20} color="#ff3333" />
-                  <View style={styles.actionButtonText}>
-                    <Text style={[styles.actionButtonTitle, styles.dangerText]}>
-                      Logout
-                    </Text>
-                    <Text style={styles.actionButtonDescription}>
-                      Sign out from your account
-                    </Text>
+              {/* Account Section */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Account</Text>
+
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.dangerButton]}
+                  onPress={handleLogout}
+                >
+                  <View style={styles.actionButtonContent}>
+                    <Feather name="log-out" size={20} color="#ff3333" />
+                    <View style={styles.actionButtonText}>
+                      <Text
+                        style={[styles.actionButtonTitle, styles.dangerText]}
+                      >
+                        Logout
+                      </Text>
+                      <Text style={styles.actionButtonDescription}>
+                        Sign out from your account
+                      </Text>
+                    </View>
                   </View>
-                </View>
-                <Feather name="chevron-right" size={20} color="#ccc" />
-              </TouchableOpacity>
-            </View>
+                  <Feather name="chevron-right" size={20} color="#ccc" />
+                </TouchableOpacity>
+              </View>
 
-            {/* App Version */}
-            <View style={styles.footerSection}>
-              <Text style={styles.versionText}>CollectoVault v1.0.0</Text>
-            </View>
-          </ScrollView>
-        )}
+              {/* App Version */}
+              <View style={styles.footerSection}>
+                <Text style={styles.versionText}>CollectoVault v1.0.0</Text>
+              </View>
+            </ScrollView>
+          )}
+        </View>
       </View>
 
       {/* Username Modal */}
@@ -243,35 +254,51 @@ export default function ProfileSettingsModal({
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "transparent",
+  },
+  backgroundOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "90%",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontWeight: "600",
+    color: "#1a1a1a",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
   content: {
     flex: 1,
@@ -283,16 +310,16 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#999',
-    textTransform: 'uppercase',
+    fontWeight: "600",
+    color: "#999",
+    textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 12,
   },
   profileCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   profileField: {
     paddingHorizontal: 16,
@@ -300,35 +327,35 @@ const styles = StyleSheet.create({
   },
   borderTop: {
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: "#f0f0f0",
   },
   profileLabel: {
     fontSize: 12,
-    color: '#999',
-    fontWeight: '500',
+    color: "#999",
+    fontWeight: "500",
     marginBottom: 4,
   },
   profileValue: {
     fontSize: 16,
-    color: '#1a1a1a',
-    fontWeight: '500',
+    color: "#1a1a1a",
+    fontWeight: "500",
   },
   actionButton: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 12,
   },
   dangerButton: {
     borderWidth: 1,
-    borderColor: '#ff3333',
+    borderColor: "#ff3333",
   },
   actionButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
     gap: 12,
   },
@@ -338,23 +365,23 @@ const styles = StyleSheet.create({
   },
   actionButtonTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontWeight: "600",
+    color: "#1a1a1a",
   },
   dangerText: {
-    color: '#ff3333',
+    color: "#ff3333",
   },
   actionButtonDescription: {
     fontSize: 13,
-    color: '#999',
+    color: "#999",
     marginTop: 4,
   },
   footerSection: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 24,
   },
   versionText: {
     fontSize: 12,
-    color: '#ccc',
+    color: "#ccc",
   },
 });

@@ -1,25 +1,21 @@
-import React, { useState } from 'react';
+import { setVaultOtpToken } from "@/src/api";
+import { authService } from "@/src/api/authService";
+import { useAuth } from "@/src/context/AuthContext";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
-  Modal,
-  Image,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useAuth } from '@/src/context/AuthContext';
-import { authService } from '@/src/api/authService';
-import { setVaultOtpToken } from '@/src/api';
-import storage from '@/src/utils/storage';
+  View
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-
-type LoginStep = 'id_entry' | 'otp_entry';
+type LoginStep = "id_entry" | "otp_entry";
 
 interface PendingPayload {
   id: string;
@@ -32,23 +28,25 @@ export default function LoginScreen() {
   const { refreshUser } = useAuth();
 
   // Login flow state
-  const [loginStep, setLoginStep] = useState<LoginStep>('id_entry');
-  const [idOrUsername, setIdOrUsername] = useState('');
-  const [otpValue, setOtpValue] = useState('');
-  const [error, setError] = useState('');
+  const [loginStep, setLoginStep] = useState<LoginStep>("id_entry");
+  const [idOrUsername, setIdOrUsername] = useState("");
+  const [otpValue, setOtpValue] = useState("");
+  const [error, setError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [pendingPayload, setPendingPayload] = useState<PendingPayload | null>(null);
+  const [pendingPayload, setPendingPayload] = useState<PendingPayload | null>(
+    null,
+  );
 
   const buildAuthPayload = (id: string) => {
-    return { type: 'client' as const, id };
+    return { type: "client" as const, id };
   };
 
   const attemptLogin = async (input: string) => {
-    setError('');
+    setError("");
     setIsProcessing(true);
 
     if (input.length < 3) {
-      setError('Please enter a valid ID or username.');
+      setError("Please enter a valid ID or username.");
       setIsProcessing(false);
       return;
     }
@@ -56,27 +54,26 @@ export default function LoginScreen() {
     try {
       let resolvedId = input;
 
-
-
       // Try as client ID
       const { id, type } = buildAuthPayload(resolvedId);
       const res = await authService.startCollectoAuth({ type, id });
-      console.log('Auth response:', res);
+      console.log("Auth response:", res);
       const inner = res?.data ?? null;
 
-      const returnedToken = inner?.data?.vaultOTPToken ?? inner?.vaultOTPToken ?? null;
+      const returnedToken =
+        inner?.data?.vaultOTPToken ?? inner?.vaultOTPToken ?? null;
 
       if (returnedToken) {
         const expiryIso = new Date(Date.now() + 30 * 60 * 1000).toISOString();
         await setVaultOtpToken(returnedToken, expiryIso);
         setPendingPayload({ id: resolvedId, vaultOTPToken: returnedToken });
-        setLoginStep('otp_entry');
+        setLoginStep("otp_entry");
         return;
       }
 
-      setError(inner?.message ?? res?.message ?? 'ID or username not found.');
+      setError(inner?.message ?? res?.message ?? "ID or username not found.");
     } catch (err: any) {
-      setError(err?.message ?? 'Network or service error.');
+      setError(err?.message ?? "Network or service error.");
     } finally {
       setIsProcessing(false);
     }
@@ -87,11 +84,11 @@ export default function LoginScreen() {
   };
 
   const handleOtpSubmit = async () => {
-    setError('');
+    setError("");
     setIsProcessing(true);
 
     if (otpValue.length !== 6) {
-      setError('OTP must be 6 digits.');
+      setError("OTP must be 6 digits.");
       setIsProcessing(false);
       return;
     }
@@ -99,21 +96,21 @@ export default function LoginScreen() {
     try {
       const verifyPayload = {
         id: pendingPayload!.id,
-        type: 'client' as const,
+        type: "client" as const,
         vaultOTP: otpValue,
         vaultOTPToken: pendingPayload!.vaultOTPToken!,
       };
 
       const resp = await authService.verifyCollectoOtp(verifyPayload);
       // update auth context from storage
-      console.log('OTP verify response:', resp);
+      console.log("OTP verify response:", resp);
       await refreshUser();
-      
+
       // navigate to root/dashboard
-      router.replace('/');
+      router.replace("/");
       return;
     } catch (err: any) {
-      setError('Verification failed. Please try again.');
+      setError("Verification failed. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -124,10 +121,13 @@ export default function LoginScreen() {
     setIsProcessing(true);
     try {
       const payload = buildAuthPayload(pendingPayload.id);
-      await authService.startCollectoAuth({ type: payload.type, id: payload.id });
-      setError('A new code has been sent.');
+      await authService.startCollectoAuth({
+        type: payload.type,
+        id: payload.id,
+      });
+      setError("A new code has been sent.");
     } catch (e) {
-      setError('Unable to resend code.');
+      setError("Unable to resend code.");
     } finally {
       setIsProcessing(false);
     }
@@ -143,7 +143,7 @@ export default function LoginScreen() {
         <View style={styles.logoSection}>
           {/* replace the Text logo with an Image. put your logo file under assets/images and adjust the require path accordingly */}
           <Image
-            source={require('../assets/images/logo.png')}
+            source={require("../assets/images/logo.jpeg")}
             style={styles.logoImage}
             resizeMode="contain"
           />
@@ -155,12 +155,12 @@ export default function LoginScreen() {
           {/* Step Title */}
           <View style={styles.headerSection}>
             <Text style={styles.stepTitle}>
-              {loginStep === 'id_entry' ? 'Sign In' : 'Verify Identity'}
+              {loginStep === "id_entry" ? "Sign In" : "Verify Identity"}
             </Text>
             <Text style={styles.stepDescription}>
-              {loginStep === 'id_entry'
-                ? 'Enter your Client ID or Username to continue'
-                : 'Enter the 6-digit code sent to your device'}
+              {loginStep === "id_entry"
+                ? "Enter your Client ID or Username to continue"
+                : "Enter the 6-digit code sent to your device"}
             </Text>
           </View>
 
@@ -169,8 +169,8 @@ export default function LoginScreen() {
             <View
               style={[
                 styles.messageBox,
-                error.toLowerCase().includes('sent') ||
-                error.toLowerCase().includes('success')
+                error.toLowerCase().includes("sent") ||
+                error.toLowerCase().includes("success")
                   ? styles.messageSuccess
                   : styles.messageError,
               ]}
@@ -180,7 +180,7 @@ export default function LoginScreen() {
           )}
 
           {/* ID Entry Step */}
-          {loginStep === 'id_entry' ? (
+          {loginStep === "id_entry" ? (
             <View style={styles.formSection}>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>CLIENT ID OR USERNAME</Text>
@@ -191,7 +191,7 @@ export default function LoginScreen() {
                   value={idOrUsername}
                   onChangeText={(text) => {
                     setIdOrUsername(text);
-                    setError('');
+                    setError("");
                   }}
                   editable={!isProcessing}
                   autoCapitalize="none"
@@ -227,10 +227,10 @@ export default function LoginScreen() {
                   placeholderTextColor="#999"
                   value={otpValue}
                   onChangeText={(text) => {
-                    const val = text.replace(/\D/g, '');
+                    const val = text.replace(/\D/g, "");
                     if (val.length <= 6) {
                       setOtpValue(val);
-                      setError('');
+                      setError("");
                     }
                   }}
                   keyboardType="number-pad"
@@ -266,11 +266,13 @@ export default function LoginScreen() {
                 <TouchableOpacity
                   disabled={isProcessing}
                   onPress={() => {
-                    setLoginStep('id_entry');
-                    setError('');
+                    setLoginStep("id_entry");
+                    setError("");
                   }}
                 >
-                  <Text style={styles.tertiaryAction}>← Use a different ID</Text>
+                  <Text style={styles.tertiaryAction}>
+                    ← Use a different ID
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -280,8 +282,6 @@ export default function LoginScreen() {
         {/* Footer */}
         <Text style={styles.footer}>© 2026 CollectoVault</Text>
       </ScrollView>
-
-
     </SafeAreaView>
   );
 }
@@ -289,16 +289,16 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: "#F9FAFB",
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 16,
     paddingVertical: 32,
   },
   logoSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 40,
   },
   /* old text logo style commented out in case it is needed later
@@ -314,62 +314,62 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tagline: {
-    fontSize: 10,
-    fontWeight: '500',
-    color: '#999',
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#999",
     letterSpacing: 0.2,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 24,
     padding: 32,
     marginBottom: 40,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 20 },
     shadowOpacity: 0.05,
     shadowRadius: 50,
     elevation: 5,
     borderWidth: 1,
-    borderColor: '#f0f0f0',
+    borderColor: "#f0f0f0",
   },
   headerSection: {
     marginBottom: 32,
-    alignItems: 'center',
+    alignItems: "center",
   },
   stepTitle: {
     fontSize: 22,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    fontWeight: "700",
+    color: "#1a1a1a",
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   stepDescription: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
   messageBox: {
     padding: 12,
     borderRadius: 12,
     marginBottom: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   messageError: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: "#FEE2E2",
   },
   messageSuccess: {
-    backgroundColor: '#ECFDF5',
+    backgroundColor: "#ECFDF5",
   },
   messageText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   messageError_text: {
-    color: '#991B1B',
+    color: "#991B1B",
   },
   messageSuccess_text: {
-    color: '#065F46',
+    color: "#065F46",
   },
   formSection: {
     gap: 20,
@@ -379,75 +379,75 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 10,
-    fontWeight: '700',
-    color: '#999',
+    fontWeight: "700",
+    color: "#999",
     letterSpacing: 0.2,
     marginBottom: 8,
     marginLeft: 4,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e5e5e5',
+    borderColor: "#e5e5e5",
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 14,
-    fontWeight: '500',
-    backgroundColor: '#fafafa',
-    color: '#1a1a1a',
+    fontWeight: "500",
+    backgroundColor: "#fafafa",
+    color: "#1a1a1a",
   },
   otpInputContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 20,
   },
   otpInput: {
     borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: '#e5e5e5',
+    borderStyle: "dashed",
+    borderColor: "#e5e5e5",
     borderRadius: 16,
-    width: '100%',
+    width: "100%",
     paddingHorizontal: 16,
     paddingVertical: 16,
     fontSize: 32,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
     letterSpacing: 8,
-    backgroundColor: '#fafafa',
-    color: '#1a1a1a',
+    backgroundColor: "#fafafa",
+    color: "#1a1a1a",
   },
   primaryButton: {
-    backgroundColor: '#e1d7e0',
+    backgroundColor: "#e1d7e0",
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 8,
   },
   primaryButtonText: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    fontWeight: "700",
+    color: "#1a1a1a",
   },
   primaryButtonIcon: {
     fontSize: 16,
     marginLeft: 8,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 16,
-    backgroundColor: '#F8E9F1',
+    backgroundColor: "#F8E9F1",
     borderWidth: 1,
-    borderColor: '#E8C5D8',
+    borderColor: "#E8C5D8",
     gap: 8,
   },
   secondaryButtonIcon: {
@@ -455,8 +455,8 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#D81B60',
+    fontWeight: "600",
+    color: "#D81B60",
   },
   secondaryActionsContainer: {
     gap: 16,
@@ -464,39 +464,39 @@ const styles = StyleSheet.create({
   },
   secondaryAction: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#1a1a1a',
-    textAlign: 'center',
+    fontWeight: "700",
+    color: "#1a1a1a",
+    textAlign: "center",
     letterSpacing: 0.2,
   },
   tertiaryAction: {
     fontSize: 11,
-    fontWeight: '500',
-    color: '#999',
-    textAlign: 'center',
+    fontWeight: "500",
+    color: "#999",
+    textAlign: "center",
   },
   footer: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#ccc',
-    textAlign: 'center',
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#ccc",
+    textAlign: "center",
     letterSpacing: 0.4,
   },
   // Modal styles
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 16,
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 24,
     padding: 24,
-    width: '100%',
+    width: "100%",
     maxWidth: 360,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 20 },
     shadowOpacity: 0.2,
     shadowRadius: 50,
@@ -504,40 +504,40 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    fontWeight: "700",
+    color: "#1a1a1a",
     marginBottom: 8,
   },
   modalDescription: {
     fontSize: 13,
-    color: '#666',
+    color: "#666",
     marginBottom: 16,
   },
   modalErrorBox: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: "#FEE2E2",
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
   },
   modalErrorText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#991B1B',
+    fontWeight: "600",
+    color: "#991B1B",
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#e5e5e5',
+    borderColor: "#e5e5e5",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 13,
-    fontWeight: '500',
-    backgroundColor: '#fafafa',
+    fontWeight: "500",
+    backgroundColor: "#fafafa",
     marginBottom: 16,
-    color: '#1a1a1a',
+    color: "#1a1a1a",
   },
   modalButtonContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   modalCancelButton: {
@@ -545,25 +545,25 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 12,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
+    backgroundColor: "#f0f0f0",
+    alignItems: "center",
   },
   modalCancelButtonText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
   },
   modalConfirmButton: {
     flex: 1,
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 12,
-    backgroundColor: '#d0d0d0',
-    alignItems: 'center',
+    backgroundColor: "#d0d0d0",
+    alignItems: "center",
   },
   modalConfirmButtonText: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#000',
+    fontWeight: "700",
+    color: "#000",
   },
 });
