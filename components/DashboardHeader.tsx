@@ -55,8 +55,11 @@ export default function DashboardHeader({
   return (
     <View style={styles.headerContainer}>
       <View style={styles.headerTopRow}>
-        {/* Logo starts from the left edge of the padding */}
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
+        {/* Logo with Collecto Vault text */}
+        <View style={styles.logoTextContainer}>
+          <Image source={logo} style={styles.logo} resizeMode="contain" />
+          <Text style={styles.vaultText}>Collecto Vault</Text>
+        </View>
 
         {/* Avatar with initial */}
         <TouchableOpacity style={styles.avatarButton} onPress={onProfilePress}>
@@ -84,10 +87,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
+  logoTextContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flex: 1,
+  },
   logo: {
-    width: 160,
+    width: 40,
     height: 40,
-    // No left margin — flush to paddingHorizontal
+  },
+  vaultText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#d81b60",
   },
   avatarButton: {
     width: 38,

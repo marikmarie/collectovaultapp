@@ -175,7 +175,13 @@ export default function HelpHubModal() {
 
   return (
     <>
-      <Modal visible={showHelpHub} transparent animationType="slide" onRequestClose={closeHelpHub}>
+      <Modal 
+        visible={showHelpHub} 
+        transparent 
+        animationType="slide" 
+        onRequestClose={closeHelpHub}
+        statusBarTranslucent={true}
+      >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.container}
@@ -221,17 +227,18 @@ export default function HelpHubModal() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'flex-end',
   },
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'flex-end',
   },
   modal: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: height * 0.9,
+    maxHeight: height * 0.85,
     overflow: 'hidden',
   },
   content: {
