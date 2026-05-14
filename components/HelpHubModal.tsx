@@ -28,6 +28,12 @@ export default function HelpHubModal() {
     setCurrentPage,
     unreadCount,
     contextData,
+    showFeedbackModal,
+    closeFeedbackModal,
+    showRatingModal,
+    closeRatingModal,
+    showChatModal,
+    closeChatModal,
   } = useHelpFeedback();
   const { user } = useAuth();
   const [showChildModal, setShowChildModal] = useState(false);

@@ -1,217 +1,151 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9f9f9',
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 80,
-  },
-  header: {
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#d81b60',
-    marginBottom: 4,
-  },
-  cardText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  contactItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  contactIcon: {
-    fontSize: 20,
-    marginRight: 12,
-    color: '#d81b60',
-  },
-  contactInfo: {
-    flex: 1,
-  },
-  contactLabel: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 2,
-  },
-  contactValue: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-  },
-  button: {
-    backgroundColor: '#d81b60',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  faqItem: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  faqQuestion: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  faqAnswer: {
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 18,
-  },
-});
+import { useHelpFeedback } from "@/src/context/HelpFeedbackContext";
+import { Feather } from "@expo/vector-icons";
+import React from "react";
+import {
+    Linking,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HelpScreen() {
+  const { openChatModal, openFeedbackModal, openRatingModal, contextData } =
+    useHelpFeedback();
+  const canRate = Boolean(contextData.transactionId);
+
   const handlePhoneCall = () => {
-    Linking.openURL('tel:0775634567');
+    Linking.openURL("tel:0775634567");
   };
 
   const handleEmail = () => {
-    Linking.openURL('mailto:info@cissytech.com');
+    Linking.openURL("mailto:info@cissytech.com");
   };
 
   const handleWhatsApp = () => {
-    Linking.openURL('https://wa.me/256775618385');
+    Linking.openURL("https://wa.me/256775618385");
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Help & Support</Text>
-          <Text style={styles.subtitle}>Get answers and assistance</Text>
+        <View style={styles.hero}>
+          <Text style={styles.heroTitle}>Help at your fingertips</Text>
+          <Text style={styles.heroSubtitle}>
+            Get fast support with chat, feedback, rating and quick answers.
+          </Text>
         </View>
 
-        {/* Contact Section */}
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => openChatModal()}
+            activeOpacity={0.85}
+          >
+            <View style={[styles.actionIcon, styles.chatIcon]}>
+              <Feather name="message-circle" size={20} color="#1D4ED8" />
+            </View>
+            <Text style={styles.actionTitle}>Live Chat</Text>
+            <Text style={styles.actionText}>Talk with support instantly.</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => openFeedbackModal("general")}
+            activeOpacity={0.85}
+          >
+            <View style={[styles.actionIcon, styles.feedbackIcon]}>
+              <Feather name="edit-3" size={20} color="#C2410C" />
+            </View>
+            <Text style={styles.actionTitle}>Send Feedback</Text>
+            <Text style={styles.actionText}>Share your thoughts with us.</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            style={[styles.actionCard, !canRate && styles.actionCardDisabled]}
+            onPress={() =>
+              canRate && contextData.transactionId
+                ? openRatingModal(contextData.transactionId)
+                : openFeedbackModal("general")
+            }
+            activeOpacity={0.85}
+            disabled={!canRate}
+          >
+            <View style={[styles.actionIcon, styles.ratingIcon]}>
+              <Feather name="star" size={20} color="#B45309" />
+            </View>
+            <Text style={styles.actionTitle}>Rate Experience</Text>
+            <Text style={styles.actionText}>
+              {canRate
+                ? "Rate your latest transaction."
+                : "Available after a purchase."}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => openFeedbackModal("general")}
+            activeOpacity={0.85}
+          >
+            <View style={[styles.actionIcon, styles.faqIcon]}>
+              <Feather name="help-circle" size={20} color="#7C3AED" />
+            </View>
+            <Text style={styles.actionTitle}>Quick FAQ</Text>
+            <Text style={styles.actionText}>
+              Find answers to common questions.
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Us</Text>
-          
-          <View style={styles.card}>
-            <TouchableOpacity style={styles.contactItem} onPress={handleEmail}>
-              <Text style={styles.contactIcon}>📧</Text>
+          <Text style={styles.sectionTitle}>Contact support</Text>
+          <View style={styles.contactRow}>
+            <TouchableOpacity style={styles.contactCard} onPress={handleEmail}>
+              <Text style={styles.contactEmoji}>📧</Text>
               <View style={styles.contactInfo}>
-                <Text style={styles.contactLabel}>Email Support</Text>
+                <Text style={styles.contactLabel}>Email</Text>
                 <Text style={styles.contactValue}>info@cissytech.com</Text>
               </View>
             </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.contactItem} onPress={handlePhoneCall}>
-              <Text style={styles.contactIcon}>📱</Text>
-              <View style={styles.contactInfo}>
-                <Text style={styles.contactLabel}>Phone</Text>
-                <Text style={styles.contactValue}>0775634567</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.contactItem} onPress={handleWhatsApp}>
-              <Text style={styles.contactIcon}>💬</Text>
+            <TouchableOpacity
+              style={styles.contactCard}
+              onPress={handleWhatsApp}
+            >
+              <Text style={styles.contactEmoji}>💬</Text>
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>WhatsApp</Text>
                 <Text style={styles.contactValue}>0775618385</Text>
               </View>
             </TouchableOpacity>
-
-            <View style={styles.contactItem}>
-              <Text style={styles.contactIcon}>⏰</Text>
-              <View style={styles.contactInfo}>
-                <Text style={styles.contactLabel}>Available</Text>
-                <Text style={styles.contactValue}>24/7 Support</Text>
-              </View>
-            </View>
           </View>
+          <TouchableOpacity
+            style={styles.contactButton}
+            onPress={handlePhoneCall}
+          >
+            <Text style={styles.contactButtonText}>
+              Call support: 0775634567
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* FAQ Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
-          
+          <Text style={styles.sectionTitle}>Quick answers</Text>
           <View style={styles.faqItem}>
             <Text style={styles.faqQuestion}>How do I earn points?</Text>
             <Text style={styles.faqAnswer}>
-              You earn points every time you make a purchase at our partner stores. The points are automatically added to your account.
+              Earn points automatically every time you purchase through
+              CollectoVault.
             </Text>
           </View>
-
           <View style={styles.faqItem}>
-            <Text style={styles.faqQuestion}>How do I check my transaction history?</Text>
+            <Text style={styles.faqQuestion}>Where is my history?</Text>
             <Text style={styles.faqAnswer}>
-              Go to the Statement tab to view all your transactions, points earned, and redemptions.
-            </Text>
-          </View>
-
-          <View style={styles.faqItem}>
-            <Text style={styles.faqQuestion}>Is my data secure?</Text>
-            <Text style={styles.faqAnswer}>
-              Yes, we use industry-standard encryption and security measures to protect your personal and financial information.
-            </Text>
-          </View>
-        </View>
-
-        {/* About Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About CollectoVault</Text>
-          
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Our Mission</Text>
-            <Text style={styles.cardText}>
-              To provide a seamless rewards experience that values your loyalty and gives you more for your purchases.
-            </Text>
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Version 1.0</Text>
-            <Text style={styles.cardText}>
-              Thank you for using CollectoVault! We&apos;re constantly improving to serve you better.
+              Open the Statement tab to view all transactions, points and
+              redemptions.
             </Text>
           </View>
         </View>
@@ -219,3 +153,161 @@ export default function HelpScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  hero: {
+    marginBottom: 24,
+  },
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#111827",
+    marginBottom: 10,
+  },
+  heroSubtitle: {
+    fontSize: 15,
+    color: "#6B7280",
+    lineHeight: 22,
+    maxWidth: "90%",
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 14,
+  },
+  actionCard: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    elevation: 3,
+    minHeight: 145,
+  },
+  actionCardDisabled: {
+    opacity: 0.6,
+  },
+  actionIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  chatIcon: {
+    backgroundColor: "#DBEAFE",
+  },
+  feedbackIcon: {
+    backgroundColor: "#FFEDD5",
+  },
+  ratingIcon: {
+    backgroundColor: "#FEF3C7",
+  },
+  faqIcon: {
+    backgroundColor: "#EDE9FE",
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 8,
+  },
+  actionText: {
+    fontSize: 13,
+    color: "#6B7280",
+    lineHeight: 20,
+  },
+  section: {
+    marginTop: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 16,
+  },
+  contactRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  contactCard: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.05,
+    shadowRadius: 14,
+    elevation: 2,
+  },
+  contactEmoji: {
+    fontSize: 22,
+    marginBottom: 10,
+  },
+  contactInfo: {
+    gap: 4,
+  },
+  contactLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 4,
+  },
+  contactValue: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  contactButton: {
+    marginTop: 16,
+    backgroundColor: "#d81b60",
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  contactButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  faqItem: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    padding: 18,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    elevation: 2,
+  },
+  faqQuestion: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 10,
+  },
+  faqAnswer: {
+    fontSize: 14,
+    color: "#4B5563",
+    lineHeight: 20,
+  },
+});
