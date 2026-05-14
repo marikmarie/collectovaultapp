@@ -1,41 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import { useAuth } from "@/src/context/AuthContext";
+import { useHelpFeedback } from "@/src/context/HelpFeedbackContext";
+import { Feather } from "@expo/vector-icons";
+import React, { useState } from "react";
 import {
-  Modal,
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
   Dimensions,
   KeyboardAvoidingView,
+  Modal,
   Platform,
-} from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { useHelpFeedback } from '@/src/context/HelpFeedbackContext';
-import { useAuth } from '@/src/context/AuthContext';
-import FeedbackModal from './FeedbackModal';
-import RatingModal from './RatingModal';
-import LiveChatModal from './LiveChatModal';
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
+import FeedbackModal from "./FeedbackModal";
+import LiveChatModal from "./LiveChatModal";
+import RatingModal from "./RatingModal";
 
-const { height } = Dimensions.get('window');
+const { height } = Dimensions.get("window");
 
 export default function HelpHubModal() {
-  const { showHelpHub, closeHelpHub, currentPage, setCurrentPage, unreadCount, contextData } = useHelpFeedback();
+  const {
+    showHelpHub,
+    closeHelpHub,
+    currentPage,
+    setCurrentPage,
+    unreadCount,
+    contextData,
+  } = useHelpFeedback();
   const { user } = useAuth();
   const [showChildModal, setShowChildModal] = useState(false);
 
   const handleMainActions = (action: string) => {
-    if (action === 'feedback') {
-      setCurrentPage('feedback');
+    if (action === "feedback") {
+      setCurrentPage("feedback");
       setShowChildModal(true);
-    } else if (action === 'rating') {
-      setCurrentPage('rating');
+    } else if (action === "rating") {
+      setCurrentPage("rating");
       setShowChildModal(true);
-    } else if (action === 'chat') {
-      setCurrentPage('chat');
+    } else if (action === "chat") {
+      setCurrentPage("chat");
       setShowChildModal(true);
-    } else if (action === 'faq') {
-      setCurrentPage('faq');
+    } else if (action === "faq") {
+      setCurrentPage("faq");
       setShowChildModal(true);
     }
   };
@@ -44,86 +52,97 @@ export default function HelpHubModal() {
     setShowChildModal(false);
   };
 
+  const hasTransaction = Boolean(contextData.transactionId);
+
   const mainContent = (
     <View style={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.title}>Help & Support</Text>
-        <TouchableOpacity onPress={closeHelpHub}>
-          <Feather name="x" size={28} color="#333" />
+        <View>
+          <Text style={styles.title}>Help Center</Text>
+          <Text style={styles.subtitle}>
+            Fast support, chat, feedback and FAQs in one place.
+          </Text>
+        </View>
+        <TouchableOpacity onPress={closeHelpHub} style={styles.closeButton}>
+          <Feather name="x" size={24} color="#4B5563" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.optionsGrid}>
-          {/* Feedback Option */}
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.optionRow}>
           <TouchableOpacity
             style={styles.optionCard}
-            onPress={() => handleMainActions('feedback')}
-            activeOpacity={0.7}
+            onPress={() => handleMainActions("chat")}
+            activeOpacity={0.8}
           >
-            <View style={[styles.iconContainer, { backgroundColor: '#fff3e0' }]}>
-              <Feather name="message-square" size={32} color="#f57c00" />
-            </View>
-            <Text style={styles.optionTitle}>Send Feedback</Text>
-            <Text style={styles.optionDesc}>Share your thoughts and suggestions</Text>
-          </TouchableOpacity>
-
-          {/* Rating Option */}
-          {contextData.transactionId && (
-            <TouchableOpacity
-              style={styles.optionCard}
-              onPress={() => handleMainActions('rating')}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: '#fff9c4' }]}>
-                <Feather name="star" size={32} color="#fbc02d" />
-              </View>
-              <Text style={styles.optionTitle}>Rate Transaction</Text>
-              <Text style={styles.optionDesc}>Share your experience</Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Live Chat Option */}
-          <TouchableOpacity
-            style={styles.optionCard}
-            onPress={() => handleMainActions('chat')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.iconContainer, { backgroundColor: '#e3f2fd' }]}>
-              <Feather name="message-circle" size={32} color="#1976d2" />
-              {unreadCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{unreadCount}</Text>
-                </View>
-              )}
+            <View style={[styles.iconContainer, styles.chatIcon]}>
+              <Feather name="message-circle" size={28} color="#2563EB" />
             </View>
             <Text style={styles.optionTitle}>Live Chat</Text>
-            <Text style={styles.optionDesc}>Chat with our support team</Text>
+            <Text style={styles.optionDesc}>Talk with support instantly.</Text>
+            {unreadCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationText}>{unreadCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
-          {/* FAQ Option */}
           <TouchableOpacity
             style={styles.optionCard}
-            onPress={() => handleMainActions('faq')}
-            activeOpacity={0.7}
+            onPress={() => handleMainActions("feedback")}
+            activeOpacity={0.8}
           >
-            <View style={[styles.iconContainer, { backgroundColor: '#f3e5f5' }]}>
-              <Feather name="help-circle" size={32} color="#7b1fa2" />
+            <View style={[styles.iconContainer, styles.feedbackIcon]}>
+              <Feather name="message-square" size={28} color="#EA580C" />
             </View>
-            <Text style={styles.optionTitle}>FAQ</Text>
-            <Text style={styles.optionDesc}>Find quick answers</Text>
+            <Text style={styles.optionTitle}>Send Feedback</Text>
+            <Text style={styles.optionDesc}>
+              Share your experience with us.
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Quick Info */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoCard}>
-            <Feather name="info" size={20} color="#d81b60" />
-            <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>Response Time</Text>
-              <Text style={styles.infoText}>Usually within 2 hours on business days</Text>
+        <View style={styles.optionRow}>
+          <TouchableOpacity
+            style={[styles.optionCard, !hasTransaction && styles.disabledCard]}
+            onPress={() => handleMainActions("rating")}
+            activeOpacity={0.8}
+            disabled={!hasTransaction}
+          >
+            <View style={[styles.iconContainer, styles.ratingIcon]}>
+              <Feather name="star" size={28} color="#F59E0B" />
             </View>
-          </View>
+            <Text style={styles.optionTitle}>Rate Transaction</Text>
+            <Text style={styles.optionDesc}>
+              {hasTransaction
+                ? "Rate your latest transaction."
+                : "Available after a transaction."}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.optionCard}
+            onPress={() => handleMainActions("faq")}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.iconContainer, styles.faqIcon]}>
+              <Feather name="help-circle" size={28} color="#9333EA" />
+            </View>
+            <Text style={styles.optionTitle}>Browse FAQ</Text>
+            <Text style={styles.optionDesc}>
+              Quick answers to common questions.
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.quickInfoCard}>
+          <Feather name="clock" size={18} color="#2563EB" />
+          <Text style={styles.quickInfoText}>
+            Support response time: typically under 2 hours.
+          </Text>
         </View>
       </ScrollView>
     </View>
@@ -131,89 +150,98 @@ export default function HelpHubModal() {
 
   const faqContent = (
     <View style={styles.content}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => setCurrentPage('main')} style={styles.backButton}>
-          <Feather name="arrow-left" size={24} color="#333" />
+      <View style={styles.faqHeader}>
+        <TouchableOpacity
+          onPress={() => setCurrentPage("main")}
+          style={styles.backButton}
+        >
+          <Feather name="arrow-left" size={24} color="#4B5563" />
         </TouchableOpacity>
-        <Text style={styles.title}>Frequently Asked Questions</Text>
+        <Text style={[styles.title, styles.faqTitle]}>
+          Frequently Asked Questions
+        </Text>
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.faqList}>
-          {[
-            {
-              q: 'How do I make a payment?',
-              a: 'Navigate to your invoice and tap "Pay Now". You can use mobile money or loyalty points.',
-            },
-            {
-              q: 'Can I use loyalty points for payments?',
-              a: 'Yes! You can use your loyalty points to partially or fully pay your invoices.',
-            },
-            {
-              q: 'How long does payment take?',
-              a: 'Payments are usually processed instantly. You\'ll receive a confirmation immediately.',
-            },
-            {
-              q: 'What if my payment failed?',
-              a: 'Check your connection and try again. If it persists, contact our support team via live chat.',
-            },
-            {
-              q: 'How do I earn loyalty points?',
-              a: 'You earn points on every transaction. More points = higher loyalty tier and more benefits!',
-            },
-          ].map((item, index) => (
-            <View key={index} style={styles.faqItem}>
-              <Text style={styles.faqQuestion}>{item.q}</Text>
-              <Text style={styles.faqAnswer}>{item.a}</Text>
-            </View>
-          ))}
-        </View>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        {[
+          {
+            q: "How do I make a payment?",
+            a: "Tap Pay Now on your invoice and follow the mobile money prompts.",
+          },
+          {
+            q: "Can I use loyalty points?",
+            a: "Yes — points can cover part or all of a payment.",
+          },
+          {
+            q: "Payment time?",
+            a: "Most payments process instantly with confirmation shown right away.",
+          },
+          {
+            q: "Payment failed?",
+            a: "Retry with a stable network or contact support via live chat.",
+          },
+        ].map((item, index) => (
+          <View key={index} style={styles.faqItem}>
+            <Text style={styles.faqQuestion}>{item.q}</Text>
+            <Text style={styles.faqAnswer}>{item.a}</Text>
+          </View>
+        ))}
       </ScrollView>
     </View>
   );
 
   return (
     <>
-      <Modal 
-        visible={showHelpHub} 
-        transparent 
-        animationType="slide" 
+      <Modal
+        visible={showHelpHub}
+        transparent
+        animationType="fade"
+        presentationStyle="overFullScreen"
+        hardwareAccelerated
         onRequestClose={closeHelpHub}
         statusBarTranslucent={true}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.container}
         >
-          <View style={styles.backdrop}>
-            <View style={styles.modal}>
-              {currentPage === 'main' ? mainContent : faqContent}
+          <TouchableWithoutFeedback onPress={closeHelpHub}>
+            <View style={styles.backdrop}>
+              <TouchableWithoutFeedback onPress={() => null}>
+                <View style={styles.modal}>
+                  {currentPage === "main" ? mainContent : faqContent}
+                </View>
+              </TouchableWithoutFeedback>
             </View>
-          </View>
+          </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Child Modals */}
-      {showChildModal && currentPage === 'feedback' && (
+      {showChildModal && currentPage === "feedback" && (
         <FeedbackModal
           visible={true}
           onClose={handleChildModalClose}
           clientId={Number(user?.clientId) || 0}
-          initialType={(contextData.feedbackType as any) || 'general'}
+          initialType={(contextData.feedbackType as any) || "general"}
         />
       )}
 
-      {showChildModal && currentPage === 'rating' && contextData.transactionId && (
-        <RatingModal
-          visible={true}
-          onClose={handleChildModalClose}
-          clientId={Number(user?.clientId) || 0}
-          transactionId={contextData.transactionId}
-        />
-      )}
+      {showChildModal &&
+        currentPage === "rating" &&
+        contextData.transactionId && (
+          <RatingModal
+            visible={true}
+            onClose={handleChildModalClose}
+            clientId={Number(user?.clientId) || 0}
+            transactionId={contextData.transactionId}
+          />
+        )}
 
-      {showChildModal && currentPage === 'chat' && (
+      {showChildModal && currentPage === "chat" && (
         <LiveChatModal
           visible={true}
           onClose={handleChildModalClose}
@@ -227,144 +255,175 @@ export default function HelpHubModal() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
+    justifyContent: "flex-end",
   },
   modal: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: height * 0.85,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   content: {
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 24,
+    paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    backgroundColor: '#fff',
+    borderBottomColor: "#E5E7EB",
+    backgroundColor: "#fff",
+  },
+  faqHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    backgroundColor: "#fff",
+  },
+  closeButton: {
+    padding: 8,
   },
   backButton: {
-    width: 24,
-    justifyContent: 'center',
+    width: 32,
+    justifyContent: "center",
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#111827",
     flex: 1,
-    textAlign: 'center',
+  },
+  faqTitle: {
+    textAlign: "center",
+  },
+  subtitle: {
+    marginTop: 6,
+    fontSize: 14,
+    color: "#6B7280",
+    lineHeight: 20,
+    maxWidth: 240,
   },
   scrollView: {
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 20,
   },
-  optionsGrid: {
-    gap: 16,
+  optionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 14,
   },
   optionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 18,
     borderWidth: 1,
-    borderColor: '#f0f0f0',
-    marginBottom: 8,
+    borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 3,
+    minHeight: 150,
+  },
+  disabledCard: {
+    opacity: 0.6,
   },
   iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-    position: 'relative',
+    width: 50,
+    height: 50,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 18,
   },
-  badge: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#f44336',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+  chatIcon: {
+    backgroundColor: "#DBEAFE",
   },
-  badgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
+  feedbackIcon: {
+    backgroundColor: "#FFEDD5",
+  },
+  ratingIcon: {
+    backgroundColor: "#FEF3C7",
+  },
+  faqIcon: {
+    backgroundColor: "#EDE9FE",
   },
   optionTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 8,
   },
   optionDesc: {
     fontSize: 13,
-    color: '#999',
-    textAlign: 'center',
+    color: "#6B7280",
+    lineHeight: 20,
   },
-  infoSection: {
-    marginTop: 20,
-    marginBottom: 20,
+  notificationBadge: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    backgroundColor: "#EF4444",
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 6,
   },
-  infoCard: {
-    backgroundColor: '#fff3e0',
-    borderLeftWidth: 4,
-    borderLeftColor: '#f57c00',
-    borderRadius: 8,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  infoContent: {
-    flex: 1,
-  },
-  infoTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 2,
-  },
-  infoText: {
+  notificationText: {
+    color: "#fff",
     fontSize: 12,
-    color: '#666',
+    fontWeight: "700",
   },
-  faqList: {
-    gap: 12,
+  quickInfoCard: {
+    marginTop: 16,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  quickInfoText: {
+    color: "#2563EB",
+    fontSize: 14,
+    lineHeight: 20,
   },
   faqItem: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
+    backgroundColor: "#fff",
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#f0f0f0',
+    borderColor: "#E5E7EB",
+    padding: 18,
+    marginBottom: 12,
   },
   faqQuestion: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 10,
   },
   faqAnswer: {
     fontSize: 13,
-    color: '#666',
-    lineHeight: 18,
+    color: "#4B5563",
+    lineHeight: 20,
   },
 });

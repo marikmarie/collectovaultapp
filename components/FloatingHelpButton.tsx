@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, StyleSheet, View, Text, Animated, Dimensions } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { useHelpFeedback } from '@/src/context/HelpFeedbackContext';
+import { useHelpFeedback } from "@/src/context/HelpFeedbackContext";
+import { Feather } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import {
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-const { height } = Dimensions.get('window');
+const { height } = Dimensions.get("window");
 
 export default function FloatingHelpButton() {
   const { openHelpHub, unreadCount } = useHelpFeedback();
@@ -13,18 +20,27 @@ export default function FloatingHelpButton() {
     if (unreadCount > 0) {
       // Pulse animation when unread messages
       Animated.sequence([
-        Animated.timing(scaleAnim, { toValue: 1.1, duration: 200, useNativeDriver: true }),
-        Animated.timing(scaleAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.timing(scaleAnim, {
+          toValue: 1.1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
       ]).start();
     }
   }, [unreadCount]);
 
   const handlePress = () => {
-    openHelpHub('main');
+    openHelpHub("main");
   };
 
   return (
     <Animated.View
+      pointerEvents="box-none"
       style={[
         styles.container,
         {
@@ -36,13 +52,14 @@ export default function FloatingHelpButton() {
         style={styles.fab}
         onPress={handlePress}
         activeOpacity={0.8}
+        hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
       >
         <Feather name="help-circle" size={24} color="#fff" />
 
         {unreadCount > 0 && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>
-              {unreadCount > 9 ? '9+' : unreadCount}
+              {unreadCount > 9 ? "9+" : unreadCount}
             </Text>
           </View>
         )}
@@ -53,41 +70,42 @@ export default function FloatingHelpButton() {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 100,
     right: 20,
     zIndex: 999,
+    elevation: 20,
   },
   fab: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#d81b60',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    backgroundColor: "#d81b60",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 12,
   },
   badge: {
-    position: 'absolute',
+    position: "absolute",
     top: -4,
     right: -4,
-    backgroundColor: '#f44336',
+    backgroundColor: "#f44336",
     borderRadius: 12,
     minWidth: 24,
     height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 6,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: "#fff",
   },
   badgeText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });
