@@ -16,7 +16,7 @@ import { createRating } from "../src/api/feedback";
 interface RatingModalProps {
   visible: boolean;
   onClose: () => void;
-  customerId: number;
+  clientId: number;
   transactionId: number;
   onSuccess?: () => void;
 }
@@ -59,7 +59,7 @@ function StarRating({ label, value, onChange }: StarRatingProps) {
 export default function RatingModal({
   visible,
   onClose,
-  customerId,
+  clientId,
   transactionId,
   onSuccess,
 }: RatingModalProps) {
@@ -87,7 +87,7 @@ export default function RatingModal({
 
     try {
       await createRating({
-        customerId,
+        clientId,
         transactionId,
         orderRating,
         paymentRating,

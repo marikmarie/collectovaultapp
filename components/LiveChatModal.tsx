@@ -19,7 +19,7 @@ import {
 
 interface ChatMessage {
   id: number;
-  customerId: number;
+  clientId: number;
   senderType: "customer" | "support";
   message: string;
   isRead: boolean;
@@ -29,13 +29,13 @@ interface ChatMessage {
 interface LiveChatModalProps {
   visible: boolean;
   onClose: () => void;
-  customerId: number;
+  clientId: number;
 }
 
 export default function LiveChatModal({
   visible,
   onClose,
-  customerId,
+  clientId,
 }: LiveChatModalProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -47,11 +47,11 @@ export default function LiveChatModal({
     if (visible) {
       loadConversation();
     }
-  }, [visible, customerId]);
+  }, [visible, clientId]);
 
   const loadConversation = async () => {
     try {
-      const data = await getConversation(customerId, 50, 0);
+      const data = await getConversation(clientId, 50, 0);
       setMessages(data);
 
       // Mark unread messages as read
@@ -76,7 +76,7 @@ export default function LiveChatModal({
 
     try {
       const message = await sendChatMessage({
-        customerId,
+        clientId,
         message: newMessage.trim(),
       });
 

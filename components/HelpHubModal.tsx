@@ -199,7 +199,7 @@ export default function HelpHubModal() {
         <FeedbackModal
           visible={true}
           onClose={handleChildModalClose}
-          customerId={Number(user?.clientId) || 0}
+          clientId={Number(user?.clientId) || 0}
           initialType={(contextData.feedbackType as any) || 'general'}
         />
       )}
@@ -208,7 +208,7 @@ export default function HelpHubModal() {
         <RatingModal
           visible={true}
           onClose={handleChildModalClose}
-          customerId={Number(user?.clientId) || 0}
+          clientId={Number(user?.clientId) || 0}
           transactionId={contextData.transactionId}
         />
       )}
@@ -217,7 +217,7 @@ export default function HelpHubModal() {
         <LiveChatModal
           visible={true}
           onClose={handleChildModalClose}
-          customerId={Number(user?.clientId) || 0}
+          clientId={Number(user?.clientId) || 0}
         />
       )}
     </>

@@ -1,16 +1,42 @@
 import axios from "axios";
 
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:4000";
+const API_BASE =
+  process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
 const api = axios.create({
   baseURL: API_BASE,
   timeout: 15000,
 });
 
+api.interceptors.response.use(
+  (response) => {
+    console.log("API response:", {
+      url: response.config.url,
+      method: response.config.method,
+      status: response.status,
+      data: response.data,
+    });
+    return response;
+  },
+  (error) => {
+    if (error.response) {
+      console.error("API response error:", {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response.status,
+        data: error.response.data,
+      });
+    } else {
+      console.error("API request error:", error.message);
+    }
+    return Promise.reject(error);
+  },
+);
+
 // ========== RATING ENDPOINTS ==========
 
 export interface RatingData {
-  customerId: number;
+  clientId: number;
   transactionId: number;
   orderRating: number;
   paymentRating: number;
@@ -33,16 +59,16 @@ export const getRatingByTransaction = async (transactionId: number) => {
   }
 };
 
-export const getCustomerAverageRatings = async (customerId: number) => {
-  const response = await api.get(`/ratings/customer/${customerId}/average`);
+export const getCustomerAverageRatings = async (clientId: number) => {
+  const response = await api.get(`/ratings/customer/${clientId}/average`);
   return response.data;
 };
 
 // ========== FEEDBACK ENDPOINTS ==========
 
 export interface FeedbackData {
-  customerId: number;
-  feedbackType: 'order' | 'service' | 'app' | 'general';
+  clientId: number;
+  feedbackType: "order" | "service" | "app" | "general";
   title: string;
   message: string;
   attachments?: string[];
@@ -54,12 +80,12 @@ export const createFeedback = async (data: FeedbackData) => {
 };
 
 export const getCustomerFeedback = async (
-  customerId: number,
+  clientId: number,
   limit = 20,
-  offset = 0
+  offset = 0,
 ) => {
   const response = await api.get(
-    `/feedback/customer/${customerId}?limit=${limit}&offset=${offset}`
+    `/feedback/customer/${clientId}?limit=${limit}&offset=${offset}`,
   );
   return response.data;
 };
@@ -67,7 +93,7 @@ export const getCustomerFeedback = async (
 // ========== CHAT ENDPOINTS ==========
 
 export interface ChatMessageData {
-  customerId: number;
+  clientId: number;
   message: string;
   attachments?: string[];
 }
@@ -75,24 +101,24 @@ export interface ChatMessageData {
 export const sendChatMessage = async (data: ChatMessageData) => {
   const response = await api.post("/chat", {
     ...data,
-    senderType: 'customer',
+    senderType: "customer",
   });
   return response.data;
 };
 
 export const getConversation = async (
-  customerId: number,
+  clientId: number,
   limit = 50,
-  offset = 0
+  offset = 0,
 ) => {
   const response = await api.get(
-    `/chat/customer/${customerId}?limit=${limit}&offset=${offset}`
+    `/chat/customer/${clientId}?limit=${limit}&offset=${offset}`,
   );
   return response.data;
 };
 
-export const getUnreadMessageCount = async (customerId: number) => {
-  const response = await api.get(`/chat/customer/${customerId}/unread`);
+export const getUnreadMessageCount = async (clientId: number) => {
+  const response = await api.get(`/chat/customer/${clientId}/unread`);
   return response.data.unreadCount;
 };
 
@@ -104,19 +130,19 @@ export const markChatMessageAsRead = async (messageId: number) => {
 // ========== CONTACT ENDPOINTS ==========
 
 export const setUserWhatsApp = async (
-  customerId: number,
-  whatsappNumber: string
+  clientId: number,
+  whatsappNumber: string,
 ) => {
   const response = await api.post("/contacts/whatsapp/user", {
-    customerId,
+    clientId,
     whatsappNumber,
   });
   return response.data;
 };
 
-export const getUserWhatsAppContact = async (customerId: number) => {
+export const getUserWhatsAppContact = async (clientId: number) => {
   try {
-    const response = await api.get(`/contacts/whatsapp/user/${customerId}`);
+    const response = await api.get(`/contacts/whatsapp/user/${clientId}`);
     return response.data;
   } catch (error) {
     return null;
@@ -132,7 +158,7 @@ export const getBusinessWhatsAppUrl = async () => {
   }
 };
 
-export const deleteUserWhatsAppContact = async (customerId: number) => {
-  const response = await api.delete(`/contacts/whatsapp/user/${customerId}`);
+export const deleteUserWhatsAppContact = async (clientId: number) => {
+  const response = await api.delete(`/contacts/whatsapp/user/${clientId}`);
   return response.data;
 };

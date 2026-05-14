@@ -16,7 +16,7 @@ import { createFeedback } from "../src/api/feedback";
 interface FeedbackModalProps {
   visible: boolean;
   onClose: () => void;
-  customerId: number;
+  clientId: number;
   onSuccess?: () => void;
   initialType?: "order" | "service" | "app" | "general";
 }
@@ -24,7 +24,7 @@ interface FeedbackModalProps {
 export default function FeedbackModal({
   visible,
   onClose,
-  customerId,
+  clientId,
   onSuccess,
   initialType = "general",
 }: FeedbackModalProps) {
@@ -55,7 +55,7 @@ export default function FeedbackModal({
 
     try {
       await createFeedback({
-        customerId,
+        clientId,
         feedbackType,
         title: title.trim(),
         message: message.trim(),
