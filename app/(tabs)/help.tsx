@@ -12,8 +12,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HelpScreen() {
-  const { openChatModal, openFeedbackModal, openRatingModal, contextData } =
-    useHelpFeedback();
+  const {
+    openChatModal,
+    openFeedbackModal,
+    openRatingModal,
+    openHelpHub,
+    contextData,
+  } = useHelpFeedback();
   const canRate = Boolean(contextData.transactionId);
 
   const handlePhoneCall = () => {
@@ -88,7 +93,7 @@ export default function HelpScreen() {
 
           <TouchableOpacity
             style={styles.actionCard}
-            onPress={() => openFeedbackModal("general")}
+            onPress={() => openHelpHub("faq")}
             activeOpacity={0.85}
           >
             <View style={[styles.actionIcon, styles.faqIcon]}>

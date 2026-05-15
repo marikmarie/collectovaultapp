@@ -1,7 +1,7 @@
 import { useAuth } from "@/src/context/AuthContext";
 import { useHelpFeedback } from "@/src/context/HelpFeedbackContext";
 import { Feather } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React from "react";
 import {
   Dimensions,
   KeyboardAvoidingView,
@@ -34,28 +34,24 @@ export default function HelpHubModal() {
     closeRatingModal,
     showChatModal,
     closeChatModal,
+    openFeedbackModal,
+    openRatingModal,
+    openChatModal,
   } = useHelpFeedback();
   const { user } = useAuth();
-  const [showChildModal, setShowChildModal] = useState(false);
 
   const handleMainActions = (action: string) => {
     if (action === "feedback") {
-      setCurrentPage("feedback");
-      setShowChildModal(true);
+      openFeedbackModal("general");
     } else if (action === "rating") {
-      setCurrentPage("rating");
-      setShowChildModal(true);
+      if (contextData.transactionId) {
+        openRatingModal(contextData.transactionId);
+      }
     } else if (action === "chat") {
-      setCurrentPage("chat");
-      setShowChildModal(true);
+      openChatModal();
     } else if (action === "faq") {
       setCurrentPage("faq");
-      setShowChildModal(true);
     }
-  };
-
-  const handleChildModalClose = () => {
-    setShowChildModal(false);
   };
 
   const hasTransaction = Boolean(contextData.transactionId);
@@ -227,30 +223,28 @@ export default function HelpHubModal() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {showChildModal && currentPage === "feedback" && (
+      {showFeedbackModal && (
         <FeedbackModal
           visible={true}
-          onClose={handleChildModalClose}
+          onClose={closeFeedbackModal}
           clientId={Number(user?.clientId) || 0}
           initialType={(contextData.feedbackType as any) || "general"}
         />
       )}
 
-      {showChildModal &&
-        currentPage === "rating" &&
-        contextData.transactionId && (
-          <RatingModal
-            visible={true}
-            onClose={handleChildModalClose}
-            clientId={Number(user?.clientId) || 0}
-            transactionId={contextData.transactionId}
-          />
-        )}
+      {showRatingModal && contextData.transactionId && (
+        <RatingModal
+          visible={true}
+          onClose={closeRatingModal}
+          clientId={Number(user?.clientId) || 0}
+          transactionId={contextData.transactionId}
+        />
+      )}
 
-      {showChildModal && currentPage === "chat" && (
+      {showChatModal && (
         <LiveChatModal
           visible={true}
-          onClose={handleChildModalClose}
+          onClose={closeChatModal}
           clientId={Number(user?.clientId) || 0}
         />
       )}
