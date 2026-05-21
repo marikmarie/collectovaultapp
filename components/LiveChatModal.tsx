@@ -1,20 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
-    getConversation,
-    markChatMessageAsRead,
-    sendChatMessage,
+  getConversation,
+  markChatMessageAsRead,
+  sendChatMessage,
 } from "../src/api/feedback";
 
 interface ChatMessage {
@@ -52,10 +52,13 @@ export default function LiveChatModal({
   const loadConversation = async () => {
     try {
       const data = await getConversation(clientId, 50, 0);
-      setMessages(data);
+
+      // Handle both array and object responses
+      const messagesArray = Array.isArray(data) ? data : data?.messages || [];
+      setMessages(messagesArray);
 
       // Mark unread messages as read
-      for (const msg of data) {
+      for (const msg of messagesArray) {
         if (!msg.isRead && msg.senderType === "support") {
           await markChatMessageAsRead(msg.id);
         }
