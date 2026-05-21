@@ -53,6 +53,14 @@ export default function LiveChatModal({
     try {
       const data = await getConversation(clientId, 50, 0);
 
+      // Check for API errors
+      if (data?.error) {
+        console.warn("API returned error:", data.error);
+        setError(data.error);
+        setMessages([]);
+        return;
+      }
+
       // Handle both array and object responses
       const messagesArray = Array.isArray(data) ? data : data?.messages || [];
       setMessages(messagesArray);
@@ -60,12 +68,17 @@ export default function LiveChatModal({
       // Mark unread messages as read
       for (const msg of messagesArray) {
         if (!msg.isRead && msg.senderType === "support") {
-          await markChatMessageAsRead(msg.id);
+          try {
+            await markChatMessageAsRead(msg.id);
+          } catch (readErr) {
+            console.warn("Failed to mark message as read:", readErr);
+          }
         }
       }
     } catch (err) {
       console.error("Failed to load conversation:", err);
-      setError("Failed to load conversation");
+      setError("Failed to load conversation. Please check your connection.");
+      setMessages([]);
     }
   };
 
@@ -132,15 +145,15 @@ export default function LiveChatModal({
             scrollEnabled={true}
           >
             {messages.length === 0 ? (
-              <View style={styles.emptyState}>
+              <View style={styles.emptyState} key="empty-state">
                 <Text style={styles.emptyStateText}>
                   No messages yet. Start a conversation!
                 </Text>
               </View>
             ) : (
-              messages.map((msg) => (
+              messages.map((msg, index) => (
                 <View
-                  key={msg.id}
+                  key={`msg-${msg.id}-${index}`}
                   style={[
                     styles.messageRow,
                     msg.senderType === "customer"
@@ -313,15 +326,15 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#E5E7EB",
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    paddingBottom: Platform.OS === "ios" ? 24 : 12,
+    paddingVertical: 12,
+    paddingBottom: Platform.OS === "ios" ? 16 : 8,
     backgroundColor: "white",
   },
   errorContainer: {
     backgroundColor: "#FEE2E2",
     padding: 8,
     borderRadius: 6,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   errorText: {
     color: "#DC2626",
@@ -348,6 +361,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
+    minWidth: 56,
   },
   sendButtonDisabled: {
     backgroundColor: "#D1D5DB",
@@ -360,6 +374,6 @@ const styles = StyleSheet.create({
   charCount: {
     fontSize: 11,
     color: "#9CA3AF",
-    marginTop: 4,
+    marginTop: 2,
   },
 });

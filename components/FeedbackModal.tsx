@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { createFeedback } from "../src/api/feedback";
 
@@ -209,25 +209,25 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 20,
+    padding: 16,
     minHeight: "70%",
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 16,
+    marginBottom: 12,
   },
   scrollView: {
     flex: 1,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   section: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   label: {
     fontSize: 14,
     fontWeight: "600",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   typeButtons: {
     flexDirection: "row",
@@ -267,13 +267,13 @@ const styles = StyleSheet.create({
   charCount: {
     fontSize: 12,
     color: "#9CA3AF",
-    marginTop: 4,
+    marginTop: 2,
   },
   errorContainer: {
     backgroundColor: "#FEE2E2",
     padding: 12,
     borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   errorText: {
     color: "#DC2626",
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: "row",
-    gap: 12,
+    gap: 10,
   },
   button: {
     flex: 1,
